@@ -256,143 +256,6 @@ def zalo_callback(code=None, state=None):
 
 
 # =========================
-# GET SESSION MENU
-# =========================
-
-@frappe.whitelist(allow_guest=True)
-def get_session_menu(session):
-
-    try:
-
-        menu = frappe.db.get_all(
-            "Lunch Session Menu",
-            filters={"session": session},
-            fields=["menu_item", "price"]
-        )
-
-        frappe.log_error(
-            str(menu),
-            "SESSION MENU"
-        )
-
-        return menu
-
-    except Exception:
-
-        frappe.log_error(
-            frappe.get_traceback(),
-            "GET MENU ERROR"
-        )
-
-        return {"error": "menu_failed"}
-
-
-# =========================
-# SUBMIT VOTE
-# =========================
-
-@frappe.whitelist(allow_guest=True)
-def submit_vote(session, zalo_id, menu_item):
-
-    try:
-
-        user = frappe.db.exists(
-            "Zalo User Map",
-            {"zalo_id": zalo_id}
-        )
-
-        if not user:
-            return {"error": "user_not_found"}
-
-        existed = frappe.db.exists(
-            "Lunch Order",
-            {
-                "session": session,
-                "zalo_user": user
-            }
-        )
-
-        if existed:
-            return {"error": "already_voted"}
-
-        price = frappe.db.get_value(
-            "Lunch Session Menu",
-            {
-                "session": session,
-                "menu_item": menu_item
-            },
-            "price"
-        )
-
-        if not price:
-            return {"error": "menu_not_found"}
-
-        order = frappe.get_doc({
-            "doctype": "Lunch Order",
-            "session": session,
-            "zalo_user": user,
-            "menu_item": menu_item,
-            "price": price,
-            "created_at": frappe.utils.now()
-        })
-
-        order.insert(ignore_permissions=True)
-
-        frappe.log_error(
-            order.name,
-            "ORDER CREATED"
-        )
-
-        update_wallet(user, price)
-        update_session_stats(session)
-
-        return {"message": "vote_success"}
-
-    except Exception:
-
-        frappe.log_error(
-            frappe.get_traceback(),
-            "SUBMIT VOTE ERROR"
-        )
-
-        return {"error": "vote_failed"}
-
-
-# =========================
-# UPDATE WALLET
-# =========================
-
-def update_wallet(user, price):
-
-    try:
-
-        wallet_name = frappe.get_value(
-            "Lunch Wallet",
-            {"zalo_user": user},
-            "name"
-        )
-
-        wallet = frappe.get_doc("Lunch Wallet", wallet_name)
-
-        wallet.balance -= price
-        wallet.updated_at = frappe.utils.now()
-
-        wallet.save(ignore_permissions=True)
-
-        frappe.log_error(
-            f"{wallet.name} balance={wallet.balance}",
-            "WALLET UPDATED"
-        )
-
-    except Exception:
-
-        frappe.log_error(
-            frappe.get_traceback(),
-            "WALLET UPDATE ERROR"
-        )
-
-
-# =========================
 # UPDATE SESSION STATS
 # =========================
 
@@ -463,6 +326,28 @@ def create_vote_link(doc, method):
         frappe.log_error(
             frappe.get_traceback(),
             "CREATE VOTE LINK ERROR"
+        )
+
+def update_session_menu_items(doc, method=None):
+    try:
+        frappe.db.delete("Lunch Session Menu", {"session": doc.name})
+
+        if hasattr(doc, 'menu_item') and doc.menu_item:
+            for row in doc.menu_item:
+                if row.menu_item:
+                    new_link = frappe.get_doc({
+                        "doctype": "Lunch Session Menu",
+                        "session": doc.name,
+                        "menu_item": row.menu_item
+                    })
+                    new_link.insert(ignore_permissions=True)
+        
+        frappe.db.commit()
+
+    except Exception:
+        frappe.log_error(
+            frappe.get_traceback(),
+            "Lỗi cập nhật danh sách Menu"
         )
 		
 @frappe.whitelist(allow_guest=True)
@@ -585,9 +470,22 @@ def vote(session, menu_item, zalo_id):
                 "session": session,
                 "zalo_user": user,
                 "menu_item": menu_item,
-                "price": price
+                "price": price,
+                "created_at": now()
             })
+
             order_doc.insert(ignore_permissions=True)
+
+            transaction = frappe.get_doc({
+                "doctype": "Lunch Transaction",
+                "zalo_user": user,
+                "type": "Pay",
+                "amount": price,
+                "date": now()
+            })
+
+            transaction.insert(ignore_permissions=True)
+
             frappe.db.commit()
         except Exception:
             frappe.db.rollback()
@@ -595,20 +493,6 @@ def vote(session, menu_item, zalo_id):
             return {"success": False, "message": "Failed to create order"}
 
         logger.info(f"[VOTE] ORDER CREATED name={order_doc.name}")
-
-        # ====================================
-        # 8. DEDUCT MONEY
-        # ====================================
-        try:
-            new_balance = wallet_balance - price
-            frappe.db.set_value("Lunch Wallet", wallet_name, "balance", new_balance)
-            frappe.db.commit()
-        except Exception:
-            frappe.db.rollback()
-            logger.error(traceback.format_exc())
-            return {"success": False, "message": "Order created but wallet update failed"}
-
-        logger.info(f"[VOTE] WALLET UPDATED new_balance={new_balance}")
 
         # ====================================
         # 9. SUCCESS
@@ -620,4 +504,20 @@ def vote(session, menu_item, zalo_id):
         error = traceback.format_exc()
         logger.error(f"[VOTE] ERROR {error}")
         return {"success": False, "message": "Internal error"}
+
+@frappe.whitelist()
+def update_wallet_on_transaction(doc, method=None):
+    wallet = frappe.get_doc("Lunch Wallet", {"zalo_user": doc.zalo_user})
+    
+    if not wallet:
+        frappe.throw(f"Không tìm thấy ví cho người dùng {doc.zalo_user}")
+    
+    new_balance = wallet.balance + doc.amount
+
+    wallet.balance = new_balance
+    wallet.updated_at = frappe.utils.now_datetime()
+    wallet.save(ignore_permissions=True)
+
+    frappe.msgprint(f"Ví của {doc.zalo_user} đã được cập nhật. Số dư: {new_balance:,.0f}đ")	
+		
 

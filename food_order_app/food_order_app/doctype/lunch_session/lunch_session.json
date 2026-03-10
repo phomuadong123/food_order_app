@@ -6,15 +6,24 @@
  "doctype": "DocType",
  "engine": "InnoDB",
  "field_order": [
+  "menu",
   "session_name",
   "date",
   "status",
   "created_by",
   "vote_link",
   "total_orders",
-  "total_amount"
+  "total_amount",
+  "menu_today",
+  "orders",
+  "menu_item"
  ],
  "fields": [
+  {
+   "fieldname": "menu",
+   "fieldtype": "Column Break",
+   "label": "Menu"
+  },
   {
    "fieldname": "session_name",
    "fieldtype": "Data",
@@ -47,7 +56,8 @@
    "fieldname": "vote_link",
    "fieldtype": "Data",
    "in_list_view": 1,
-   "label": "vote_link"
+   "label": "vote_link",
+   "options": "URL"
   },
   {
    "fieldname": "total_orders",
@@ -60,13 +70,32 @@
    "fieldtype": "Currency",
    "in_list_view": 1,
    "label": "total_amount "
+  },
+  {
+   "fieldname": "menu_today",
+   "fieldtype": "Table",
+   "label": "Menu Today",
+   "options": "Lunch Session Menu"
+  },
+  {
+   "fieldname": "orders",
+   "fieldtype": "Table",
+   "label": "Orders",
+   "options": "Lunch Order",
+   "read_only": 1
+  },
+  {
+   "fieldname": "menu_item",
+   "fieldtype": "Table MultiSelect",
+   "label": "MonAn",
+   "options": "Lunch Session Menu"
   }
  ],
  "grid_page_length": 50,
  "index_web_pages_for_search": 1,
  "links": [],
- "modified": "2026-03-09 16:25:05.800352",
- "modified_by": "tuantigiatq@gmail.com",
+ "modified": "2026-03-10 20:04:40.241462",
+ "modified_by": "Administrator",
  "module": "food_order_app",
  "name": "Lunch Session",
  "owner": "tuantigiatq@gmail.com",
@@ -88,5 +117,6 @@
  "rows_threshold_for_grid_search": 20,
  "sort_field": "creation",
  "sort_order": "DESC",
- "states": []
+ "states": [],
+ "title_field": "session_name"
 }
