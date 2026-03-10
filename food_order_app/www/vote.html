@@ -1,0 +1,276 @@
+{% extends "templates/web.html" %}
+
+{% block page_content %}
+<style>
+
+body {
+    background: #f7f9fc;
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial;
+    padding: 10px 0 40px 0;
+}
+
+/* Title */
+h1 {
+    text-align: center;
+    font-size: 26px;
+    color: #222;
+    margin-bottom: 20px;
+}
+
+/* Menu item card */
+.menu-card {
+    background: #fff;
+    border-radius: 14px;
+    padding: 16px;
+    margin: 12px;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.08);
+    transition: transform .15s ease, box-shadow .15s ease;
+    border: 1px solid #e6eaf0;
+}
+
+.menu-card:hover {
+    transform: translateY(-3px);
+    box-shadow: 0 6px 18px rgba(0,0,0,0.12);
+}
+
+/* Item name */
+.menu-card h3 {
+    margin: 0;
+    font-size: 20px;
+    color: #1d1d1f;
+    font-weight: 600;
+}
+
+/* Price */
+.menu-card p {
+    color: #4a5568;
+    margin: 6px 0 12px 0;
+    font-size: 15px;
+}
+
+/* Vote Button */
+.vote-btn {
+    background: #0584fe;
+    color: #fff;
+    border: none;
+    padding: 10px 14px;
+    border-radius: 10px;
+    cursor: pointer;
+    font-size: 15px;
+    font-weight: 600;
+    width: 100%;
+    transition: all .2s ease;
+}
+
+.vote-btn:hover {
+    background: #006be6;
+    transform: translateY(-2px);
+}
+
+.vote-btn:disabled {
+    background: #cbd5e0 !important;
+    cursor: not-allowed;
+    transform: none !important;
+}
+
+/* Loading / error message */
+.message-box {
+    padding: 10px;
+    border-radius: 10px;
+    text-align: center;
+    margin: 20px;
+}
+
+.message-error {
+    background: #ffe5e8;
+    color: #d0002f;
+}
+
+.message-loading {
+    background: #e5f2ff;
+    color: #0562d1;
+}
+
+</style>
+<h1>Vote Lunch</h1>
+
+<div id="menu">Loading...</div>
+
+<script>
+
+frappe.ready(async function(){
+
+    const urlParams = new URLSearchParams(window.location.search)
+
+    const session = urlParams.get("session")
+    const zalo_id = urlParams.get("zalo_id")
+
+    async function loadMenu(){
+
+    console.log("loadMenu start", { session })
+
+    try {
+
+        const res = await frappe.call({
+            method: "food_order_app.api.get_menu",
+            args: {
+                session: session
+            }
+        })
+
+        console.log("API response:", res)
+
+        if (!res || !res.message) {
+            throw new Error("Invalid API response")
+        }
+
+        const payload = res.message
+
+        console.log("Payload:", payload)
+
+        if (!payload.success) {
+            throw new Error(payload.message || "API returned error")
+        }
+
+        const items = payload.data
+
+        if (!Array.isArray(items)) {
+            throw new Error("Menu data is not an array")
+        }
+
+        console.log("Menu items:", items)
+
+        let html = ""
+
+        items.forEach(i => {
+
+            console.log("Render item:", i)
+
+            html += `
+			<div class="menu-card">
+				<h3>${i.item_name}</h3>
+				<p>${i.price.toLocaleString()} đ</p>
+
+				<button class="vote-btn" onclick="vote('${i.name}')">
+					Vote món này
+				</button>
+			</div>
+			`
+        })
+
+        const container = document.getElementById("menu")
+
+        if (!container) {
+            throw new Error("Element #menu not found in DOM")
+        }
+
+        container.innerHTML = html
+
+        console.log("Menu render success")
+
+    } catch (error) {
+
+        console.error("loadMenu error:", error)
+
+        const container = document.getElementById("menu")
+
+        if (container) {
+            container.innerHTML = `
+                <div style="color:red;padding:10px">
+                    Failed to load menu
+                </div>
+            `
+        }
+
+        if (frappe && frappe.msgprint) {
+            frappe.msgprint({
+                title: "Menu Error",
+                message: error.message,
+                indicator: "red"
+            })
+        }
+
+    }
+
+}
+
+   window.vote = async function(menu_item) {
+
+    console.log("Vote clicked:", menu_item);
+
+    try {
+
+        // Loading state (optional)
+        frappe.show_alert({
+            message: "Đang gửi vote...",
+            indicator: "blue"
+        });
+
+        const res = await frappe.call({
+            method: "food_order_app.api.vote",
+            args: {
+                session: session,
+                menu_item: menu_item,
+                zalo_id: zalo_id
+            }
+        });
+
+        console.log("Vote API response:", res.message);
+
+        const payload = res.message;
+
+        // =========================
+        // Validate response
+        // =========================
+        if (!payload) {
+            frappe.msgprint({
+                title: "Lỗi",
+                message: "Vote thất bại (no response)",
+                indicator: "red"
+            });
+            return;
+        }
+
+        if (!payload.success) {
+            frappe.msgprint({
+                title: "Vote thất bại",
+                message: payload.message || "Có lỗi xảy ra",
+                indicator: "red"
+            });
+            return;
+        }
+
+        // =========================
+        // SUCCESS
+        // =========================
+
+        frappe.msgprint({
+            title: "Thành công",
+            message: payload.message || "Vote thành công!",
+            indicator: "green"
+        });
+
+        // Optional: disable all vote buttons
+        document.querySelectorAll("button").forEach(btn => {
+            btn.disabled = true;
+        });
+
+    } catch (err) {
+
+        console.error("Vote error:", err);
+
+        frappe.msgprint({
+            title: "Vote lỗi",
+            message: "Không gửi được vote. Vui lòng thử lại.",
+            indicator: "red"
+        });
+    }
+}
+
+    loadMenu()
+
+})
+
+</script>
+
+{% endblock %}

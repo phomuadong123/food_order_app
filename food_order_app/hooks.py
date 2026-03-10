@@ -5,6 +5,11 @@ app_description = "Food ordering system"
 app_email = "tuantigiatq@gmail.com"
 app_license = "mit"
 
+doc_events = {
+    "Lunch Session": {
+        "after_insert": "food_order_app.api.create_vote_link"
+    }
+}
 # Apps
 # ------------------
 
