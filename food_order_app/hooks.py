@@ -10,7 +10,7 @@ doc_events = {
         "after_insert": "food_order_app.api.create_vote_link"
         # "on_update": "food_order_app.api.update_session_menu_items"
     },
-    "Lunch Transaction": {
+    "Transaction": {
         "after_insert": "food_order_app.api.update_wallet_on_transaction"
     }
 }

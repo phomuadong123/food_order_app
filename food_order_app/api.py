@@ -480,7 +480,7 @@ def vote(session, menu_item, zalo_id):
             order_doc.insert(ignore_permissions=True)
 
             transaction = frappe.get_doc({
-                "doctype": "Lunch Transaction",
+                "doctype": "Transaction",
                 "zalo_user": user,
                 "type": "Pay",
                 "amount": -price,  # Trừ tiền nên số âm
