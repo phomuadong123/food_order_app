@@ -484,6 +484,7 @@ def vote(session, menu_item, zalo_id):
                 "zalo_user": user,
                 "type": "Pay",
                 "amount": -price,  # Trừ tiền nên số âm
+                "reference": order_doc.name, # Ghi nhận order vừa tạo
                 "date": now()
             })
 
