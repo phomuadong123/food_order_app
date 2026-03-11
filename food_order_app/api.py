@@ -474,7 +474,6 @@ def vote(session, menu_item, zalo_id):
                 "session": session,
                 "zalo_user": user,
                 "menu_item": menu_item,
-                "price": price,
                 "created_at": now()
             })
 
@@ -484,7 +483,7 @@ def vote(session, menu_item, zalo_id):
                 "doctype": "Lunch Transaction",
                 "zalo_user": user,
                 "type": "Pay",
-                "amount": price,
+                "amount": -price,  # Trừ tiền nên số âm
                 "date": now()
             })
 
