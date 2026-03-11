@@ -1,4 +1,5 @@
 import frappe
+import os
 import requests
 import traceback
 from frappe.utils import now
@@ -9,9 +10,10 @@ logger = frappe.logger("lunch_api")
 # ZALO CONFIG
 # =========================
 
-ZALO_APP_ID = "2622443107747618674"
-ZALO_SECRET = "rcrRF3vTO6wPDfKOSsbI"
-REDIRECT_URI = "/api/method/food_order_app.api.zalo_callback"
+ZALO_APP_ID = os.getenv("ZALO_APP_ID")
+ZALO_SECRET = os.getenv("ZALO_SECRET")
+REDIRECT_URI = os.getenv("ZALO_REDIRECT_URI")
+BASE_URL = os.getenv("BASE_URL")
 
 
 # =========================
@@ -23,7 +25,7 @@ def start_vote(session):
 
     try:
 
-        base = frappe.utils.get_url()
+        base = BASE_URL or frappe.utils.get_url()
 
         oauth_url = (
             f"https://oauth.zaloapp.com/v4/permission?"
@@ -328,27 +330,27 @@ def create_vote_link(doc, method):
             "CREATE VOTE LINK ERROR"
         )
 
-def update_session_menu_items(doc, method=None):
-    try:
-        frappe.db.delete("Lunch Session Menu", {"session": doc.name})
+# def update_session_menu_items(doc, method=None):
+#     try:
+#         frappe.db.delete("Lunch Session Menu", {"session": doc.name})
 
-        if hasattr(doc, 'menu_item') and doc.menu_item:
-            for row in doc.menu_item:
-                if row.menu_item:
-                    new_link = frappe.get_doc({
-                        "doctype": "Lunch Session Menu",
-                        "session": doc.name,
-                        "menu_item": row.menu_item
-                    })
-                    new_link.insert(ignore_permissions=True)
+#         if hasattr(doc, 'menu_item') and doc.menu_item:
+#             for row in doc.menu_item:
+#                 if row.menu_item:
+#                     new_link = frappe.get_doc({
+#                         "doctype": "Lunch Session Menu",
+#                         "session": doc.name,
+#                         "menu_item": row.menu_item
+#                     })
+#                     new_link.insert(ignore_permissions=True)
         
-        frappe.db.commit()
+#         frappe.db.commit()
 
-    except Exception:
-        frappe.log_error(
-            frappe.get_traceback(),
-            "Lỗi cập nhật danh sách Menu"
-        )
+#     except Exception:
+#         frappe.log_error(
+#             frappe.get_traceback(),
+#             "Lỗi cập nhật danh sách Menu"
+#         )
 		
 @frappe.whitelist(allow_guest=True)
 def get_menu(session):
