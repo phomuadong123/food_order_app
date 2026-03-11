@@ -332,14 +332,16 @@ def create_vote_link(doc, method):
 
 def update_session_menu_items(doc, method=None):
     try:
-        frappe.db.delete("Lunch Session Menu", {"session": doc.name})
+        frappe.db.delete("Lunch Session Menu", {"parent": doc.name})
 
-        if hasattr(doc, 'menu_item') and doc.menu_item:
-            for row in doc.menu_item:
+        if hasattr(doc, 'menu_items') and doc.menu_items:
+            for row in doc.menu_items:
                 if row.menu_item:
                     new_link = frappe.get_doc({
                         "doctype": "Lunch Session Menu",
-                        "session": doc.name,
+                        "parent": doc.name,
+                        "parenttype": "Lunch Session",
+                        "parentfield": "menu_items",
                         "menu_item": row.menu_item
                     })
                     new_link.insert(ignore_permissions=True)
@@ -370,7 +372,7 @@ def get_menu(session):
             FROM `tabLunch Session Menu` sm
             JOIN `tabLunch Menu Item` mi
                 ON sm.menu_item = mi.name
-            WHERE sm.session = %s
+            WHERE sm.parent = %s
         """, (session,), as_dict=True)
 
         logger.info(f"menu count={len(items)}")
@@ -442,7 +444,7 @@ def vote(session, menu_item, zalo_id):
             FROM `tabLunch Session Menu` sm
             JOIN `tabLunch Menu Item` mi
                 ON sm.menu_item = mi.name
-            WHERE sm.session = %s AND sm.menu_item = %s
+            WHERE sm.parent = %s AND sm.menu_item = %s
             LIMIT 1
         """, (session, menu_item), as_dict=True)
 

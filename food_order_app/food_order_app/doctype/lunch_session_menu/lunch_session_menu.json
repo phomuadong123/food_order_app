@@ -5,17 +5,9 @@
     "doctype": "DocType",
     "engine": "InnoDB",
     "field_order": [
-        "session",
         "menu_item"
     ],
     "fields": [
-        {
-            "fieldname": "session",
-            "fieldtype": "Link",
-            "in_list_view": 1,
-            "label": "session",
-            "options": "Lunch Session"
-        },
         {
             "fieldname": "menu_item",
             "fieldtype": "Link",
