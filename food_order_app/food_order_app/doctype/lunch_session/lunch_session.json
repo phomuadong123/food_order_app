@@ -2,7 +2,6 @@
  "actions": [],
  "allow_rename": 1,
  "creation": "2026-03-07 22:39:19.312072",
- "custom": 1,
  "doctype": "DocType",
  "engine": "InnoDB",
  "field_order": [
@@ -13,10 +12,7 @@
   "created_by",
   "vote_link",
   "total_orders",
-  "total_amount",
-  "menu_today",
-  "orders",
-  "menu_item"
+  "total_amount"
  ],
  "fields": [
   {
