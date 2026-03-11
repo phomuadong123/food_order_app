@@ -72,23 +72,11 @@
    "label": "total_amount "
   },
   {
-   "fieldname": "menu_today",
-   "fieldtype": "Table",
-   "label": "Menu Today",
-   "options": "Lunch Session Menu"
-  },
-  {
    "fieldname": "orders",
    "fieldtype": "Table",
    "label": "Orders",
    "options": "Lunch Order",
    "read_only": 1
-  },
-  {
-   "fieldname": "menu_item",
-   "fieldtype": "Table MultiSelect",
-   "label": "MonAn",
-   "options": "Lunch Session Menu"
   }
  ],
  "grid_page_length": 50,

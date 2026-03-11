@@ -7,8 +7,8 @@ app_license = "mit"
 
 doc_events = {
     "Lunch Session": {
-        "after_insert": "food_order_app.api.create_vote_link",
-        "on_update": "food_order_app.api.update_session_menu_items"
+        "after_insert": "food_order_app.api.create_vote_link"
+        # "on_update": "food_order_app.api.update_session_menu_items"
     },
     "Lunch Transaction": {
         "after_insert": "food_order_app.api.update_wallet_on_transaction"

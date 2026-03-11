@@ -330,27 +330,27 @@ def create_vote_link(doc, method):
             "CREATE VOTE LINK ERROR"
         )
 
-# def update_session_menu_items(doc, method=None):
-#     try:
-#         frappe.db.delete("Lunch Session Menu", {"session": doc.name})
+def update_session_menu_items(doc, method=None):
+    try:
+        frappe.db.delete("Lunch Session Menu", {"session": doc.name})
 
-#         if hasattr(doc, 'menu_item') and doc.menu_item:
-#             for row in doc.menu_item:
-#                 if row.menu_item:
-#                     new_link = frappe.get_doc({
-#                         "doctype": "Lunch Session Menu",
-#                         "session": doc.name,
-#                         "menu_item": row.menu_item
-#                     })
-#                     new_link.insert(ignore_permissions=True)
+        if hasattr(doc, 'menu_item') and doc.menu_item:
+            for row in doc.menu_item:
+                if row.menu_item:
+                    new_link = frappe.get_doc({
+                        "doctype": "Lunch Session Menu",
+                        "session": doc.name,
+                        "menu_item": row.menu_item
+                    })
+                    new_link.insert(ignore_permissions=True)
         
-#         frappe.db.commit()
+        frappe.db.commit()
 
-#     except Exception:
-#         frappe.log_error(
-#             frappe.get_traceback(),
-#             "Lỗi cập nhật danh sách Menu"
-#         )
+    except Exception:
+        frappe.log_error(
+            frappe.get_traceback(),
+            "Lỗi cập nhật danh sách Menu"
+        )
 		
 @frappe.whitelist(allow_guest=True)
 def get_menu(session):
