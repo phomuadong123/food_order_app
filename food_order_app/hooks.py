@@ -152,16 +152,11 @@ doc_events = {
 # Scheduled Tasks
 # ---------------
 
-# scheduler_events = {
-# 	"all": [
-# 		"food_order_app.tasks.all"
-# 	],
-# 	"daily": [
-# 		"food_order_app.tasks.daily"
-# 	],
-# 	"hourly": [
-# 		"food_order_app.tasks.hourly"
-# 	],
+scheduler_events = {
+	"hourly": [
+		"food_order_app.api.check_and_renew_sessions"
+	]
+}
 # 	"weekly": [
 # 		"food_order_app.tasks.weekly"
 # 	],
