@@ -574,14 +574,12 @@ def check_and_renew_sessions():
         logger.info(f"Current time: {current_time}")
 
         # 1️⃣ Lấy các session hết hạn
-        expired_sessions = frappe.get_all(
-            "Lunch Session",
-            filters={
-                "status": "Open",
-                "end_date": ["<", current_time]
-            },
-            fields=["name", "session_name", "created_by"]
-        )
+        expired_sessions = frappe.db.sql("""
+            SELECT name, session_name, created_by
+            FROM `tabLunch Session`
+            WHERE status='Open'
+            AND end_date < NOW()
+        """, as_dict=True)
 
         logger.info(f"Found {len(expired_sessions)} expired sessions")
 
