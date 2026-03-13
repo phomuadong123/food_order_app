@@ -16,20 +16,20 @@
    "fieldtype": "Link",
    "in_list_view": 1,
    "in_standard_filter": 1,
-   "label": "zalo_user",
+   "label": "Người dùng Zalo",
    "options": "Zalo User Map"
   },
   {
    "fieldname": "balance",
    "fieldtype": "Currency",
    "in_list_view": 1,
-   "label": "balance"
+   "label": "Số dư trong ví"
   },
   {
    "fieldname": "updated_at",
    "fieldtype": "Datetime",
    "in_list_view": 1,
-   "label": "updated_at"
+   "label": "Thời gian cập nhật"
   }
  ],
  "grid_page_length": 50,

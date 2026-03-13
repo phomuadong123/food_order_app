@@ -12,7 +12,7 @@
             "fieldname": "menu_item",
             "fieldtype": "Link",
             "in_list_view": 1,
-            "label": "menu_item",
+            "label": "Món ăn",
             "options": "Lunch Menu Item"
         }
     ],

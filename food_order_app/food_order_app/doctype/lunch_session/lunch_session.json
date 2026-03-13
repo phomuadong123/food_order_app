@@ -34,59 +34,59 @@
             "fieldtype": "Data",
             "in_list_view": 1,
             "in_standard_filter": 1,
-            "label": "session_name"
+            "label": "Tên buổi ăn"
         },
         {
             "fieldname": "date",
             "fieldtype": "Date",
             "in_list_view": 1,
             "in_standard_filter": 1,
-            "label": "date"
+            "label": "Ngày"
         },
         {
             "fieldname": "start_date",
             "fieldtype": "Datetime",
             "in_list_view": 1,
-            "label": "start_date"
+            "label": "Thời gian bắt đầu"
         },
         {
             "fieldname": "end_date",
             "fieldtype": "Datetime",
             "in_list_view": 1,
-            "label": "end_date"
+            "label": "Thời gian kết thúc"
         },
         {
             "fieldname": "status",
             "fieldtype": "Select",
             "in_list_view": 1,
-            "label": "status",
+            "label": "Trạng thái",
             "options": "Draft\nOpen\nClosed"
         },
         {
             "fieldname": "created_by",
             "fieldtype": "Link",
             "in_list_view": 1,
-            "label": "created_by",
+            "label": "Người tạo",
             "options": "User"
         },
         {
             "fieldname": "vote_link",
             "fieldtype": "Data",
             "in_list_view": 1,
-            "label": "vote_link",
+            "label": "Link bình chọn",
             "options": "URL"
         },
         {
             "fieldname": "total_orders",
             "fieldtype": "Int",
             "in_list_view": 1,
-            "label": "total_orders "
+            "label": "Tổng số đơn"
         },
         {
             "fieldname": "total_amount",
             "fieldtype": "Currency",
             "in_list_view": 1,
-            "label": "total_amount "
+            "label": "Tổng số tiền"
         }
     ],
     "grid_page_length": 50,

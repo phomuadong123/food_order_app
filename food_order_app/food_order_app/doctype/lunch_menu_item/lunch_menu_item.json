@@ -16,27 +16,27 @@
             "fieldtype": "Data",
             "in_list_view": 1,
             "in_standard_filter": 1,
-            "label": "item_name"
+            "label": "Tên món ăn"
         },
         {
             "fieldname": "description",
             "fieldtype": "Text",
             "in_list_view": 1,
-            "label": "description"
+            "label": "Mô tả"
         },
         {
             "fieldname": "price",
             "fieldtype": "Currency",
             "in_list_view": 1,
             "in_standard_filter": 1,
-            "label": "price"
+            "label": "Giá"
         },
         {
             "default": "0",
             "fieldname": "active",
             "fieldtype": "Check",
             "in_list_view": 1,
-            "label": "active"
+            "label": "Kích hoạt"
         }
     ],
     "grid_page_length": 50,

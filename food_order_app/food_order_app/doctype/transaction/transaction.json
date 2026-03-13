@@ -19,36 +19,36 @@
    "fieldtype": "Link",
    "in_list_view": 1,
    "in_standard_filter": 1,
-   "label": "zalo_user",
+   "label": "Người dùng Zalo",
    "options": "Zalo User Map"
   },
   {
    "fieldname": "type",
    "fieldtype": "Select",
-   "label": "type",
+   "label": "Loại giao dịch",
    "options": "Deposit\nPay"
   },
   {
    "fieldname": "amount",
    "fieldtype": "Currency",
-   "label": "amount"
+   "label": "Số tiền"
   },
   {
    "fieldname": "reference",
    "fieldtype": "Link",
-   "label": "reference",
+   "label": "Tham chiếu",
    "options": "Lunch Order"
   },
   {
    "fieldname": "date",
    "fieldtype": "Datetime",
-   "label": "date"
+   "label": "Thời gian"
   },
   {
    "fieldname": "description",
    "fieldtype": "Text",
    "in_list_view": 1,
-   "label": "description"
+   "label": "Mô tả"
   }
  ],
  "grid_page_length": 50,

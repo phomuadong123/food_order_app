@@ -567,8 +567,20 @@ def check_and_renew_sessions():
     logger.info("=== START check_and_renew_sessions ===")
 
     try:
+        today_date = today()
 
-        # 1️⃣ lấy session gần nhất
+        existing_today = frappe.db.sql("""
+            SELECT name
+            FROM `tabLunch Session`
+            WHERE date = %s
+            LIMIT 1
+        """, today_date)
+
+        if existing_today:
+            logger.info("Session for today already exists -> EXIT")
+            return
+
+        # lấy session gần nhất
         last_session = frappe.db.sql("""
             SELECT *
             FROM `tabLunch Session`
@@ -582,7 +594,7 @@ def check_and_renew_sessions():
 
         last_session = last_session[0]
 
-        # 2️⃣ check hết hạn
+        # check hết hạn
         expired = frappe.db.sql("""
             SELECT name
             FROM `tabLunch Session`
@@ -597,17 +609,16 @@ def check_and_renew_sessions():
 
         logger.info(f"Session expired: {last_session['name']}")
 
-        # 3️⃣ đóng session cũ
+        # đóng session cũ
         frappe.db.sql("""
             UPDATE `tabLunch Session`
             SET status='Closed'
             WHERE name=%s
         """, last_session["name"])
 
-        # 4️⃣ tạo session mới
+        # tạo session mới
         new_name = frappe.generate_hash(10)
         link = f"{BASE_URL}/api/method/food_order_app.api.start_vote?session={new_name}"
-        today_date = today()
         start_time = now_datetime()
         tomorrow = add_days(today_date, 1)
         end_time = f"{tomorrow} 10:30:00"
@@ -622,9 +633,11 @@ def check_and_renew_sessions():
                 end_date,
                 status,
                 vote_link,
-                created_by
+                created_by,
+                creation,
+                modified
             )
-            VALUES (%s,%s,%s,%s,%s,'Open',%s,'Schedule')
+            VALUES (%s,%s,%s,%s,%s,'Open',%s,'Schedule',NOW(),NOW())
         """, (
             new_name,
             f"Menu {today_date}",

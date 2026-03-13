@@ -15,7 +15,7 @@
    "fieldname": "zalo_id",
    "fieldtype": "Data",
    "in_list_view": 1,
-   "label": "zalo_id",
+   "label": "ID Zalo",
    "unique": 1
   },
   {
@@ -23,19 +23,19 @@
    "fieldtype": "Data",
    "in_list_view": 1,
    "in_standard_filter": 1,
-   "label": "full_name"
+   "label": "Tên đầy đủ"
   },
   {
    "fieldname": "avatar",
    "fieldtype": "Data",
    "in_list_view": 1,
-   "label": "avatar"
+   "label": "Ảnh đại diện"
   },
   {
    "fieldname": "created_at",
    "fieldtype": "Datetime",
    "in_list_view": 1,
-   "label": "created_at"
+   "label": "Thời gian tạo"
   }
  ],
  "grid_page_length": 50,

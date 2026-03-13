@@ -15,28 +15,28 @@
             "fieldname": "session",
             "fieldtype": "Link",
             "in_list_view": 1,
-            "label": "session",
+            "label": "ID buổi ăn",
             "options": "Lunch Session"
         },
         {
             "fieldname": "zalo_user",
             "fieldtype": "Link",
             "in_list_view": 1,
-            "label": "zalo_user",
+            "label": "ID người dùng Zalo",
             "options": "Zalo User Map"
         },
         {
             "fieldname": "menu_item",
             "fieldtype": "Link",
             "in_list_view": 1,
-            "label": "menu_item",
+            "label": "ID Món ăn",
             "options": "Lunch Menu Item"
         },
         {
             "fieldname": "created_at",
             "fieldtype": "Datetime",
             "in_list_view": 1,
-            "label": "created_at"
+            "label": "Thời gian tạo"
         }
     ],
     "grid_page_length": 50,

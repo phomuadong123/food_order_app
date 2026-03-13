@@ -155,7 +155,7 @@ doctype_list_js = {
 # ---------------
 
 scheduler_events = {
-	"all": [
+	"hourly": [
 		"food_order_app.api.check_and_renew_sessions"
 	]
 }
