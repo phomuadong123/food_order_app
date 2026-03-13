@@ -2,7 +2,7 @@ import frappe
 import os
 import requests
 import traceback
-from frappe.utils import now, today, add_days
+from frappe.utils import now, today, now_datetime, add_days
 
 logger = frappe.logger("lunch_api")
 
@@ -560,98 +560,67 @@ def send_zalo_vote_link(zalo_id, vote_link, menu_date):
         logger.error(f"[Zalo Message] Failed to send message to {zalo_id}: {str(e)}")
 
 
-
 def check_and_renew_sessions():
-    """
-    Scheduler: kiểm tra session hết hạn và tạo session mới
-    """
 
     logger.info("=== START check_and_renew_sessions ===")
 
     try:
 
-        current_time = now()
-        logger.info(f"Current time: {current_time}")
-
-        # 1️⃣ Lấy các session hết hạn
         expired_sessions = frappe.db.sql("""
-            SELECT name, session_name, created_by
+            SELECT name
             FROM `tabLunch Session`
             WHERE status='Open'
             AND end_date < NOW()
         """, as_dict=True)
 
-        logger.info(f"Found {len(expired_sessions)} expired sessions")
-
         if not expired_sessions:
-            logger.info("No expired session found -> EXIT")
+            logger.info("No expired session found")
             return
 
-        # 2️⃣ Loop từng session
         for s in expired_sessions:
 
-            logger.info(f"Processing session: {s.name}")
-
-            # lấy doc cũ
             old_doc = frappe.get_doc("Lunch Session", s.name)
-            logger.info(f"Loaded old session: {old_doc.name}")
 
-            # đóng session cũ
             old_doc.status = "Closed"
             old_doc.save(ignore_permissions=True)
 
-            logger.info(f"Closed expired session: {old_doc.name}")
-
-            # 3️⃣ Tạo session mới
             today_date = today()
-            today_start = now()
+
+            start_time = now_datetime()
 
             tomorrow = add_days(today_date, 1)
-            tomorrow_deadline = f"{tomorrow} 10:30:00"
+            end_time = f"{tomorrow} 10:30:00"
 
-            logger.info(
-                f"Creating new session | date={today_date} start={today_start} end={tomorrow_deadline}"
-            )
+            new_session = frappe.new_doc("Lunch Session")
 
-            new_session = frappe.get_doc({
-                "doctype": "Lunch Session",
-                "session_name": f"Menu {today_date}",
-                "date": today_date,
-                "start_date": today_start,
-                "end_date": tomorrow_deadline,
-                "status": "Open",
-                "created_by": s.created_by
-            })
-
-            # 4️⃣ Copy menu items
-            menu_count = len(old_doc.menu_items)
-            logger.info(f"Copying {menu_count} menu items")
+            new_session.session_name = f"Menu {today_date}"
+            new_session.date = today_date
+            new_session.start_date = start_time
+            new_session.end_date = end_time
+            new_session.status = "Open"
 
             for item in old_doc.menu_items:
-
-                logger.info(f"Appending menu item: {item.menu_item}")
 
                 new_session.append("menu_items", {
                     "menu_item": item.menu_item
                 })
 
-            # 5️⃣ Insert session mới
             new_session.insert(ignore_permissions=True)
-
-            logger.info(f"New session created: {new_session.name}")
 
         frappe.db.commit()
 
-        logger.info("Database commit success")
+    except Exception as e:
 
-    except Exception:
+        error_trace = traceback.format_exc()
 
-        logger.error("=== ERROR in check_and_renew_sessions ===")
-        logger.error(traceback.format_exc())
+        logger.error(error_trace)
+
+        frappe.log_error(
+            title="Scheduler check_and_renew_sessions failed",
+            message=error_trace
+        )
 
         frappe.db.rollback()
-
-    logger.info("=== END check_and_renew_sessions ===")
 
 
 @frappe.whitelist(allow_guest=False)
