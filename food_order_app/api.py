@@ -566,7 +566,6 @@ def check_and_renew_sessions():
 
     try:
 
-        # 1️⃣ tìm session hết hạn
         expired_sessions = frappe.db.sql("""
             SELECT name
             FROM `tabLunch Session`
@@ -585,16 +584,13 @@ def check_and_renew_sessions():
 
             logger.info(f"Processing session: {session_name}")
 
-            # 2️⃣ đóng session cũ
+            # đóng session cũ
             frappe.db.sql("""
                 UPDATE `tabLunch Session`
                 SET status='Closed'
                 WHERE name=%s
             """, session_name)
 
-            logger.info(f"Closed session: {session_name}")
-
-            # 3️⃣ tạo session mới
             today_date = today()
             start_time = now_datetime()
             tomorrow = add_days(today_date, 1)
@@ -602,6 +598,7 @@ def check_and_renew_sessions():
 
             new_name = frappe.generate_hash(length=10)
 
+            # tạo session mới
             frappe.db.sql("""
                 INSERT INTO `tabLunch Session`
                 (name, session_name, date, start_date, end_date, status, creation, modified)
@@ -616,10 +613,10 @@ def check_and_renew_sessions():
 
             logger.info(f"Created new session: {new_name}")
 
-            # 4️⃣ copy menu items
+            # copy menu items
             menu_items = frappe.db.sql("""
                 SELECT menu_item
-                FROM `tabLunch Session Menu Items`
+                FROM `tabLunch Session Menu`
                 WHERE parent=%s
             """, session_name, as_dict=True)
 
@@ -628,7 +625,7 @@ def check_and_renew_sessions():
             for item in menu_items:
 
                 frappe.db.sql("""
-                    INSERT INTO `tabLunch Session Menu Items`
+                    INSERT INTO `tabLunch Session Menu`
                     (name,parent,parenttype,parentfield,menu_item,creation,modified)
                     VALUES (%s,%s,'Lunch Session','menu_items',%s,NOW(),NOW())
                 """, (
@@ -653,8 +650,6 @@ def check_and_renew_sessions():
         )
 
         frappe.db.rollback()
-
-    logger.info("=== END check_and_renew_sessions ===")
 
 
 @frappe.whitelist(allow_guest=False)
