@@ -1,3 +1,5 @@
+from email.mime import base
+
 import frappe
 import os
 import requests
@@ -566,73 +568,97 @@ def check_and_renew_sessions():
 
     try:
 
-        expired_sessions = frappe.db.sql("""
-            SELECT name
+        # 1️⃣ lấy session gần nhất
+        last_session = frappe.db.sql("""
+            SELECT *
             FROM `tabLunch Session`
-            WHERE status='Open'
-            AND end_date < NOW()
+            ORDER BY creation DESC
+            LIMIT 1
         """, as_dict=True)
 
-        logger.info(f"Expired sessions found: {len(expired_sessions)}")
-
-        if not expired_sessions:
+        if not last_session:
+            logger.info("No Lunch Session found")
             return
 
-        for s in expired_sessions:
+        last_session = last_session[0]
 
-            session_name = s["name"]
+        # 2️⃣ check hết hạn
+        expired = frappe.db.sql("""
+            SELECT name
+            FROM `tabLunch Session`
+            WHERE name=%s
+            AND status='Open'
+            AND end_date < NOW()
+        """, last_session["name"])
 
-            logger.info(f"Processing session: {session_name}")
+        if not expired:
+            logger.info("Session not expired")
+            return
 
-            # đóng session cũ
-            frappe.db.sql("""
-                UPDATE `tabLunch Session`
-                SET status='Closed'
-                WHERE name=%s
-            """, session_name)
+        logger.info(f"Session expired: {last_session['name']}")
 
-            today_date = today()
-            start_time = now_datetime()
-            tomorrow = add_days(today_date, 1)
-            end_time = f"{tomorrow} 10:30:00"
+        # 3️⃣ đóng session cũ
+        frappe.db.sql("""
+            UPDATE `tabLunch Session`
+            SET status='Closed'
+            WHERE name=%s
+        """, last_session["name"])
 
-            new_name = frappe.generate_hash(length=10)
+        # 4️⃣ tạo session mới
+        new_name = frappe.generate_hash(10)
+        link = f"{BASE_URL}/api/method/food_order_app.api.start_vote?session={new_name}"
+        today_date = today()
+        start_time = now_datetime()
+        tomorrow = add_days(today_date, 1)
+        end_time = f"{tomorrow} 10:30:00"
 
-            # tạo session mới
-            frappe.db.sql("""
-                INSERT INTO `tabLunch Session`
-                (name, session_name, date, start_date, end_date, status, creation, modified)
-                VALUES (%s,%s,%s,%s,%s,'Open',NOW(),NOW())
-            """, (
-                new_name,
-                f"Menu {today_date}",
-                today_date,
-                start_time,
-                end_time
-            ))
+        frappe.db.sql("""
+            INSERT INTO `tabLunch Session`
+            (
+                name,
+                session_name,
+                date,
+                start_date,
+                end_date,
+                status,
+                vote_link,
+                created_by
+            )
+            VALUES (%s,%s,%s,%s,%s,'Open',%s,'Schedule')
+        """, (
+            new_name,
+            f"Menu {today_date}",
+            today_date,
+            start_time,
+            end_time,
+            link
+        ))
 
-            logger.info(f"Created new session: {new_name}")
+        logger.info(f"Created new session: {new_name}")
 
-            # copy menu items
-            menu_items = frappe.db.sql("""
-                SELECT menu_item
-                FROM `tabLunch Session Menu`
-                WHERE parent=%s
-            """, session_name, as_dict=True)
-
-            logger.info(f"Copying {len(menu_items)} menu items")
-
-            for item in menu_items:
-
-                frappe.db.sql("""
-                    INSERT INTO `tabLunch Session Menu`
-                    (name,parent,parenttype,parentfield,menu_item,creation,modified)
-                    VALUES (%s,%s,'Lunch Session','menu_items',%s,NOW(),NOW())
-                """, (
-                    frappe.generate_hash(10),
-                    new_name,
-                    item["menu_item"]
-                ))
+        # 5️⃣ copy menu từ session cũ
+        frappe.db.sql("""
+            INSERT INTO `tabLunch Session Menu`
+            (
+                name,
+                parent,
+                parenttype,
+                parentfield,
+                menu_item,
+                creation,
+                modified
+            )
+            SELECT
+                UUID(),
+                %s,
+                'Lunch Session',
+                'menu_items',
+                menu_item,
+                NOW(),
+                NOW()
+            FROM `tabLunch Session Menu`
+            WHERE parent=%s
+        """, (new_name, last_session["name"]))
 
         frappe.db.commit()
 
@@ -645,7 +671,7 @@ def check_and_renew_sessions():
         logger.error(error_trace)
 
         frappe.log_error(
-            title="Scheduler check_and_renew_sessions failed",
+            title="check_and_renew_sessions failed",
             message=error_trace
         )
 
