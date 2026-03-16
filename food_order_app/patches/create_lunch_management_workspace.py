@@ -33,7 +33,7 @@ def create_lunch_management_workspace():
             "name": workspace_name,
             "title": workspace_name,
             "module": "Food Order App",
-            "icon": "fa fa-cutlery",
+            "icon": "octicon octicon-package",
             "roles": [
                 {"role": "Lunch Management"},
             ],
@@ -41,12 +41,42 @@ def create_lunch_management_workspace():
                 {
                     "label": "Lunch Management",
                     "items": [
-                        {"type": "doctype", "link_to": "Lunch Session", "label": "Lunch Sessions"},
-                        {"type": "doctype", "link_to": "Lunch Order", "label": "Orders"},
-                        {"type": "doctype", "link_to": "Lunch Menu Item", "label": "Menu Items"},
-                        {"type": "doctype", "link_to": "Lunch Session Menu", "label": "Session Menus"},
-                        {"type": "doctype", "link_to": "Lunch Wallet", "label": "Wallets"},
-                        {"type": "doctype", "link_to": "Transaction", "label": "Transactions"},
+                        {
+                            "type": "doctype",
+                            "link_to": "Lunch Session",
+                            "label": "Lunch Sessions",
+                            "icon": "octicon octicon-calendar",
+                        },
+                        {
+                            "type": "doctype",
+                            "link_to": "Lunch Order",
+                            "label": "Orders",
+                            "icon": "octicon octicon-list-unordered",
+                        },
+                        {
+                            "type": "doctype",
+                            "link_to": "Lunch Menu Item",
+                            "label": "Menu Items",
+                            "icon": "octicon octicon-package",
+                        },
+                        {
+                            "type": "doctype",
+                            "link_to": "Lunch Session Menu",
+                            "label": "Session Menus",
+                            "icon": "octicon octicon-duplicate",
+                        },
+                        {
+                            "type": "doctype",
+                            "link_to": "Lunch Wallet",
+                            "label": "Wallets",
+                            "icon": "octicon octicon-credit-card",
+                        },
+                        {
+                            "type": "doctype",
+                            "link_to": "Transaction",
+                            "label": "Transactions",
+                            "icon": "octicon octicon-sync",
+                        },
                     ],
                 }
             ],
