@@ -71,7 +71,7 @@
         },
         {
             "fieldname": "vote_link",
-            "fieldtype": "Data",
+            "fieldtype": "Text",
             "in_list_view": 1,
             "label": "Link bình chọn",
             "options": "URL"

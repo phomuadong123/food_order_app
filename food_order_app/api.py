@@ -563,9 +563,6 @@ def send_zalo_vote_link(zalo_id, vote_link, menu_date):
 
 
 def check_and_renew_sessions():
-
-    logger.info("=== START check_and_renew_sessions ===")
-
     try:
         today_date = today()
 
