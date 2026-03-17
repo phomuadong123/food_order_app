@@ -14,6 +14,21 @@ doc_events = {
         "after_insert": "food_order_app.api.update_wallet_on_transaction"
     }
 }
+
+fixtures = [
+    {
+        "doctype": "Workspace",
+        "filters": [
+            ["name", "=", "Lunch Management"]
+        ]
+    },
+    {
+        "doctype": "Role",
+        "filters": [
+            ["role_name", "=", "Lunch Management"]
+        ]
+    }
+]
 # Apps
 # ------------------
 
