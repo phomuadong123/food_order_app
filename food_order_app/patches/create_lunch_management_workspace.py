@@ -24,67 +24,63 @@ def create_lunch_management_role():
 def create_lunch_management_workspace():
     workspace_name = "Lunch Management"
 
-    workspace_data = {
-        "doctype": "Workspace",
-        "name": workspace_name,
-        "title": workspace_name,
-        "module": "Food Order App",
-        "icon": "octicon octicon-package",
-        "roles": [
-            {"role": "Lunch Management"},
-        ],
-        "sections": [
-            {
-                "label": "Lunch Management",
-                "items": [
-                    {
-                        "type": "doctype",
-                        "link_to": "Lunch Session",
-                        "label": "Lunch Sessions",
-                        "icon": "octicon octicon-calendar",
-                    },
-                    {
-                        "type": "doctype",
-                        "link_to": "Lunch Order",
-                        "label": "Orders",
-                        "icon": "octicon octicon-list-unordered",
-                    },
-                    {
-                        "type": "doctype",
-                        "link_to": "Lunch Menu Item",
-                        "label": "Menu Items",
-                        "icon": "octicon octicon-package",
-                    },
-                    {
-                        "type": "doctype",
-                        "link_to": "Lunch Session Menu",
-                        "label": "Session Menus",
-                        "icon": "octicon octicon-duplicate",
-                    },
-                    {
-                        "type": "doctype",
-                        "link_to": "Lunch Wallet",
-                        "label": "Wallets",
-                        "icon": "octicon octicon-credit-card",
-                    },
-                    {
-                        "type": "doctype",
-                        "link_to": "Transaction",
-                        "label": "Transactions",
-                        "icon": "octicon octicon-sync",
-                    },
-                ],
-            }
-        ],
-    }
-
     if frappe.db.exists("Workspace", workspace_name):
-        workspace = frappe.get_doc("Workspace", workspace_name)
-        # Ensure the workspace has the expected icon + sidebar items
-        workspace.icon = workspace_data["icon"]
-        workspace.roles = workspace_data["roles"]
-        workspace.sections = workspace_data["sections"]
-        workspace.save(ignore_permissions=True)
         return
 
-    frappe.get_doc(workspace_data).insert(ignore_permissions=True)
+    workspace = frappe.get_doc(
+        {
+            "doctype": "Workspace",
+            "name": workspace_name,
+            "title": workspace_name,
+            "module": "Food Order App",
+            "icon": "list",
+            "roles": [
+                {"role": "Lunch Management"},
+            ],
+            "sections": [
+                {
+                    "label": "Lunch Management",
+                    "items": [
+                        {
+                            "type": "doctype",
+                            "link_to": "Lunch Session",
+                            "label": "Lunch Sessions",
+                            "icon": "list",
+                        },
+                        {
+                            "type": "doctype",
+                            "link_to": "Lunch Order",
+                            "label": "Orders",
+                            "icon": "list",
+                        },
+                        {
+                            "type": "doctype",
+                            "link_to": "Lunch Menu Item",
+                            "label": "Menu Items",
+                            "icon": "list",
+                        },
+                        {
+                            "type": "doctype",
+                            "link_to": "Lunch Session Menu",
+                            "label": "Session Menus",
+                            "icon": "list",
+                        },
+                        {
+                            "type": "doctype",
+                            "link_to": "Lunch Wallet",
+                            "label": "Wallets",
+                            "icon": "list",
+                        },
+                        {
+                            "type": "doctype",
+                            "link_to": "Transaction",
+                            "label": "Transactions",
+                            "icon": "list",
+                        },
+                    ],
+                }
+            ],
+        }
+    )
+
+    workspace.insert(ignore_permissions=True)
