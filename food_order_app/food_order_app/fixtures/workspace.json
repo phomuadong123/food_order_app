@@ -6,54 +6,59 @@
         "title": "Lunch Management",
         "module": "Food Order App",
         "is_standard": 1,
-        "public": 0,
-        "for_user": "",
-        "icon": "lunch",
+        "public": 1,
+        "icon": "🍜",
         "indicator_color": "green",
-        "restrict_to_domain": "",
         "roles": [
             {
+                "doctype": "Workspace Role",
                 "role": "Lunch Management"
             }
         ],
         "shortcuts": [
             {
+                "doctype": "Workspace Shortcut",
                 "type": "DocType",
                 "label": "Lunch Session",
                 "link_to": "Lunch Session",
                 "doc_view": "List"
             },
             {
+                "doctype": "Workspace Shortcut",
                 "type": "DocType",
                 "label": "Lunch Order",
                 "link_to": "Lunch Order",
                 "doc_view": "List"
             },
             {
+                "doctype": "Workspace Shortcut",
                 "type": "DocType",
                 "label": "Lunch Menu Item",
                 "link_to": "Lunch Menu Item",
                 "doc_view": "List"
             },
             {
+                "doctype": "Workspace Shortcut",
                 "type": "DocType",
                 "label": "Lunch Wallet",
                 "link_to": "Lunch Wallet",
                 "doc_view": "List"
             },
             {
+                "doctype": "Workspace Shortcut",
                 "type": "DocType",
                 "label": "Transaction",
                 "link_to": "Transaction",
                 "doc_view": "List"
             },
             {
+                "doctype": "Workspace Shortcut",
                 "type": "DocType",
                 "label": "Zalo User Map",
                 "link_to": "Zalo User Map",
                 "doc_view": "List"
             }
         ],
-        "content": "[{\"type\":\"onboarding\",\"data\":{\"onboarding_name\":\"\",\"col\":12}},{\"type\":\"card\",\"data\":{\"card_name\":\"Quản lý buổi ăn\",\"col\":12,\"links\":[{\"label\":\"Lunch Session\",\"type\":\"Link\",\"link_type\":\"DocType\",\"link_to\":\"Lunch Session\",\"onboard\":1},{\"label\":\"Lunch Order\",\"type\":\"Link\",\"link_type\":\"DocType\",\"link_to\":\"Lunch Order\",\"onboard\":1}]}},{\"type\":\"card\",\"data\":{\"card_name\":\"Thực đơn & Ví\",\"col\":12,\"links\":[{\"label\":\"Lunch Menu Item\",\"type\":\"Link\",\"link_type\":\"DocType\",\"link_to\":\"Lunch Menu Item\",\"onboard\":1},{\"label\":\"Lunch Wallet\",\"type\":\"Link\",\"link_type\":\"DocType\",\"link_to\":\"Lunch Wallet\",\"onboard\":1},{\"label\":\"Transaction\",\"type\":\"Link\",\"link_type\":\"DocType\",\"link_to\":\"Transaction\",\"onboard\":1}]}},{\"type\":\"card\",\"data\":{\"card_name\":\"Người dùng\",\"col\":12,\"links\":[{\"label\":\"Zalo User Map\",\"type\":\"Link\",\"link_type\":\"DocType\",\"link_to\":\"Zalo User Map\",\"onboard\":1}]}}]"
+        "content": "[{\"type\":\"card\",\"data\":{\"card_name\":\"Quản lý buổi ăn\",\"col\":12,\"links\":[{\"label\":\"Lunch Session\",\"type\":\"Link\",\"link_type\":\"DocType\",\"link_to\":\"Lunch Session\",\"onboard\":1},{\"label\":\"Lunch Order\",\"type\":\"Link\",\"link_type\":\"DocType\",\"link_to\":\"Lunch Order\",\"onboard\":1}]}},{\"type\":\"card\",\"data\":{\"card_name\":\"Thực đơn & Ví\",\"col\":12,\"links\":[{\"label\":\"Lunch Menu Item\",\"type\":\"Link\",\"link_type\":\"DocType\",\"link_to\":\"Lunch Menu Item\",\"onboard\":1},{\"label\":\"Lunch Wallet\",\"type\":\"Link\",\"link_type\":\"DocType\",\"link_to\":\"Lunch Wallet\",\"onboard\":1},{\"label\":\"Transaction\",\"type\":\"Link\",\"link_type\":\"DocType\",\"link_to\":\"Transaction\",\"onboard\":1}]}},{\"type\":\"card\",\"data\":{\"card_name\":\"Người dùng\",\"col\":12,\"links\":[{\"label\":\"Zalo User Map\",\"type\":\"Link\",\"link_type\":\"DocType\",\"link_to\":\"Zalo User Map\",\"onboard\":1}]}}]"
     }
 ]
