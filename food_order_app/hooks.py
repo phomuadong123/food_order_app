@@ -19,7 +19,7 @@ fixtures = [
     {
         "doctype": "Workspace",
         "filters": [
-            ["name", "=", "Lunch Management"]
+            ["name", "in", ["Lunch Management", "Quản Lý"]]
         ]
     },
     {
