@@ -1,0 +1,12 @@
+[
+    {
+        "doctype": "Role",
+        "name": "Lunch Management",
+        "role_name": "Lunch Management",
+        "desk_access": 1,
+        "is_custom": 0,
+        "disabled": 0,
+        "home_page": "",
+        "restrict_to_domain": ""
+    }
+]
