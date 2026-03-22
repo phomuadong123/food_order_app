@@ -19,7 +19,7 @@ fixtures = [
     {
         "doctype": "Workspace",
         "filters": [
-            ["name", "in", ["Lunch Management", "Quản Lý"]]
+            ["name", "in", ["food_order_app"]]
         ]
     },
     {
@@ -38,7 +38,7 @@ fixtures = [
 add_to_apps_screen = [
 	{
 		"name": "food_order_app",
-		"logo": "/assets/food_order_app/images/logo.svg",
+		"icon": "utensils",
 		"title": "Food Order App",
 		"route": "/app/food_order_app",
 		"has_permission": "food_order_app.api.permission.has_app_permission"
