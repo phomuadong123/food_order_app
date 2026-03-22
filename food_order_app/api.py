@@ -37,7 +37,7 @@ def start_vote(session):
             f"&state={session}"
         )
 
-        frappe.log_error(oauth_url, "ZALO OAUTH URL")
+        frappe.log_error(title="Zalo OAuth Debug", message=oauth_url)
 
         frappe.local.response["type"] = "redirect"
         frappe.local.response["location"] = oauth_url
