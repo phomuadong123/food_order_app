@@ -16,18 +16,10 @@ doc_events = {
 }
 
 fixtures = [
-    {
-        "doctype": "Workspace",
-        "filters": [
-            ["name", "in", ["food_order_app"]]
-        ]
-    },
-    {
-        "doctype": "Role",
-        "filters": [
-            ["role_name", "=", "Lunch Management"]
-        ]
-    }
+    "Workspace",
+    "Role",
+    "Custom Field",
+    "Property Setter"
 ]
 # Apps
 # ------------------
@@ -35,15 +27,15 @@ fixtures = [
 # required_apps = []
 
 # Each item in the list will be shown as an app in the apps page
-add_to_apps_screen = [
-	{
-		"name": "food_order_app",
-		"icon": "utensils",
-		"title": "Food Order App",
-		"route": "/app/food_order_app",
-		"has_permission": "food_order_app.api.permission.has_app_permission"
-	}
-]
+# add_to_apps_screen = [
+# 	{
+# 		"name": "food_order_app",
+# 		"icon": "utensils",
+# 		"title": "Food Order App",
+# 		"route": "/app/food_order_app",
+# 		"has_permission": "food_order_app.api.permission.has_app_permission"
+# 	}
+# ]
 
 # Includes in <head>
 # ------------------
