@@ -4,7 +4,7 @@ authors = [
     { name = "your name", email = "tuantigiatq@gmail.com"}
 ]
 description = "Food ordering system"
-requires-python = ">=3.14"
+requires-python = ">=3.11.6"
 readme = "README.md"
 dynamic = ["version"]
 dependencies = [
