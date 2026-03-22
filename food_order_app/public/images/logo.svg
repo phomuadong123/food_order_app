@@ -1,0 +1,21 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 200" width="200" height="200">
+  <!-- Background circle -->
+  <circle cx="100" cy="100" r="95" fill="#E8F5E9" stroke="#4CAF50" stroke-width="2"/>
+  
+  <!-- Fork icon -->
+  <g transform="translate(100, 100)">
+    <!-- Handle -->
+    <rect x="-8" y="30" width="16" height="40" fill="#4CAF50" rx="8"/>
+    
+    <!-- Three prongs -->
+    <!-- Left prong -->
+    <path d="M -30 30 Q -30 0 -20 -20" stroke="#4CAF50" stroke-width="6" fill="none" stroke-linecap="round"/>
+    <!-- Middle prong -->
+    <path d="M 0 30 Q 0 0 0 -25" stroke="#4CAF50" stroke-width="6" fill="none" stroke-linecap="round"/>
+    <!-- Right prong -->
+    <path d="M 30 30 Q 30 0 20 -20" stroke="#4CAF50" stroke-width="6" fill="none" stroke-linecap="round"/>
+  </g>
+  
+  <!-- Optional: Add text label -->
+  <text x="100" y="175" font-family="Arial, sans-serif" font-size="14" font-weight="bold" text-anchor="middle" fill="#4CAF50">Food Order</text>
+</svg>

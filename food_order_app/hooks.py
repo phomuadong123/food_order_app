@@ -35,15 +35,15 @@ fixtures = [
 # required_apps = []
 
 # Each item in the list will be shown as an app in the apps page
-# add_to_apps_screen = [
-# 	{
-# 		"name": "food_order_app",
-# 		"logo": "/assets/food_order_app/logo.png",
-# 		"title": "Food Order App",
-# 		"route": "/food_order_app",
-# 		"has_permission": "food_order_app.api.permission.has_app_permission"
-# 	}
-# ]
+add_to_apps_screen = [
+	{
+		"name": "food_order_app",
+		"logo": "/assets/food_order_app/images/logo.svg",
+		"title": "Food Order App",
+		"route": "/app/food_order_app",
+		"has_permission": "food_order_app.api.permission.has_app_permission"
+	}
+]
 
 # Includes in <head>
 # ------------------

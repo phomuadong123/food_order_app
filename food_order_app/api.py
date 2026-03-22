@@ -15,6 +15,7 @@ logger = frappe.logger("lunch_api")
 ZALO_APP_ID = os.getenv("ZALO_APP_ID")
 ZALO_SECRET = os.getenv("ZALO_SECRET")
 REDIRECT_URI = os.getenv("ZALO_REDIRECT_URI")
+ZALO_OA_TOKEN = os.getenv("ZALO_OA_TOKEN")
 BASE_URL = os.getenv("BASE_URL")
 
 
@@ -534,7 +535,7 @@ def send_zalo_vote_link(zalo_id, vote_link, menu_date):
     Sử dụng Zalo OA API để gửi tin nhắn thông báo link chọn món
     Yêu cầu thiết lập config ZALO_OA_TOKEN trong site config
     """
-    token = frappe.conf.get("zalo_oa_token")
+    token = ZALO_OA_TOKEN
     if not token:
         logger.warning("ZALO_OA_TOKEN is missing. Could not send the daily vote link.")
         return
