@@ -25,27 +25,45 @@ BASE_URL = os.getenv("BASE_URL")
 
 @frappe.whitelist(allow_guest=True)
 def start_vote(session):
+    if not ZALO_APP_ID:
+        frappe.log_error("ZALO_APP_ID is not configured", "START VOTE ERROR")
+        return {"error": "start_vote_failed", "detail": "ZALO_APP_ID not configured"}
+
+    if not REDIRECT_URI:
+        frappe.log_error("REDIRECT_URI is not configured", "START VOTE ERROR")
+        return {"error": "start_vote_failed", "detail": "REDIRECT_URI not configured"}
+
+    if not session:
+        frappe.log_error("Session is missing", "START VOTE ERROR")
+        return {"error": "start_vote_failed", "detail": "Missing session"}
 
     try:
-
         base = BASE_URL or frappe.utils.get_url()
+        redirect_uri = f"{base}{REDIRECT_URI}"
+
+        # encode redirect URI to be safe
+        from urllib.parse import quote_plus
+        encoded_redirect_uri = quote_plus(redirect_uri)
 
         oauth_url = (
             f"https://oauth.zaloapp.com/v4/permission?"
             f"app_id={ZALO_APP_ID}"
-            f"&redirect_uri={base}{REDIRECT_URI}"
+            f"&redirect_uri={encoded_redirect_uri}"
             f"&state={session}"
         )
 
-        frappe.log_error(title="Zalo OAuth Debug", message=oauth_url)
+        # Logger chỉ ghi ngắn gọn để tránh Value too big
+        logger.info(f"ZALO OAuth URL generated for session {session}")
 
         frappe.local.response["type"] = "redirect"
         frappe.local.response["location"] = oauth_url
+        return
 
-    except Exception:
-
-        frappe.log_error(frappe.get_traceback(), "START VOTE ERROR")
-        return {"error": "start_vote_failed"}
+    except Exception as err:
+        err_trace = frappe.get_traceback()
+        logger.error(f"start_vote failed: {err}\n{err_trace}")
+        frappe.log_error(err_trace, "START VOTE ERROR")
+        return {"error": "start_vote_failed", "detail": str(err)}
 
 
 # =========================
