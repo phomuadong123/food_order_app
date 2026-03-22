@@ -26,15 +26,15 @@ BASE_URL = os.getenv("BASE_URL")
 @frappe.whitelist(allow_guest=True)
 def start_vote(session):
     if not ZALO_APP_ID:
-        frappe.log_error("ZALO_APP_ID is not configured", "START VOTE ERROR")
+        logger.warning("ZALO_APP_ID is not configured")
         return {"error": "start_vote_failed", "detail": "ZALO_APP_ID not configured"}
 
     if not REDIRECT_URI:
-        frappe.log_error("REDIRECT_URI is not configured", "START VOTE ERROR")
+        logger.warning("REDIRECT_URI is not configured")
         return {"error": "start_vote_failed", "detail": "REDIRECT_URI not configured"}
 
     if not session:
-        frappe.log_error("Session is missing", "START VOTE ERROR")
+        logger.warning("Session is missing")
         return {"error": "start_vote_failed", "detail": "Missing session"}
 
     try:
@@ -61,8 +61,8 @@ def start_vote(session):
 
     except Exception as err:
         err_trace = frappe.get_traceback()
-        logger.error(f"start_vote failed: {err}\n{err_trace}")
-        frappe.log_error(err_trace, "START VOTE ERROR")
+        logger.error(f"start_vote failed: {err}")
+        logger.debug(err_trace)
         return {"error": "start_vote_failed", "detail": str(err)}
 
 
@@ -73,12 +73,12 @@ def start_vote(session):
 @frappe.whitelist(allow_guest=True)
 def zalo_callback(code=None, state=None):
 
-    frappe.log_error(f"START code={code} state={state}", "ZALO CALLBACK START")
+    logger.info(f"ZALO CALLBACK START (code={'<redacted>' if code else None}, state={state})")
 
     try:
 
         if not code:
-            frappe.log_error("Missing OAuth code", "ZALO CALLBACK ERROR")
+            logger.warning("Missing OAuth code")
             return {"error": "missing_code"}
 
         # =====================================================
@@ -101,27 +101,23 @@ def zalo_callback(code=None, state=None):
                 timeout=15
             )
 
-            frappe.log_error(
-                f"STATUS={token_res.status_code} BODY={token_res.text}",
-                "ZALO TOKEN RAW RESPONSE"
-            )
+            logger.info(f"ZALO TOKEN RESPONSE status={token_res.status_code}")
 
             token_json = token_res.json()
 
-        except Exception:
-            frappe.log_error(
-                frappe.get_traceback(),
-                "ZALO TOKEN API FAILED"
-            )
-            return {"error": "token_api_failed"}
+        except Exception as e:
+            err_trace = frappe.get_traceback()
+            logger.error(f"ZALO TOKEN API FAILED: {e}")
+            logger.debug(err_trace)
+            return {"error": "token_api_failed", "detail": str(e)}
 
         access_token = token_json.get("access_token")
 
         if not access_token:
-            frappe.log_error(str(token_json), "TOKEN NOT FOUND")
-            return {"error": "token_failed", "detail": token_json}
+            logger.warning("TOKEN NOT FOUND from zalo response")
+            return {"error": "token_failed", "detail": "access_token missing"}
 
-        frappe.log_error(access_token, "ACCESS TOKEN RECEIVED")
+        logger.info("ACCESS TOKEN RECEIVED")
 
         # =====================================================
         # STEP 2: GET USER PROFILE
@@ -138,19 +134,15 @@ def zalo_callback(code=None, state=None):
                 timeout=15
             )
 
-            frappe.log_error(
-                f"STATUS={profile_res.status_code} BODY={profile_res.text}",
-                "ZALO PROFILE RAW"
-            )
+            logger.info(f"ZALO PROFILE RESPONSE status={profile_res.status_code}")
 
             profile = profile_res.json()
 
-        except Exception:
-            frappe.log_error(
-                frappe.get_traceback(),
-                "PROFILE API FAILED"
-            )
-            return {"error": "profile_api_failed"}
+        except Exception as e:
+            err_trace = frappe.get_traceback()
+            logger.error(f"PROFILE API FAILED: {e}")
+            logger.debug(err_trace)
+            return {"error": "profile_api_failed", "detail": str(e)}
 
         zalo_id = profile.get("id")
         name = profile.get("name")
@@ -162,10 +154,10 @@ def zalo_callback(code=None, state=None):
         else:
             avatar = picture
 
-        frappe.log_error(str(profile), "PROFILE PARSED")
+        logger.info(f"PROFILE PARSED (id={zalo_id}, name={name})")
 
         if not zalo_id:
-            frappe.log_error(str(profile), "PROFILE MISSING ID")
+            logger.warning("PROFILE MISSING ID")
             return {"error": "profile_failed"}
 
         # =====================================================
@@ -179,15 +171,14 @@ def zalo_callback(code=None, state=None):
                 {"zalo_id": zalo_id}
             )
 
-            frappe.log_error(str(user), "USER EXISTS RESULT")
-            frappe.log_error(frappe.local.site, "CURRENT SITE")
+            logger.info(f"USER EXISTS RESULT: {user}")
+            logger.info(f"CURRENT SITE: {frappe.local.site}")
 
-        except Exception:
-            frappe.log_error(
-                frappe.get_traceback(),
-                "USER LOOKUP FAILED"
-            )
-            return {"error": "user_lookup_failed"}
+        except Exception as e:
+            err_trace = frappe.get_traceback()
+            logger.error(f"USER LOOKUP FAILED: {e}")
+            logger.debug(err_trace)
+            return {"error": "user_lookup_failed", "detail": str(e)}
 
         # =====================================================
         # STEP 4: CREATE USER
@@ -209,19 +200,15 @@ def zalo_callback(code=None, state=None):
 
                 frappe.db.commit()
 
-                frappe.log_error(
-                    user_doc.as_json(),
-                    "USER INSERTED DATA"
-                )
+                logger.info(f"USER INSERTED: {user_doc.name}")
 
                 user = user_doc.name
 
-            except Exception:
-                frappe.log_error(
-                    frappe.get_traceback(),
-                    "USER INSERT FAILED"
-                )
-                return {"error": "user_create_failed"}
+            except Exception as e:
+                err_trace = frappe.get_traceback()
+                logger.error(f"USER INSERT FAILED: {e}")
+                logger.debug(err_trace)
+                return {"error": "user_create_failed", "detail": str(e)}
 
             # =====================================================
             # STEP 5: CREATE WALLET
@@ -240,17 +227,13 @@ def zalo_callback(code=None, state=None):
 
                 frappe.db.commit()
 
-                frappe.log_error(
-                    wallet_doc.name,
-                    "WALLET CREATED"
-                )
+                logger.info(f"WALLET CREATED: {wallet_doc.name}")
 
-            except Exception:
+            except Exception as e:
 
-                frappe.log_error(
-                    frappe.get_traceback(),
-                    "WALLET CREATE FAILED"
-                )
+                err_trace = frappe.get_traceback()
+                logger.error(f"WALLET CREATE FAILED: {e}")
+                logger.debug(err_trace)
 
         # =====================================================
         # STEP 6: REDIRECT
@@ -258,23 +241,22 @@ def zalo_callback(code=None, state=None):
 
         vote_page = f"/vote?session={state}&zalo_id={zalo_id}"
 
-        frappe.log_error(vote_page, "REDIRECT TO VOTE PAGE")
+        logger.info(f"REDIRECT TO VOTE PAGE {vote_page}")
 
         frappe.local.response["type"] = "redirect"
         frappe.local.response["location"] = vote_page
 
         return
 
-    except Exception:
+    except Exception as e:
 
-        frappe.log_error(
-            frappe.get_traceback(),
-            "ZALO CALLBACK FATAL ERROR"
-        )
+        err_trace = frappe.get_traceback()
+        logger.error(f"ZALO CALLBACK FATAL ERROR: {e}")
+        logger.debug(err_trace)
 
         return {
             "error": "callback_crash",
-            "trace": frappe.get_traceback()
+            "trace": err_trace
         }
 
 
@@ -307,17 +289,13 @@ def update_session_stats(session):
             }
         )
 
-        frappe.log_error(
-            f"{session} orders={total_orders} amount={total_amount}",
-            "SESSION STATS UPDATED"
-        )
+        logger.info(f"{session} orders={total_orders} amount={total_amount}")
 
-    except Exception:
+    except Exception as e:
 
-        frappe.log_error(
-            frappe.get_traceback(),
-            "SESSION STATS ERROR"
-        )
+        err_trace = frappe.get_traceback()
+        logger.error(f"SESSION STATS ERROR: {e}")
+        logger.debug(err_trace)
 
 
 # =========================
@@ -339,17 +317,14 @@ def create_vote_link(doc, method):
             link
         )
 
-        frappe.log_error(
-            link,
-            "VOTE LINK CREATED"
-        )
+        logger.info(f"VOTE LINK CREATED: {link}")
 
-    except Exception:
+    except Exception as e:
 
-        frappe.log_error(
-            frappe.get_traceback(),
-            "CREATE VOTE LINK ERROR"
-        )
+        err_trace = frappe.get_traceback()
+        logger.error(f"CREATE VOTE LINK ERROR: {e}")
+        logger.debug(err_trace)
+
 
 def update_session_menu_items(doc, method=None):
     try:
@@ -369,11 +344,10 @@ def update_session_menu_items(doc, method=None):
         
         frappe.db.commit()
 
-    except Exception:
-        frappe.log_error(
-            frappe.get_traceback(),
-            "Lỗi cập nhật danh sách Menu"
-        )
+    except Exception as e:
+        err_trace = frappe.get_traceback()
+        logger.error(f"Lỗi cập nhật danh sách Menu: {e}")
+        logger.debug(err_trace)
 		
 @frappe.whitelist(allow_guest=True)
 def get_menu(session):
