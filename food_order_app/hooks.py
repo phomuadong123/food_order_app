@@ -16,9 +16,11 @@ doc_events = {
 }
 
 scheduler_events = {
-	"daily": [
-		"food_order_app.api.check_and_renew_sessions"
-	]
+    "cron": {
+        "*/5 * * * *": [
+            "food_order_app.api.check_and_renew_sessions"
+        ]
+    }
 }
 
 fixtures = [
