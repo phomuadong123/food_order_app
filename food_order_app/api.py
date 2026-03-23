@@ -15,7 +15,8 @@ logger = frappe.logger("lunch_api")
 ZALO_APP_ID = os.getenv("ZALO_APP_ID")
 ZALO_SECRET = os.getenv("ZALO_SECRET")
 REDIRECT_URI = os.getenv("ZALO_REDIRECT_URI")
-ZALO_OA_TOKEN = os.getenv("ZALO_OA_TOKEN")
+ZALO_OA_ACCESS_TOKEN = os.getenv("ZALO_OA_ACCESS_TOKEN")
+GROUP_ID_ZALO = os.getenv("GROUP_ID_ZALO")
 BASE_URL = os.getenv("BASE_URL")
 
 
@@ -533,27 +534,27 @@ def update_wallet_on_transaction(doc, method=None):
 # =========================
 # AUTO SESSION DAILY RENEWAL
 # =========================
-def send_zalo_vote_link(zalo_id, vote_link, menu_date):
+def send_zalo_vote_link_group(vote_link):
     """
-    Sử dụng Zalo OA API để gửi tin nhắn thông báo link chọn món
-    Yêu cầu thiết lập config ZALO_OA_TOKEN trong site config
+    Gửi thực đơn vào nhóm Zalo bằng GMF
     """
-    token = ZALO_OA_TOKEN
+
+    token = ZALO_OA_ACCESS_TOKEN
     if not token:
-        logger.warning("ZALO_OA_TOKEN is missing. Could not send the daily vote link.")
+        logger.warning("ZALO_OA_ACCESS_TOKEN is missing.")
         return
-        
-    url = "https://openapi.zalo.me/v3.0/oa/message/cs"
-    
+
+    url = "https://openapi.zalo.me/v3.0/oa/group/message"
+
     payload = {
         "recipient": {
-            "user_id": zalo_id
+            "group_id": GROUP_ID_ZALO  
         },
         "message": {
-            "text": f"🔔 Đã có thực đơn ăn trưa ngày {menu_date}!\nKính mời anh/chị chọn món qua liên kết sau:\n{vote_link}"
+            "text": f"🔔 Đã có thực đơn ăn trưa ngày {today()}!\nKính mời anh/chị chọn món:\n{vote_link}"
         }
     }
-    
+
     headers = {
         "access_token": token,
         "Content-Type": "application/json"
@@ -561,9 +562,9 @@ def send_zalo_vote_link(zalo_id, vote_link, menu_date):
 
     try:
         response = requests.post(url, json=payload, headers=headers)
-        logger.info(f"[Zalo Message] Sent vote link to {zalo_id} - Response: {response.text}")
+        logger.info(f"[Zalo Group] Sent to group {GROUP_ID_ZALO} - Response: {response.text}")
     except Exception as e:
-        logger.error(f"[Zalo Message] Failed to send message to {zalo_id}: {str(e)}")
+        logger.error(f"[Zalo Group] Failed to send to group {GROUP_ID_ZALO}: {str(e)}")
 
 
 def check_and_renew_sessions():
@@ -676,6 +677,8 @@ def check_and_renew_sessions():
 
         frappe.db.commit()
 
+        send_zalo_vote_link_group(link)
+        
         logger.info("Database commit success")
 
     except Exception:

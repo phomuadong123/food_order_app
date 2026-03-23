@@ -16,9 +16,9 @@ doc_events = {
 }
 
 scheduler_events = {
-    "every_minute": [
-        "food_order_app.task.my_task"
-    ]
+	"daily": [
+		"food_order_app.api.check_and_renew_sessions"
+	]
 }
 
 fixtures = [
@@ -167,11 +167,7 @@ doctype_list_js = {
 # Scheduled Tasks
 # ---------------
 
-scheduler_events = {
-	# "hourly": [
-	# 	"food_order_app.api.check_and_renew_sessions"
-	# ]
-}
+
 # 	"weekly": [
 # 		"food_order_app.tasks.weekly"
 # 	],
