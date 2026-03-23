@@ -15,6 +15,12 @@ doc_events = {
     }
 }
 
+scheduler_events = {
+    "every_minute": [
+        "food_order_app.task.my_task"
+    ]
+}
+
 fixtures = [
     "Workspace",
     "Role",
@@ -162,9 +168,9 @@ doctype_list_js = {
 # ---------------
 
 scheduler_events = {
-	"hourly": [
-		"food_order_app.api.check_and_renew_sessions"
-	]
+	# "hourly": [
+	# 	"food_order_app.api.check_and_renew_sessions"
+	# ]
 }
 # 	"weekly": [
 # 		"food_order_app.tasks.weekly"

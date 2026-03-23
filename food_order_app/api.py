@@ -348,6 +348,17 @@ def update_session_menu_items(doc, method=None):
         err_trace = frappe.get_traceback()
         logger.error(f"Lỗi cập nhật danh sách Menu: {e}")
         logger.debug(err_trace)
+
+
+# =========================
+# MY NOTIFICATION API
+# =========================
+
+@frappe.whitelist()
+def my_notification_api():
+    """API that displays a notification message"""
+    frappe.msgprint("Thông báo từ task được gọi mỗi phút!")
+    return {"status": "success", "message": "Notification displayed"}
 		
 @frappe.whitelist(allow_guest=True)
 def get_menu(session):
