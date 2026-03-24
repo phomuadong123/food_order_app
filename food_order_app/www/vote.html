@@ -180,7 +180,38 @@
         font-weight: 600;
         text-decoration: underline;
     }
+
+    .vote-page-header,
+    .vote-page-footer {
+        background: #ffffff;
+        border: 1px solid #e6eaf0;
+        border-radius: 12px;
+        margin: 0 12px 12px;
+        padding: 12px 14px;
+        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+    }
+
+    .vote-page-header h2,
+    .vote-page-footer h3 {
+        margin: 0 0 6px 0;
+        color: #1e293b;
+    }
+
+    .vote-page-header p,
+    .vote-page-footer p {
+        margin: 0;
+        color: #475569;
+        font-size: 14px;
+    }
 </style>
+<!--
+CUSTOM HEADER:
+Sửa nội dung khối này để đổi header riêng cho trang vote.
+-->
+<div class="vote-page-header">
+    <h2>Food Order Voting</h2>
+    <p>Chọn món cho phiên ăn trưa hôm nay.</p>
+</div>
 <h1>Bếp ăn VNPT Tuyên Quang</h1>
 
 <div id="order-status" style="text-align:center;margin-bottom:10px;"></div>
@@ -196,6 +227,15 @@
 <div class="vote-history">
     <h2>Danh sách đã đăng ký ăn</h2>
     <div id="vote-history-content" class="empty-text">Đang tải danh sách...</div>
+</div>
+
+<!--
+CUSTOM FOOTER:
+Sửa nội dung khối này để đổi footer riêng cho trang vote.
+-->
+<div class="vote-page-footer">
+    <h3>Hỗ trợ</h3>
+    <p>Nếu có vấn đề, vui lòng liên hệ admin.</p>
 </div>
 
 <div id="inactive-lock-modal" class="lock-modal" aria-hidden="true">
