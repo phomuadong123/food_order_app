@@ -1,5 +1,17 @@
 {% extends "templates/web.html" %}
 
+{% block navbar %}
+<div style="background: #1f2937; color: white; padding: 12px 20px; display:flex; justify-content: space-between; align-items:center;">
+    <div style="font-weight: bold;">🍱 Lunch App</div>
+    <div>
+        <a href="/" style="color:white; margin-right:15px;">Home</a>
+        <a href="/menu" style="color:white; margin-right:15px;">Menu</a>
+        <a href="/orders" style="color:white;">Orders</a>
+        <img src="/assets/food_order_app/images/logo.png" style="height:40px;">
+    </div>
+</div>
+{% endblock %}
+
 {% block page_content %}
 <style>
     body {
@@ -652,4 +664,11 @@ Sửa nội dung khối này để đổi footer riêng cho trang vote.
 
 </script>
 
+{% endblock %}
+
+{% block footer %}
+<div style="background: #f3f4f6; padding: 20px; text-align:center; margin-top:50px;">
+    <p>© 2026 Lunch App</p>
+    <p style="font-size: 12px; color: gray;">Powered by ERPNext</p>
+</div>
 {% endblock %}
