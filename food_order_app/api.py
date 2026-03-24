@@ -2,7 +2,7 @@ import frappe
 import os
 import requests
 import traceback
-from frappe.utils import now, now_datetime, add_days, getdate, today
+from frappe.utils import now, now_datetime, add_days, getdate
 from datetime import datetime, timedelta
 
 logger = frappe.logger("lunch_api")
@@ -872,7 +872,7 @@ def remind_vote_today():
     Đã có X người chọn món rồi, đừng quên bình chọn nhé!
     """
     try:
-        today_date = today()
+        today_date = getdate()
 
         session = frappe.db.sql("""
             SELECT name, vote_link
