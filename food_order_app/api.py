@@ -838,6 +838,7 @@ def remind_vote_today():
             logger.info("No open session for today -> EXIT")
             return
 
+        session = session[0] 
         session_name = session["name"]
         vote_link = session["vote_link"]
 
