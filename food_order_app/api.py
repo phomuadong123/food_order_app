@@ -603,6 +603,36 @@ def get_order_status(session, zalo_id):
         logger.error(f"[GET_ORDER_STATUS] ERROR {error}")
         return {"success": False, "message": "Internal error"}
 
+@frappe.whitelist(allow_guest=True)
+def get_session_votes(session):
+    try:
+        if not session:
+            return {"success": False, "message": "Missing session"}
+
+        rows = frappe.db.sql("""
+            SELECT
+                lo.name AS order_id,
+                zum.zalo_id,
+                COALESCE(NULLIF(zum.real_name, ''), NULLIF(zum.full_name, ''), zum.zalo_id) AS voter_name,
+                lmi.item_name AS menu_item_name,
+                lmi.price,
+                lo.created_at
+            FROM `tabLunch Order` lo
+            LEFT JOIN `tabZalo User Map` zum
+                ON lo.zalo_user = zum.name
+            LEFT JOIN `tabLunch Menu Item` lmi
+                ON lo.menu_item = lmi.name
+            WHERE lo.session = %s
+                AND lo.is_active = 1
+            ORDER BY lo.created_at DESC, lo.creation DESC
+        """, (session,), as_dict=True)
+
+        return {"success": True, "data": rows}
+    except Exception:
+        error = traceback.format_exc()
+        logger.error(f"[GET_SESSION_VOTES] ERROR {error}")
+        return {"success": False, "message": "Internal error"}
+
 @frappe.whitelist()
 def update_wallet_on_transaction(doc, method=None):
     wallet = frappe.get_doc("Lunch Wallet", {"zalo_user": doc.zalo_user})

@@ -89,8 +89,54 @@
         background: #e5f2ff;
         color: #0562d1;
     }
+
+    .vote-history {
+        background: #fff;
+        border-radius: 14px;
+        margin: 18px 12px 0;
+        padding: 14px;
+        border: 1px solid #e6eaf0;
+        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+    }
+
+    .vote-history h2 {
+        margin: 0 0 12px 0;
+        font-size: 18px;
+        color: #1d1d1f;
+    }
+
+    .table-wrap {
+        overflow-x: auto;
+    }
+
+    .vote-table {
+        width: 100%;
+        border-collapse: collapse;
+        min-width: 560px;
+    }
+
+    .vote-table th,
+    .vote-table td {
+        border-bottom: 1px solid #edf2f7;
+        padding: 10px 8px;
+        text-align: left;
+        font-size: 14px;
+        color: #2d3748;
+    }
+
+    .vote-table th {
+        background: #f8fafc;
+        color: #334155;
+        font-weight: 600;
+    }
+
+    .empty-text {
+        text-align: center;
+        color: #64748b;
+        padding: 10px 0 4px;
+    }
 </style>
-<h1>Vote Lunch</h1>
+<h1>Bình chọn bữa ăn</h1>
 
 <div id="order-status" style="text-align:center;margin-bottom:10px;"></div>
 
@@ -101,6 +147,11 @@
 </div>
 
 <div id="menu">Loading...</div>
+
+<div class="vote-history">
+    <h2>Danh sách đã vote</h2>
+    <div id="vote-history-content" class="empty-text">Đang tải danh sách...</div>
+</div>
 
 <script>
 
@@ -175,6 +226,7 @@
                 console.log("Menu render success")
 
                 await updateOrderStatus();
+                await loadSessionVotes();
 
             } catch (error) {
 
@@ -259,11 +311,12 @@
                 });
 
                 // Optional: disable all vote buttons
-                document.querySelectorAll("button").forEach(btn => {
+                document.querySelectorAll("button.vote-btn").forEach(btn => {
                     btn.disabled = true;
                 });
 
                 await updateOrderStatus();
+                await loadSessionVotes();
 
             } catch (err) {
 
@@ -276,9 +329,7 @@
                 });
             }
         }
-
-        const btn = document.getElementById("cancel-btn");
-
+        const btnCancel = document.getElementById("cancel-btn");
         window.cancelOrder = async function () {
             try {
                 frappe.show_alert({ message: "Đang xử lý hủy...", indicator: "blue" });
@@ -304,9 +355,8 @@
                     indicator: "green"
                 });
 
-                document.querySelectorAll("button").forEach(btn => btn.disabled = true);
-
                 await updateOrderStatus();
+                await loadSessionVotes();
 
             } catch (err) {
                 console.error("Cancel error:", err);
@@ -330,10 +380,11 @@
                 if (statusRes.message && statusRes.message.success) {
                     const { has_order, date } = statusRes.message;
                     const statusDiv = document.getElementById("order-status");
+                    
                     if (has_order) {
                         statusDiv.innerHTML = `<p style="color:#0584fe;font-weight:600;">Bạn đã đăng ký ăn vào ngày ${date}</p>`;
                     } else {
-                        btn.setAttribute("disabled", "disabled");
+                        btnCancel.setAttribute("disabled", "disabled");
                         statusDiv.innerHTML = `<p style="color:#666;">Bạn chưa đăng ký</p>`;
                     }
                 } else {
@@ -341,6 +392,89 @@
                 }
             } catch (statusError) {
                 console.error("Error getting order status:", statusError);
+            }
+        }
+
+        function escapeHtml(value) {
+            if (value === null || value === undefined) return "";
+            return String(value)
+                .replace(/&/g, "&amp;")
+                .replace(/</g, "&lt;")
+                .replace(/>/g, "&gt;")
+                .replace(/"/g, "&quot;")
+                .replace(/'/g, "&#39;");
+        }
+
+        function formatDateTime(dateValue) {
+            if (!dateValue) return "-";
+            const d = new Date(dateValue);
+            if (Number.isNaN(d.getTime())) return dateValue;
+            return d.toLocaleString("vi-VN");
+        }
+
+        async function loadSessionVotes() {
+            const container = document.getElementById("vote-history-content");
+            if (!container) return;
+
+            try {
+                const res = await frappe.call({
+                    method: "food_order_app.api.get_session_votes",
+                    args: { session: session }
+                });
+
+                const payload = res && res.message ? res.message : null;
+                if (!payload || !payload.success) {
+                    throw new Error((payload && payload.message) || "Không tải được danh sách vote");
+                }
+
+                const rows = Array.isArray(payload.data) ? payload.data : [];
+                if (!rows.length) {
+                    container.innerHTML = `<div class="empty-text">Chưa có ai vote cho session này.</div>`;
+                    return;
+                }
+
+                let tableHtml = `
+                    <div class="table-wrap">
+                        <table class="vote-table">
+                            <thead>
+                                <tr>
+                                    <th>STT</th>
+                                    <th>Người vote</th>
+                                    <th>Món đã chọn</th>
+                                    <th>Giá</th>
+                                    <th>Thời gian</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                `;
+
+                rows.forEach((row, index) => {
+                    const voterName = escapeHtml(row.voter_name || row.zalo_id || "-");
+                    const itemName = escapeHtml(row.menu_item_name || "-");
+                    const price = Number(row.price || 0).toLocaleString("vi-VN");
+                    const createdAt = escapeHtml(formatDateTime(row.created_at));
+
+                    tableHtml += `
+                        <tr>
+                            <td>${index + 1}</td>
+                            <td>${voterName}</td>
+                            <td>${itemName}</td>
+                            <td>${price} đ</td>
+                            <td>${createdAt}</td>
+                        </tr>
+                    `;
+                });
+
+                tableHtml += `
+                            </tbody>
+                        </table>
+                    </div>
+                `;
+
+                container.innerHTML = tableHtml;
+            } catch (error) {
+                console.error("loadSessionVotes error:", error);
+                container.innerHTML = `<div class="empty-text" style="color:#d0002f;">Không tải được danh sách vote.</div>`;
             }
         }
         loadMenu()
