@@ -135,6 +135,45 @@
         color: #64748b;
         padding: 10px 0 4px;
     }
+
+    .lock-modal {
+        position: fixed;
+        inset: 0;
+        background: rgba(15, 23, 42, 0.55);
+        display: none;
+        align-items: center;
+        justify-content: center;
+        z-index: 9999;
+        padding: 20px;
+    }
+
+    .lock-modal.active {
+        display: flex;
+    }
+
+    .lock-modal-card {
+        width: 100%;
+        max-width: 360px;
+        background: #fff;
+        border-radius: 14px;
+        padding: 18px 16px;
+        text-align: center;
+        border: 1px solid #e2e8f0;
+        box-shadow: 0 8px 24px rgba(2, 6, 23, 0.22);
+    }
+
+    .lock-modal-title {
+        margin: 0 0 8px 0;
+        font-size: 18px;
+        color: #1e293b;
+        font-weight: 700;
+    }
+
+    .lock-modal-text {
+        margin: 0;
+        color: #475569;
+        font-size: 15px;
+    }
 </style>
 <h1>Bình chọn bữa ăn</h1>
 
@@ -153,6 +192,13 @@
     <div id="vote-history-content" class="empty-text">Đang tải danh sách...</div>
 </div>
 
+<div id="inactive-lock-modal" class="lock-modal" aria-hidden="true">
+    <div class="lock-modal-card">
+        <h3 class="lock-modal-title">Thông báo</h3>
+        <p class="lock-modal-text">đợi admin active</p>
+    </div>
+</div>
+
 <script>
 
     frappe.ready(async function () {
@@ -161,6 +207,52 @@
 
         const session = urlParams.get("session")
         const zalo_id = urlParams.get("zalo_id")
+        let userIsActive = true
+
+        function showInactiveLockModal() {
+            const modal = document.getElementById("inactive-lock-modal");
+            if (!modal) return;
+            modal.classList.add("active");
+            modal.setAttribute("aria-hidden", "false");
+        }
+
+        function applyVotePermission() {
+            if (userIsActive) return;
+
+            document.querySelectorAll("button.vote-btn").forEach(btn => {
+                const isCancelButton = btn.id === "cancel-btn";
+                if (!isCancelButton) {
+                    btn.disabled = true;
+                    btn.title = "Tài khoản chưa được kích hoạt";
+                }
+            });
+        }
+
+        async function checkUserActivation() {
+            try {
+                const res = await frappe.call({
+                    method: "food_order_app.api.get_user_activation_status",
+                    args: { zalo_id: zalo_id }
+                });
+                console.log('check active',res);
+                
+                const payload = res && res.message ? res.message : null;
+                if (!payload || !payload.success) {
+                    userIsActive = false;
+                    showInactiveLockModal();
+                    return;
+                }
+
+                userIsActive = !!payload.is_active;
+                if (!userIsActive) {
+                    showInactiveLockModal();
+                }
+            } catch (error) {
+                console.error("checkUserActivation error:", error);
+                userIsActive = false;
+                showInactiveLockModal();
+            }
+        }
 
         async function loadMenu() {
 
@@ -222,6 +314,7 @@
                 }
 
                 container.innerHTML = html
+                applyVotePermission();
 
                 console.log("Menu render success")
 
@@ -255,6 +348,10 @@
         }
 
         window.vote = async function (menu_item) {
+            if (!userIsActive) {
+                showInactiveLockModal();
+                return;
+            }
 
             console.log("Vote clicked:", menu_item);
 
@@ -310,13 +407,9 @@
                     indicator: "green"
                 });
 
-                // Optional: disable all vote buttons
-                document.querySelectorAll("button.vote-btn").forEach(btn => {
-                    btn.disabled = true;
-                });
-
                 await updateOrderStatus();
                 await loadSessionVotes();
+                window.location.reload();
 
             } catch (err) {
 
@@ -477,6 +570,7 @@
                 container.innerHTML = `<div class="empty-text" style="color:#d0002f;">Không tải được danh sách vote.</div>`;
             }
         }
+        await checkUserActivation();
         loadMenu()
     });
 

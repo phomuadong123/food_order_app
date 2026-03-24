@@ -2,7 +2,7 @@ import frappe
 import os
 import requests
 import traceback
-from frappe.utils import now, today, now_datetime, add_days
+from frappe.utils import now, now_datetime, add_days, getdate
 from datetime import datetime, timedelta
 
 logger = frappe.logger("lunch_api")
@@ -193,6 +193,7 @@ def zalo_callback(code=None, state=None):
                     "zalo_id": zalo_id,
                     "full_name": name,
                     "avatar": avatar,
+                    "is_active": 0,
                     "created_at": now()
                 })
 
@@ -435,6 +436,10 @@ def vote(session, menu_item, zalo_id):
         if not user:
             return {"success": False, "message": "User not found"}
 
+        is_active = frappe.db.get_value("Zalo User Map", user, "is_active")
+        if not int(is_active or 0):
+            return {"success": False, "message": "Vui lòng đợi admin kích hoạt tài khoản"}
+
         # ====================================
         # 4. CHECK DUPLICATE ORDER (only active)
         # ====================================
@@ -603,6 +608,32 @@ def get_order_status(session, zalo_id):
         return {"success": False, "message": "Internal error"}
 
 @frappe.whitelist(allow_guest=True)
+def get_user_activation_status(zalo_id):
+    try:
+        if not zalo_id:
+            return {"success": False, "message": "Missing zalo_id"}
+
+        row = frappe.db.get_value(
+            "Zalo User Map",
+            {"zalo_id": zalo_id},
+            ["name", "is_active"],
+            as_dict=True
+        )
+        if not row:
+            return {"success": False, "message": "User not found"}
+
+        is_active = bool(int(row.is_active or 0))
+        return {
+            "success": True,
+            "is_active": is_active,
+            "message": "OK" if is_active else "đợi admin active"
+        }
+    except Exception:
+        error = traceback.format_exc()
+        logger.error(f"[GET_USER_ACTIVATION_STATUS] ERROR {error}")
+        return {"success": False, "message": "Internal error"}
+
+@frappe.whitelist(allow_guest=True)
 def get_session_votes(session):
     try:
         if not session:
@@ -682,16 +713,12 @@ def send_zalo_vote_link_group(message):
     except Exception as e:
         logger.error(f"[Zalo Group] Failed to send to group {GROUP_ID_ZALO}: {str(e)}")
 
-def get_tomorrow():
-    today_date = today() 
-    dt = datetime.strptime(today_date, "%Y-%m-%d")
-    tomorrow = dt + timedelta(days=1)
-    return tomorrow.strftime("%Y-%m-%d")
 
 @frappe.whitelist(allow_guest=True)
 def check_and_renew_sessions():
     try:
-        today_date = get_tomorrow()
+        
+        today_date = add_days(getdate(), 1)
 
         existing_today = frappe.db.sql("""
             SELECT name
