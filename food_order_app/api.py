@@ -701,25 +701,24 @@ def update_wallet_on_transaction(doc, method=None):
 # AUTO SESSION DAILY RENEWAL
 # =========================
 def refresh_zalo_tokens():
-    # 1. Lấy thông tin cấu hình từ DB (DocType Zalo Config)
-    # Giả sử bạn đã tạo DocType này để lưu app_id và secret_key
-    zalo_config = frappe.get_doc("Zalo Config", "Zalo Config")
-    
-    url = "https://oauth.zaloapp.com/v4/oa/access_token"
-    
-    # Header và Data khớp 100% với lệnh cURL
-    headers = {
-        'Content-Type': 'application/x-www-form-urlencoded',
-        'secret_key': ZALO_SECRET
-    }
-    
-    payload = {
-        'refresh_token': zalo_config.refresh_token,
-        'app_id': ZALO_APP_ID,
-        'grant_type': 'refresh_token'
-    }
-
     try:
+        # 1. Lấy thông tin cấu hình từ DB
+        zalo_config = frappe.get_doc("Zalo Config", "Zalo Config")
+        
+        url = "https://oauth.zaloapp.com/v4/oa/access_token"
+        
+        # Lưu ý: Đảm bảo ZALO_SECRET và ZALO_APP_ID đã được định nghĩa hoặc lấy từ config
+        headers = {
+            'Content-Type': 'application/x-www-form-urlencoded',
+            'secret_key': zalo_config.secret_key # Ưu tiên lấy từ DB cho đồng bộ
+        }
+        
+        payload = {
+            'refresh_token': zalo_config.refresh_token,
+            'app_id': zalo_config.app_id,
+            'grant_type': 'refresh_token'
+        }
+
         response = requests.post(url, headers=headers, data=payload)
         res_data = response.json()
 
@@ -730,36 +729,53 @@ def refresh_zalo_tokens():
             frappe.db.commit()
             return res_data["access_token"]
         else:
-            frappe.log_error(f"Zalo Refresh Fail: {res_data}", "Zalo Auth Error")
+            # Log lỗi phản hồi từ Zalo (Ví dụ: Refresh token invalid)
+            frappe.log_error(
+                message=f"Zalo Response Error: {res_data}", 
+                title="Zalo Refresh Token Failed"
+            )
             return None
-    except Exception as e:
-        frappe.log_error(f"Zalo Request Error: {str(e)}", "Zalo Auth Error")
+
+    except Exception:
+        # Log lỗi hệ thống (Ví dụ: Mất kết nối, lỗi code Python)
+        frappe.log_error(
+            message=traceback.format_exc(), 
+            title="refresh_zalo_tokens Exception"
+        )
         return None
     
 def call_zalo_api(endpoint, method="GET", data=None):
-    zalo_config = frappe.get_doc("Zalo Config", "Zalo Config")
-    at = zalo_config.access_token
+    try:
+        zalo_config = frappe.get_doc("Zalo Config", "Zalo Config")
+        at = zalo_config.access_token
 
-    headers = {'access_token': at}
+        headers = {'access_token': at}
 
-    if method == "GET":
-        response = requests.get(endpoint, headers=headers).json()
-    else:
-        response = requests.post(endpoint, headers=headers, json=data).json()
+        if method == "GET":
+            response = requests.get(endpoint, headers=headers).json()
+        else:
+            response = requests.post(endpoint, headers=headers, json=data).json()
 
-    if response.get("error") == -216:
-        frappe.msgprint("Token hết hạn, đang tự động làm mới...")
-        
-        new_at = refresh_zalo_tokens()
-        
-        if new_at:
-            headers['access_token'] = new_at
-            if method == "GET":
-                response = requests.get(endpoint, headers=headers).json()
+        # Nếu phát hiện lỗi hết hạn -216
+        if response.get("error") == -216:
+            frappe.log_error(f"Phát hiện Token hết hạn, bắt đầu Refresh. Phản hồi gốc: {response}", "Zalo API Flow")
+            
+            new_at = refresh_zalo_tokens()
+            
+            if new_at:
+                headers['access_token'] = new_at
+                if method == "GET":
+                    response = requests.get(endpoint, headers=headers).json()
+                else:
+                    response = requests.post(endpoint, headers=headers, json=data).json()
             else:
-                response = requests.post(endpoint, headers=headers, json=data).json()
-                
-    return response
+                frappe.log_error("Tự động Refresh thất bại, không thể thực hiện lại yêu cầu.", "Zalo API Flow")
+                    
+        return response
+
+    except Exception:
+        frappe.log_error(traceback.format_exc(), "call_zalo_api Failed")
+        return {"error": -1, "message": "Internal System Error"}
 
 def send_zalo_vote_link_group(message):
     """
