@@ -20,6 +20,18 @@
    "fieldtype": "Text",
    "in_list_view": 1,
    "label": "refresh_token"
+  },
+  {
+   "fieldname": "app_id",
+   "fieldtype": "Text",
+   "in_list_view": 1,
+   "label": "app_id"
+  },
+  {
+   "fieldname": "secret_key",
+   "fieldtype": "Text",
+   "in_list_view": 1,
+   "label": "secret_key"
   }
  ],
  "grid_page_length": 50,
