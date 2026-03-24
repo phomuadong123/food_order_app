@@ -26,23 +26,27 @@
   {
    "fieldname": "type",
    "fieldtype": "Select",
-   "label": "Loại giao dịch",
+   "in_list_view": 1,
+   "label": "Loại giao dịch (Deposit: Thêm tiền, /Pay: Trả tiền)",
    "options": "Deposit\nPay"
   },
   {
    "fieldname": "amount",
    "fieldtype": "Currency",
+   "in_list_view": 1,
    "label": "Số tiền"
   },
   {
    "fieldname": "reference",
    "fieldtype": "Link",
+   "in_list_view": 0,
    "label": "Tham chiếu",
    "options": "Lunch Order"
   },
   {
    "fieldname": "session",
    "fieldtype": "Link",
+   "in_list_view": 1,
    "label": "ID buổi",
    "options": "Lunch Session"
   },

@@ -1,10 +1,9 @@
-from email.mime import base
-
 import frappe
 import os
 import requests
 import traceback
 from frappe.utils import now, today, now_datetime, add_days
+from datetime import datetime, timedelta
 
 logger = frappe.logger("lunch_api")
 
@@ -651,7 +650,7 @@ def update_wallet_on_transaction(doc, method=None):
 # =========================
 # AUTO SESSION DAILY RENEWAL
 # =========================
-def send_zalo_vote_link_group(vote_link):
+def send_zalo_vote_link_group(message):
     """
     Gửi thực đơn vào nhóm Zalo bằng GMF
     """
@@ -668,7 +667,7 @@ def send_zalo_vote_link_group(vote_link):
             "group_id": GROUP_ID_ZALO  
         },
         "message": {
-            "text": f"🔔 Đã có thực đơn ăn trưa ngày {today()}!\nKính mời anh/chị chọn món:\n{vote_link}"
+            "text": message
         }
     }
 
@@ -683,10 +682,16 @@ def send_zalo_vote_link_group(vote_link):
     except Exception as e:
         logger.error(f"[Zalo Group] Failed to send to group {GROUP_ID_ZALO}: {str(e)}")
 
+def get_tomorrow():
+    today_date = today() 
+    dt = datetime.strptime(today_date, "%Y-%m-%d")
+    tomorrow = dt + timedelta(days=1)
+    return tomorrow.strftime("%Y-%m-%d")
+
 
 def check_and_renew_sessions():
     try:
-        today_date = today()
+        today_date = get_tomorrow()
 
         existing_today = frappe.db.sql("""
             SELECT name
@@ -794,8 +799,10 @@ def check_and_renew_sessions():
 
         frappe.db.commit()
 
-        send_zalo_vote_link_group(link)
-        
+        message = f"🔔 Đã có thực đơn ăn trưa ngày {today_date}!\nKính mời anh/chị chọn món:\n{link}"
+
+        send_zalo_vote_link_group(message)
+
         logger.info("Database commit success")
 
     except Exception:
@@ -810,6 +817,51 @@ def check_and_renew_sessions():
         )
 
         frappe.db.rollback()
+
+def remind_vote_today():
+    """
+    Gửi tin nhắc lúc 9h sáng: 
+    Đã có X người chọn món rồi, đừng quên bình chọn nhé!
+    """
+    try:
+        today_date = today()
+
+        session = frappe.db.sql("""
+            SELECT name, vote_link
+            FROM `tabLunch Session`
+            WHERE date=%s AND status='Open'
+            LIMIT 1
+        """, today_date, as_dict=True)
+
+        if not session:
+            logger.info("No open session for today -> EXIT")
+            return
+
+        session_name = session["name"]
+        vote_link = session["vote_link"]
+
+        vote_count = frappe.db.sql("""
+            SELECT COUNT(*) 
+            FROM `tabLunch Order`
+            WHERE session=%s AND is_active=1
+        """, session_name)[0][0]
+
+        message = (
+            f"⏰ Nhắc nhẹ bữa trưa hôm nay!\n"
+            f"Hiện tại đã có *{vote_count}* người chọn món rồi.\n"
+            f"Đừng quên bình chọn nhé!\n"
+            f"{vote_link}"
+        )
+
+        # gửi group zalo
+        send_zalo_vote_link_group(message)
+
+        logger.info(f"Sent reminder message for session {session_name}")
+
+    except Exception:
+        error = traceback.format_exc()
+        logger.error(error)
+        frappe.log_error("remind_vote_today failed", error)
 
 
 @frappe.whitelist(allow_guest=False)
