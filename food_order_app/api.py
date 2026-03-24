@@ -688,7 +688,7 @@ def get_tomorrow():
     tomorrow = dt + timedelta(days=1)
     return tomorrow.strftime("%Y-%m-%d")
 
-
+@frappe.whitelist(allow_guest=True)
 def check_and_renew_sessions():
     try:
         today_date = get_tomorrow()
@@ -818,6 +818,7 @@ def check_and_renew_sessions():
 
         frappe.db.rollback()
 
+@frappe.whitelist(allow_guest=True)
 def remind_vote_today():
     """
     Gửi tin nhắc lúc 9h sáng: 
