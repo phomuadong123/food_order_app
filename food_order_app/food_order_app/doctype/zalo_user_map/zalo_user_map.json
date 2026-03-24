@@ -8,7 +8,10 @@
   "zalo_id",
   "full_name",
   "avatar",
-  "created_at"
+  "created_at",
+  "real_name",
+  "official_name",
+  "department"
  ],
  "fields": [
   {
@@ -24,6 +27,27 @@
    "in_list_view": 1,
    "in_standard_filter": 1,
    "label": "Tên đầy đủ"
+  },
+  {
+   "fieldname": "real_name",
+   "fieldtype": "Data",
+   "in_list_view": 1,
+   "in_standard_filter": 1,
+   "label": "Tên thật"
+  },
+   {
+   "fieldname": "official_name",
+   "fieldtype": "Data",
+   "in_list_view": 1,
+   "in_standard_filter": 1,
+   "label": "Chức vụ"
+  },
+   {
+   "fieldname": "department",
+   "fieldtype": "Data",
+   "in_list_view": 1,
+   "in_standard_filter": 1,
+   "label": "Phòng ban"
   },
   {
    "fieldname": "avatar",

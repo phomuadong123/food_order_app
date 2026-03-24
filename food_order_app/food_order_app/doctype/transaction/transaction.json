@@ -11,7 +11,8 @@
   "amount",
   "reference",
   "date",
-  "description"
+  "description",
+  "session"
  ],
  "fields": [
   {
@@ -38,6 +39,12 @@
    "fieldtype": "Link",
    "label": "Tham chiếu",
    "options": "Lunch Order"
+  },
+  {
+   "fieldname": "session",
+   "fieldtype": "Link",
+   "label": "ID buổi",
+   "options": "Lunch Session"
   },
   {
    "fieldname": "date",

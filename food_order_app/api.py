@@ -437,11 +437,11 @@ def vote(session, menu_item, zalo_id):
             return {"success": False, "message": "User not found"}
 
         # ====================================
-        # 4. CHECK DUPLICATE ORDER
+        # 4. CHECK DUPLICATE ORDER (only active)
         # ====================================
-        existed = frappe.db.exists("Lunch Order", {"session": session, "zalo_user": user})
+        existed = frappe.db.exists("Lunch Order", {"session": session, "zalo_user": user, "is_active": 1})
         if existed:
-            return {"success": False, "message": "User already ordered"}
+            return {"success": False, "message": "User already ordered (active order exists)"}
 
         # ====================================
         # 5. GET PRICE (JOIN Lunch Session Menu + Lunch Menu Item)
@@ -480,6 +480,7 @@ def vote(session, menu_item, zalo_id):
                 "doctype": "Lunch Order",
                 "session": session,
                 "zalo_user": user,
+                "is_active": 1,
                 "menu_item": menu_item,
                 "created_at": now()
             })
@@ -492,6 +493,8 @@ def vote(session, menu_item, zalo_id):
                 "type": "Pay",
                 "amount": -price,  # Trừ tiền nên số âm
                 "reference": order_doc.name, # Ghi nhận order vừa tạo
+                "session": session,
+                "description": "Trừ tiền cho order",
                 "date": now()
             })
 
@@ -514,6 +517,90 @@ def vote(session, menu_item, zalo_id):
         frappe.db.rollback()
         error = traceback.format_exc()
         logger.error(f"[VOTE] ERROR {error}")
+        return {"success": False, "message": "Internal error"}
+
+@frappe.whitelist(allow_guest=True)
+def cancel_vote(session, zalo_id):
+    try:
+        if not session or not zalo_id:
+            return {"success": False, "message": "Missing parameters"}
+
+        user = frappe.db.get_value("Zalo User Map", {"zalo_id": zalo_id}, "name")
+        if not user:
+            return {"success": False, "message": "User not found"}
+
+        order_name = frappe.db.get_value("Lunch Order", {"session": session, "zalo_user": user, "is_active": 1}, "name")
+        if not order_name:
+            return {"success": False, "message": "Active order not found"}
+
+        order_doc = frappe.get_doc("Lunch Order", order_name)
+
+        # Get price of menu item for this session
+        row = frappe.db.sql("""
+            SELECT mi.price
+            FROM `tabLunch Session Menu` sm
+            JOIN `tabLunch Menu Item` mi
+                ON sm.menu_item = mi.name
+            WHERE sm.parent = %s AND sm.menu_item = %s
+            LIMIT 1
+        """, (session, order_doc.menu_item), as_dict=True)
+
+        if not row:
+            return {"success": False, "message": "Menu item not found for session"}
+
+        price = row[0].price
+
+        order_doc.is_active = 0
+        order_doc.save(ignore_permissions=True)
+
+        refund_tx = frappe.get_doc({
+            "doctype": "Transaction",
+            "zalo_user": user,
+            "type": "Deposit",
+            "amount": price,
+            "reference": order_doc.name,
+            "session": session,
+            "description": "Hoàn tiền khi hủy order",
+            "date": now()
+        })
+
+        refund_tx.insert(ignore_permissions=True)
+
+        frappe.db.commit()
+
+        return {"success": True, "message": "Cancel success"}
+
+    except Exception:
+        frappe.db.rollback()
+        error = traceback.format_exc()
+        logger.error(f"[CANCEL] ERROR {error}")
+        return {"success": False, "message": "Internal error"}
+
+@frappe.whitelist(allow_guest=True)
+def get_order_status(session, zalo_id):
+    try:
+        if not session or not zalo_id:
+            return {"success": False, "message": "Missing parameters"}
+
+        user = frappe.db.get_value("Zalo User Map", {"zalo_id": zalo_id}, "name")
+        if not user:
+            return {"success": False, "message": "User not found"}
+
+        session_date = frappe.db.get_value("Lunch Session", session, "date")
+        if not session_date:
+            return {"success": False, "message": "Session date not found"}
+
+        has_order = frappe.db.exists("Lunch Order", {"session": session, "zalo_user": user, "is_active": 1})
+
+        return {
+            "success": True,
+            "has_order": bool(has_order),
+            "date": str(session_date)
+        }
+
+    except Exception:
+        error = traceback.format_exc()
+        logger.error(f"[GET_ORDER_STATUS] ERROR {error}")
         return {"success": False, "message": "Internal error"}
 
 @frappe.whitelist()
