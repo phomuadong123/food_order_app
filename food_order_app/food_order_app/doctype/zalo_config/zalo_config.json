@@ -11,13 +11,13 @@
  "fields": [
   {
    "fieldname": "access_token",
-   "fieldtype": "Data",
+   "fieldtype": "Text",
    "in_list_view": 1,
    "label": "access_token"
   },
   {
    "fieldname": "refresh_token",
-   "fieldtype": "Data",
+   "fieldtype": "Text",
    "in_list_view": 1,
    "label": "refresh_token"
   }
