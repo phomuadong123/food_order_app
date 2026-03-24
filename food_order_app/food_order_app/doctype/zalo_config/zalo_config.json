@@ -6,7 +6,9 @@
  "engine": "InnoDB",
  "field_order": [
   "access_token",
-  "refresh_token"
+  "refresh_token",
+  "app_id",
+  "secret_key"
  ],
  "fields": [
   {
