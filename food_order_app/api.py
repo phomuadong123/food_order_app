@@ -634,6 +634,25 @@ def get_user_activation_status(zalo_id):
         return {"success": False, "message": "Internal error"}
 
 @frappe.whitelist(allow_guest=True)
+def get_support_group_info():
+    try:
+        row = frappe.get_all(
+            "Zalo Group",
+            fields=["group_id", "group_link", "modified"],
+            order_by="modified desc",
+            limit=1
+        )
+
+        if not row:
+            return {"success": True, "data": None}
+
+        return {"success": True, "data": row[0]}
+    except Exception:
+        error = traceback.format_exc()
+        logger.error(f"[GET_SUPPORT_GROUP_INFO] ERROR {error}")
+        return {"success": False, "message": "Internal error"}
+
+@frappe.whitelist(allow_guest=True)
 def get_session_votes(session):
     try:
         if not session:
@@ -751,8 +770,8 @@ def check_and_renew_sessions():
             FROM `tabLunch Session`
             WHERE name=%s
             AND status='Open'
-            AND end_date < NOW()
-        """, last_session["name"])
+            AND end_date < %s
+        """, last_session["name"] , today_date)
 
         if not expired:
             logger.info("Session not expired")
@@ -788,14 +807,15 @@ def check_and_renew_sessions():
                 creation,
                 modified
             )
-            VALUES (%s,%s,%s,%s,%s,'Open',%s,'Schedule',NOW(),NOW())
+            VALUES (%s,%s,%s,%s,%s,'Open',%s,'Schedule',%s,%s)
         """, (
             new_name,
             f"Menu {today_date}",
             today_date,
             start_time,
             end_time,
-            link
+            link,
+            today_date,today_date
         ))
 
         logger.info(f"Created new session: {new_name}")
@@ -818,11 +838,11 @@ def check_and_renew_sessions():
                 'Lunch Session',
                 'menu_items',
                 menu_item,
-                NOW(),
-                NOW()
+                %s,
+                %s
             FROM `tabLunch Session Menu`
             WHERE parent=%s
-        """, (new_name, last_session["name"]))
+        """, (new_name, today_date, today_date, last_session["name"]))
 
         frappe.db.commit()
 

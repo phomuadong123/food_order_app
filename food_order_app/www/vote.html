@@ -174,6 +174,12 @@
         color: #475569;
         font-size: 15px;
     }
+
+    .lock-modal-text a {
+        color: #0562d1;
+        font-weight: 600;
+        text-decoration: underline;
+    }
 </style>
 <h1>Bình chọn bữa ăn</h1>
 
@@ -195,7 +201,7 @@
 <div id="inactive-lock-modal" class="lock-modal" aria-hidden="true">
     <div class="lock-modal-card">
         <h3 class="lock-modal-title">Thông báo</h3>
-        <p class="lock-modal-text">đợi admin active</p>
+        <p id="inactive-lock-message" class="lock-modal-text">Vui lòng liên hệ admin hoặc join vào nhóm zalo để được hỗ trợ</p>
     </div>
 </div>
 
@@ -208,10 +214,39 @@
         const session = urlParams.get("session")
         const zalo_id = urlParams.get("zalo_id")
         let userIsActive = true
+        let supportGroupLoaded = false
 
-        function showInactiveLockModal() {
+        async function updateInactiveSupportText() {
+            if (supportGroupLoaded) return;
+            supportGroupLoaded = true;
+
+            const messageEl = document.getElementById("inactive-lock-message");
+            if (!messageEl) return;
+
+            const defaultText = "vui lòng liên hệ admin hoặc join vào nhóm zalo để được hỗ trợ";
+            messageEl.textContent = defaultText;
+
+            try {
+                const res = await frappe.call({
+                    method: "food_order_app.api.get_support_group_info"
+                });
+
+                const payload = res && res.message ? res.message : null;
+                const data = payload && payload.success ? payload.data : null;
+                const groupLink = data && data.group_link ? String(data.group_link).trim() : "";
+
+                if (groupLink) {
+                    messageEl.innerHTML = `${defaultText}: <a href="${escapeHtml(groupLink)}" target="_blank" rel="noopener noreferrer">${escapeHtml(groupLink)}</a>`;
+                }
+            } catch (error) {
+                console.error("updateInactiveSupportText error:", error);
+            }
+        }
+
+        async function showInactiveLockModal() {
             const modal = document.getElementById("inactive-lock-modal");
             if (!modal) return;
+            await updateInactiveSupportText();
             modal.classList.add("active");
             modal.setAttribute("aria-hidden", "false");
         }
@@ -239,18 +274,18 @@
                 const payload = res && res.message ? res.message : null;
                 if (!payload || !payload.success) {
                     userIsActive = false;
-                    showInactiveLockModal();
+                    await showInactiveLockModal();
                     return;
                 }
 
                 userIsActive = !!payload.is_active;
                 if (!userIsActive) {
-                    showInactiveLockModal();
+                    await showInactiveLockModal();
                 }
             } catch (error) {
                 console.error("checkUserActivation error:", error);
                 userIsActive = false;
-                showInactiveLockModal();
+                await showInactiveLockModal();
             }
         }
 
@@ -349,7 +384,7 @@
 
         window.vote = async function (menu_item) {
             if (!userIsActive) {
-                showInactiveLockModal();
+                await showInactiveLockModal();
                 return;
             }
 
