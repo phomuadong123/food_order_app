@@ -710,12 +710,12 @@ def refresh_zalo_tokens():
     # Header và Data khớp 100% với lệnh cURL
     headers = {
         'Content-Type': 'application/x-www-form-urlencoded',
-        'secret_key': zalo_config.secret_key
+        'secret_key': ZALO_SECRET
     }
     
     payload = {
         'refresh_token': zalo_config.refresh_token,
-        'app_id': zalo_config.app_id,
+        'app_id': ZALO_APP_ID,
         'grant_type': 'refresh_token'
     }
 
