@@ -90,7 +90,6 @@
         color: var(--white);
         padding: 10px 0 10px 0;
         text-align: center;
-        position: relative;
     }
 
     .container.footer {
@@ -318,7 +317,7 @@
     }
 </style>
 <div class="vote-page-header">
-    <h2>Bếp ăn VNPT Tuyên Quang</h2>
+    <h3>Bếp ăn VNPT Tuyên Quang</h3>
 
     <div style="display: flex;align-items: center;justify-content: space-between;">
         <h1 id="order-status" style="margin-bottom:10px; margin-top: 5px;"></h1>
@@ -652,7 +651,7 @@
                     const statusDiv = document.getElementById("order-status");
 
                     if (has_order) {
-                        statusDiv.innerHTML = `<p style="color:#0584fe;font-weight:600;font-size: 25px;">Bạn đã đăng ký ăn vào ngày ${date}</p>`;
+                        statusDiv.innerHTML = `<p style="color:#0584fe;font-weight:600;font-size: 20px;">Bạn đã đăng ký ăn vào ngày ${date}</p>`;
                     } else {
                         btnCancel.setAttribute("disabled", "disabled");
                         statusDiv.innerHTML = `<p style="color:#666;">Bạn chưa đăng ký</p>`;
