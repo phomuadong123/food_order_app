@@ -181,20 +181,20 @@
         text-decoration: underline;
     }
 </style>
-<h1>Bình chọn bữa ăn</h1>
+<h1>Bếp ăn VNPT Tuyên Quang</h1>
 
 <div id="order-status" style="text-align:center;margin-bottom:10px;"></div>
 
 <div style="text-align:center;margin-bottom:10px;">
     <button id="cancel-btn" class="vote-btn" style="background:#de0f0f; max-width: 180px;" onclick="cancelOrder()">
-        Hủy đơn hiện tại
+        Hủy đăng ký
     </button>
 </div>
 
 <div id="menu">Loading...</div>
 
 <div class="vote-history">
-    <h2>Danh sách đã vote</h2>
+    <h2>Danh sách đã đăng ký ăn</h2>
     <div id="vote-history-content" class="empty-text">Đang tải danh sách...</div>
 </div>
 
@@ -223,7 +223,7 @@
             const messageEl = document.getElementById("inactive-lock-message");
             if (!messageEl) return;
 
-            const defaultText = "vui lòng liên hệ admin hoặc join vào nhóm zalo để được hỗ trợ";
+            const defaultText = "Vui lòng liên hệ admin hoặc join vào nhóm zalo để được hỗ trợ";
             messageEl.textContent = defaultText;
 
             try {
@@ -336,7 +336,7 @@
 				<p>${i.price.toLocaleString()} đ</p>
 
 				<button class="vote-btn" onclick="vote('${i.name}')">
-					Vote món này
+					Đăng ký ăn
 				</button>
 			</div>
 			`
@@ -567,8 +567,8 @@
                             <thead>
                                 <tr>
                                     <th>STT</th>
-                                    <th>Người vote</th>
-                                    <th>Món đã chọn</th>
+                                    <th>Người đăng ký</th>
+                                    <th>Đã đăng ký</th>
                                     <th>Giá</th>
                                     <th>Thời gian</th>
                                 </tr>
