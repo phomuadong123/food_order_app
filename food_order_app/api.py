@@ -700,16 +700,71 @@ def update_wallet_on_transaction(doc, method=None):
 # =========================
 # AUTO SESSION DAILY RENEWAL
 # =========================
+def refresh_zalo_tokens():
+    # 1. Lấy thông tin cấu hình từ DB (DocType Zalo Config)
+    # Giả sử bạn đã tạo DocType này để lưu app_id và secret_key
+    zalo_config = frappe.get_doc("Zalo Config", "Zalo Config")
+    
+    url = "https://oauth.zaloapp.com/v4/oa/access_token"
+    
+    # Header và Data khớp 100% với lệnh cURL
+    headers = {
+        'Content-Type': 'application/x-www-form-urlencoded',
+        'secret_key': zalo_config.secret_key
+    }
+    
+    payload = {
+        'refresh_token': zalo_config.refresh_token,
+        'app_id': zalo_config.app_id,
+        'grant_type': 'refresh_token'
+    }
+
+    try:
+        response = requests.post(url, headers=headers, data=payload)
+        res_data = response.json()
+
+        if "access_token" in res_data:
+            zalo_config.access_token = res_data["access_token"]
+            zalo_config.refresh_token = res_data["refresh_token"]
+            zalo_config.save()
+            frappe.db.commit()
+            return res_data["access_token"]
+        else:
+            frappe.log_error(f"Zalo Refresh Fail: {res_data}", "Zalo Auth Error")
+            return None
+    except Exception as e:
+        frappe.log_error(f"Zalo Request Error: {str(e)}", "Zalo Auth Error")
+        return None
+    
+def call_zalo_api(endpoint, method="GET", data=None):
+    zalo_config = frappe.get_doc("Zalo Config", "Zalo Config")
+    at = zalo_config.access_token
+
+    headers = {'access_token': at}
+
+    if method == "GET":
+        response = requests.get(endpoint, headers=headers).json()
+    else:
+        response = requests.post(endpoint, headers=headers, json=data).json()
+
+    if response.get("error") == -216:
+        frappe.msgprint("Token hết hạn, đang tự động làm mới...")
+        
+        new_at = refresh_zalo_tokens()
+        
+        if new_at:
+            headers['access_token'] = new_at
+            if method == "GET":
+                response = requests.get(endpoint, headers=headers).json()
+            else:
+                response = requests.post(endpoint, headers=headers, json=data).json()
+                
+    return response
+
 def send_zalo_vote_link_group(message):
     """
-    Gửi thực đơn vào nhóm Zalo bằng GMF
+    Gửi thực đơn vào nhóm Zalo bằng GMF - Đã tích hợp tự động Refresh Token
     """
-
-    token = ZALO_OA_ACCESS_TOKEN
-    if not token:
-        logger.warning("ZALO_OA_ACCESS_TOKEN is missing.")
-        return
-
     url = "https://openapi.zalo.me/v3.0/oa/group/message"
 
     payload = {
@@ -721,16 +776,16 @@ def send_zalo_vote_link_group(message):
         }
     }
 
-    headers = {
-        "access_token": token,
-        "Content-Type": "application/json"
-    }
-
     try:
-        response = requests.post(url, json=payload, headers=headers)
-        logger.info(f"[Zalo Group] Sent to group {GROUP_ID_ZALO} - Response: {response.text}")
+        response_data = call_zalo_api(url, method="POST", data=payload)
+        
+        if response_data.get("error") == 0:
+            logger.info(f"[Zalo Group] Gửi thành công! Response: {response_data}")
+        else:
+            logger.error(f"[Zalo Group] Gửi thất bại: {response_data}")
+            
     except Exception as e:
-        logger.error(f"[Zalo Group] Failed to send to group {GROUP_ID_ZALO}: {str(e)}")
+        logger.error(f"[Zalo Group] Lỗi hệ thống: {str(e)}")
 
 
 @frappe.whitelist(allow_guest=True)
