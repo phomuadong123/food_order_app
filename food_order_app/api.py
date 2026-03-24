@@ -771,7 +771,7 @@ def check_and_renew_sessions():
             WHERE name=%s
             AND status='Open'
             AND end_date < %s
-        """, last_session["name"] , today_date)
+        """, (last_session["name"] , today_date))
 
         if not expired:
             logger.info("Session not expired")
