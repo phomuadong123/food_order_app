@@ -2,7 +2,7 @@ import frappe
 import os
 import requests
 import traceback
-from frappe.utils import now, now_datetime, add_days, getdate
+from frappe.utils import now, now_datetime, add_days, getdate, today
 from datetime import datetime, timedelta
 
 logger = frappe.logger("lunch_api")
