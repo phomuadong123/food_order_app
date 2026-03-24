@@ -1,26 +1,119 @@
 {% extends "templates/web.html" %}
 
 {% block navbar %}
-<div style="background: #1f2937; color: white; padding: 12px 20px; display:flex; justify-content: space-between; align-items:center;">
-    <div style="font-weight: bold;">🍱 Lunch App</div>
-    <div>
-        <a href="/" style="color:white; margin-right:15px;">Home</a>
-        <a href="/menu" style="color:white; margin-right:15px;">Menu</a>
-        <a href="/orders" style="color:white;">Orders</a>
-        <img src="/assets/food_order_app/images/logo.png" style="height:40px;">
-    </div>
-</div>
+<header class="vnpt-header-main">
+        <div class="vnpt-logo-container">
+
+            <a href="https://tuyenquang.vnpt.vn" class="site-logo">
+                <img src="https://tuyenquang.vnpt.vn/static/images/logo.png" alt="VNPT Tuyên Quang Logo">
+            </a>
+
+            <div class="vnpt-text-group">
+                <div class="text-line1">Tập đoàn bưu chính viễn thông</div>
+                <div class="text-line2">VNPT Tuyên Quang</div>
+            </div>
+
+        </div>
+    </header>
 {% endblock %}
 
 {% block page_content %}
 <style>
+    :root {
+        --vnpt-blue: #007bff;
+        --white: #ffffff;
+    }
+
     body {
+        margin: 0;
+        font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
         background: #f7f9fc;
         font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial;
         padding: 10px 0 40px 0;
     }
 
-    /* Title */
+    .vnpt-header-main {
+        background-color: var(--vnpt-blue);
+        padding: 15px 10%;
+        display: flex;
+        align-items: center;
+        justify-content: flex-start;
+        box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+    }
+
+    .vnpt-logo-container {
+        display: flex;
+        align-items: center;
+        gap: 15px;
+    }
+
+    .site-logo {
+        display: flex;
+        align-items: center;
+        text-decoration: none;
+    }
+
+    .site-logo img {
+        height: 70px;
+        width: auto;
+        display: block;
+    }
+
+    .vnpt-text-group {
+        color: var(--white);
+        display: flex;
+        flex-direction: column;
+        justify-content: center;
+    }
+
+    .text-line1 {
+        font-size: 22px;
+        text-transform: uppercase;
+        font-weight: 600;
+        letter-spacing: 0.5px;
+        opacity: 0.9;
+    }
+
+    .text-line2 {
+        font-size: 30px;
+        font-weight: bold;
+        text-transform: uppercase;
+        letter-spacing: 1px;
+        margin-top: -2px;
+    }
+
+    .vnpt-footer-wrapper {
+        background-color: var(--vnpt-blue);
+        color: var(--white);
+        padding: 10px 0 10px 0;
+        text-align: center;
+        position: relative;
+    }
+
+    .container.footer {
+        max-width: 1200px;
+        margin: 0 auto;
+        padding: 0 15px;
+    }
+
+    .footer-logo {
+        max-width: 200px;
+        height: auto;
+        margin-bottom: 20px;
+    }
+
+    .footer p {
+        margin: 10px 0;
+        font-size: 14px;
+        line-height: 1.6;
+        opacity: 0.9;
+    }
+
+    .copyright {
+        font-weight: bold;
+        border-bottom: 1px solid rgba(255, 255, 255, 0.2);
+    }
+
     h1 {
         text-align: center;
         font-size: 26px;
@@ -28,7 +121,6 @@
         margin-bottom: 20px;
     }
 
-    /* Menu item card */
     .menu-card {
         background: #fff;
         border-radius: 14px;
@@ -44,7 +136,6 @@
         box-shadow: 0 6px 18px rgba(0, 0, 0, 0.12);
     }
 
-    /* Item name */
     .menu-card h3 {
         margin: 0;
         font-size: 20px;
@@ -52,14 +143,12 @@
         font-weight: 600;
     }
 
-    /* Price */
     .menu-card p {
         color: #4a5568;
         margin: 6px 0 12px 0;
         font-size: 15px;
     }
 
-    /* Vote Button */
     .vote-btn {
         background: #0584fe;
         color: #fff;
@@ -165,7 +254,12 @@
 
     .lock-modal-card {
         width: 100%;
-        max-width: 360px;
+        max-width: 66%;
+        height: 50%;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        flex-direction: column;
         background: #fff;
         border-radius: 14px;
         padding: 18px 16px;
@@ -176,7 +270,7 @@
 
     .lock-modal-title {
         margin: 0 0 8px 0;
-        font-size: 18px;
+        font-size: 29px;
         color: #1e293b;
         font-weight: 700;
     }
@@ -184,7 +278,7 @@
     .lock-modal-text {
         margin: 0;
         color: #475569;
-        font-size: 15px;
+        font-size: 21px;
     }
 
     .lock-modal-text a {
@@ -216,17 +310,12 @@
         font-size: 14px;
     }
 </style>
-<!--
-CUSTOM HEADER:
-Sửa nội dung khối này để đổi header riêng cho trang vote.
--->
 <div class="vote-page-header">
-    <h2>Food Order Voting</h2>
+    <h2>Bếp ăn VNPT Tuyên Quang</h2>
     <p>Chọn món cho phiên ăn trưa hôm nay.</p>
 </div>
-<h1>Bếp ăn VNPT Tuyên Quang</h1>
 
-<div id="order-status" style="text-align:center;margin-bottom:10px;"></div>
+<h1 id="order-status" style="text-align:center;margin-bottom:10px;"></h1>
 
 <div style="text-align:center;margin-bottom:10px;">
     <button id="cancel-btn" class="vote-btn" style="background:#de0f0f; max-width: 180px;" onclick="cancelOrder()">
@@ -241,19 +330,12 @@ Sửa nội dung khối này để đổi header riêng cho trang vote.
     <div id="vote-history-content" class="empty-text">Đang tải danh sách...</div>
 </div>
 
-<!--
-CUSTOM FOOTER:
-Sửa nội dung khối này để đổi footer riêng cho trang vote.
--->
-<div class="vote-page-footer">
-    <h3>Hỗ trợ</h3>
-    <p>Nếu có vấn đề, vui lòng liên hệ admin.</p>
-</div>
 
 <div id="inactive-lock-modal" class="lock-modal" aria-hidden="true">
     <div class="lock-modal-card">
         <h3 class="lock-modal-title">Thông báo</h3>
-        <p id="inactive-lock-message" class="lock-modal-text">Vui lòng liên hệ admin hoặc join vào nhóm zalo để được hỗ trợ</p>
+        <p id="inactive-lock-message" class="lock-modal-text">Vui lòng liên hệ admin hoặc join vào nhóm zalo để được hỗ
+            trợ</p>
     </div>
 </div>
 
@@ -321,8 +403,8 @@ Sửa nội dung khối này để đổi footer riêng cho trang vote.
                     method: "food_order_app.api.get_user_activation_status",
                     args: { zalo_id: zalo_id }
                 });
-                console.log('check active',res);
-                
+                console.log('check active', res);
+
                 const payload = res && res.message ? res.message : null;
                 if (!payload || !payload.success) {
                     userIsActive = false;
@@ -555,12 +637,12 @@ Sửa nội dung khối này để đổi footer riêng cho trang vote.
                     args: { session: session, zalo_id: zalo_id }
                 });
                 console.log(statusRes);
-                
+
 
                 if (statusRes.message && statusRes.message.success) {
                     const { has_order, date } = statusRes.message;
                     const statusDiv = document.getElementById("order-status");
-                    
+
                     if (has_order) {
                         statusDiv.innerHTML = `<p style="color:#0584fe;font-weight:600;">Bạn đã đăng ký ăn vào ngày ${date}</p>`;
                     } else {
@@ -667,8 +749,20 @@ Sửa nội dung khối này để đổi footer riêng cho trang vote.
 {% endblock %}
 
 {% block footer %}
-<div style="background: #f3f4f6; padding: 20px; text-align:center; margin-top:50px;">
-    <p>© 2026 Lunch App</p>
-    <p style="font-size: 12px; color: gray;">Powered by ERPNext</p>
-</div>
+ <footer class="vnpt-footer-wrapper">
+        <div class="container footer">
+            <div >
+                <p class="copyright">Bản quyền ©2026. TT KDGP VNPT Tuyên Quang. Địa chỉ: Số 2, đường 17/8, phường Minh Xuân,
+                    tỉnh Tuyên Quang, Việt Nam</p>
+                     <p>
+                Tel: <strong>(0207) 800126</strong> |
+                Fax: <strong>(0207) 3824572</strong> |
+                Hotline: <strong>(0207) 800126</strong>
+            </p>
+            </div>
+
+
+           
+        </div>
+    </footer>
 {% endblock %}
