@@ -26,14 +26,12 @@
 
     body {
         margin: 0;
-        font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
         background: #f7f9fc;
         font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial;
-        padding: 10px 0 40px 0;
     }
 
     .vnpt-header-main {
-        background-color: var(--vnpt-blue);
+        background: linear-gradient(180deg, #0678f1 0%, #a28de5 100%);
         padding: 15px 10%;
         display: flex;
         align-items: center;
@@ -83,7 +81,12 @@
     }
 
     .vnpt-footer-wrapper {
-        background-color: var(--vnpt-blue);
+        background: linear-gradient(180deg, #007bff 0%, #998dbf 100%);
+        position: fixed;
+        bottom: 0;
+        left: 0;
+        width: 100%;
+        z-index: 9999;
         color: var(--white);
         padding: 10px 0 10px 0;
         text-align: center;
@@ -197,6 +200,7 @@
         margin: 18px 12px 0;
         padding: 14px;
         border: 1px solid #e6eaf0;
+        margin-bottom: 111px;
         box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
     }
 
@@ -293,7 +297,7 @@
         border: 1px solid #e6eaf0;
         border-radius: 12px;
         margin: 0 12px 12px;
-        padding: 12px 14px;
+        padding: 26px;
         box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
     }
 
@@ -309,19 +313,23 @@
         color: #475569;
         font-size: 14px;
     }
+    #order-status {
+        font-size: 18px;
+    }
 </style>
 <div class="vote-page-header">
     <h2>Bếp ăn VNPT Tuyên Quang</h2>
-    <p>Chọn món cho phiên ăn trưa hôm nay.</p>
+
+    <div style="display: flex;align-items: center;justify-content: space-between;">
+        <h1 id="order-status" style="margin-bottom:10px; margin-top: 5px;"></h1>
+
+        <button id="cancel-btn" class="vote-btn" style="background:#de0f0f; max-width: 180px;" onclick="cancelOrder()">
+            Hủy đăng ký
+        </button>
+    </div>
 </div>
 
-<h1 id="order-status" style="text-align:center;margin-bottom:10px;"></h1>
 
-<div style="text-align:center;margin-bottom:10px;">
-    <button id="cancel-btn" class="vote-btn" style="background:#de0f0f; max-width: 180px;" onclick="cancelOrder()">
-        Hủy đăng ký
-    </button>
-</div>
 
 <div id="menu">Loading...</div>
 
@@ -644,7 +652,7 @@
                     const statusDiv = document.getElementById("order-status");
 
                     if (has_order) {
-                        statusDiv.innerHTML = `<p style="color:#0584fe;font-weight:600;">Bạn đã đăng ký ăn vào ngày ${date}</p>`;
+                        statusDiv.innerHTML = `<p style="color:#0584fe;font-weight:600;font-size: 25px;">Bạn đã đăng ký ăn vào ngày ${date}</p>`;
                     } else {
                         btnCancel.setAttribute("disabled", "disabled");
                         statusDiv.innerHTML = `<p style="color:#666;">Bạn chưa đăng ký</p>`;
