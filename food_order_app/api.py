@@ -766,7 +766,7 @@ def update_wallet_on_transaction(doc, method=None):
     wallet.updated_at = frappe.utils.now_datetime()
     wallet.save(ignore_permissions=True)
 
-    frappe.msgprint(f"Ví của {doc.full_name} đã được cập nhật. Số dư: {new_balance:,.0f}đ")	
+    frappe.msgprint(f"Ví người dùng đã được cập nhật. Số dư: {new_balance:,.0f}đ")	
 
 # =========================
 # AUTO SESSION DAILY RENEWAL
