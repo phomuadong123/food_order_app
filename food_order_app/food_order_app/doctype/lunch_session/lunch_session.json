@@ -46,13 +46,13 @@
         {
             "fieldname": "start_date",
             "fieldtype": "Datetime",
-            "in_list_view": 1,
+            "in_list_view": 0,
             "label": "Thời gian bắt đầu"
         },
         {
             "fieldname": "end_date",
             "fieldtype": "Datetime",
-            "in_list_view": 1,
+            "in_list_view": 0,
             "label": "Thời gian kết thúc"
         },
         {
@@ -72,19 +72,19 @@
         {
             "fieldname": "vote_link",
             "fieldtype": "Text",
-            "in_list_view": 1,
+            "in_list_view": 0,
             "label": "Link bình chọn"
         },
         {
             "fieldname": "total_orders",
             "fieldtype": "Int",
-            "in_list_view": 1,
+            "in_list_view": 0,
             "label": "Tổng số đơn"
         },
         {
             "fieldname": "total_amount",
             "fieldtype": "Currency",
-            "in_list_view": 1,
+            "in_list_view": 0,
             "label": "Tổng số tiền"
         }
     ],

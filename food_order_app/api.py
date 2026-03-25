@@ -521,7 +521,7 @@ def vote(session, menu_item, zalo_id):
         frappe.db.rollback()
         error = traceback.format_exc()
         logger.error(f"[VOTE] ERROR {error}")
-        return {"success": False, "message": "Internal error"}
+        return {"success": False, "message": "Lỗi khi đăng ký bữa ăn"}
 
 @frappe.whitelist(allow_guest=True)
 def cancel_vote(session, zalo_id):
@@ -974,9 +974,8 @@ def check_and_renew_sessions():
         # tạo session mới
         new_name = frappe.generate_hash(10)
         link = f"{BASE_URL}/api/method/food_order_app.api.start_vote?session={new_name}"
-        start_time = now_datetime()
-        tomorrow = add_days(today_date, 1)
-        end_time = f"{tomorrow} 10:30:00"
+        start_time = add_days(last_session["start_date"], 1)
+        end_time = add_days(last_session["end_date"], 1)
 
         frappe.db.sql("""
             INSERT INTO `tabLunch Session`
@@ -1031,7 +1030,7 @@ def check_and_renew_sessions():
 
         frappe.db.commit()
 
-        message = f"🔔 Đã có thực đơn ăn trưa ngày {today_date}!\nKính mời anh/chị đăng ký ăn:\n{link}"
+        message = f"🔔 Đã có lịch đăng ký ăn trưa ngày {today_date}!\nKính mời anh/chị đăng ký tại:\n{link}"
 
         send_zalo_vote_link_group(message)
 
