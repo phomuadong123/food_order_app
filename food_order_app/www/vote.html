@@ -3,18 +3,18 @@
 {% block navbar %}
 <header class="vnpt-header-main">
         <div class="vnpt-logo-container">
-
+            <a href="https://tuyenquang.vnpt.vn" class="site-logo">
+                <img src="https://lh5.googleusercontent.com/proxy/2VL2exOT6MGjFQi94NITuESZ_3bohty3Kv0EX2PDYp9WxJtl-VpwS9Jh-glhwQ8s_53XrJjmbTi1nyzhzHCT" alt="VNPT Tuyên Quang Logo">
+            </a>
             <a href="https://tuyenquang.vnpt.vn" class="site-logo">
                 <img src="https://tuyenquang.vnpt.vn/static/images/logo.png" alt="VNPT Tuyên Quang Logo">
             </a>
-
             <div class="vnpt-text-group">
-                <div class="text-line1">Tập đoàn bưu chính viễn thông</div>
-                <div class="text-line2">VNPT Tuyên Quang</div>
+                <div class="text-line1">BCH CHI ĐOÀNVIỄN THÔNG TUYÊN QUANG</div>
+                <div class="text-line2">TỈNH ĐOÀN TUYÊN QUANG</div>
             </div>
-
         </div>
-    </header>
+</header>
 {% endblock %}
 
 {% block page_content %}
@@ -315,16 +315,127 @@
     #order-status {
         font-size: 18px;
     }
+
+    .vote-header-actions {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 10px;
+        align-items: center;
+        justify-content: flex-end;
+    }
+
+    .vote-btn-secondary {
+        background: #0f766e;
+        max-width: 200px;
+    }
+
+    .vote-btn-secondary:hover {
+        background: #0d9488;
+    }
+
+    .history-modal {
+        position: fixed;
+        inset: 0;
+        background: rgba(15, 23, 42, 0.55);
+        display: none;
+        align-items: center;
+        justify-content: center;
+        z-index: 10000;
+        padding: 16px;
+    }
+
+    .history-modal.active {
+        display: flex;
+    }
+
+    .history-modal-card {
+        background: #fff;
+        border-radius: 14px;
+        width: 100%;
+        max-width: 960px;
+        max-height: 85vh;
+        display: flex;
+        flex-direction: column;
+        border: 1px solid #e2e8f0;
+        box-shadow: 0 8px 24px rgba(2, 6, 23, 0.22);
+    }
+
+    .history-modal-head {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        padding: 14px 16px;
+        border-bottom: 1px solid #edf2f7;
+    }
+
+    .history-modal-head h3 {
+        margin: 0;
+        font-size: 18px;
+        color: #1e293b;
+    }
+
+    .history-modal-close {
+        background: #f1f5f9;
+        border: none;
+        width: 36px;
+        height: 36px;
+        border-radius: 8px;
+        cursor: pointer;
+        font-size: 20px;
+        line-height: 1;
+        color: #475569;
+    }
+
+    .history-modal-close:hover {
+        background: #e2e8f0;
+    }
+
+    .history-modal-body {
+        padding: 12px 16px 16px;
+        overflow: auto;
+    }
+
+    .history-table {
+        width: 100%;
+        border-collapse: collapse;
+        min-width: 720px;
+        font-size: 13px;
+    }
+
+    .history-table th,
+    .history-table td {
+        border-bottom: 1px solid #edf2f7;
+        padding: 8px 6px;
+        text-align: left;
+        vertical-align: top;
+    }
+
+    .history-table th {
+        background: #f8fafc;
+        color: #334155;
+        font-weight: 600;
+        white-space: nowrap;
+    }
+
+    .history-table .tx-info {
+        max-width: 280px;
+        word-break: break-word;
+    }
 </style>
 <div class="vote-page-header">
     <h3 style="margin: 0;">Bếp ăn VNPT Tuyên Quang</h3>
 
-    <div style="display: flex;align-items: center;justify-content: space-between;">
+    <div style="display: flex;align-items: center;justify-content: space-between; flex-wrap: wrap; gap: 12px;">
         <h1 id="order-status" style="margin-bottom:10px; margin-top: 5px;"></h1>
 
-        <button id="cancel-btn" class="vote-btn" style="background:#de0f0f; max-width: 180px;" onclick="cancelOrder()">
-            Hủy đăng ký
-        </button>
+        <div class="vote-header-actions">
+            <button type="button" id="my-history-btn" class="vote-btn vote-btn-secondary" onclick="openMyTransactionHistory()">
+                Lịch sử của tôi
+            </button>
+            <button id="cancel-btn" class="vote-btn" style="background:#de0f0f; max-width: 180px;" onclick="cancelOrder()">
+                Hủy đăng ký
+            </button>
+        </div>
     </div>
 </div>
 
@@ -343,6 +454,18 @@
         <h3 class="lock-modal-title">Thông báo</h3>
         <p id="inactive-lock-message" class="lock-modal-text">Vui lòng liên hệ admin hoặc join vào nhóm zalo để được hỗ
             trợ</p>
+    </div>
+</div>
+
+<div id="my-history-modal" class="history-modal" aria-hidden="true">
+    <div class="history-modal-card" role="dialog" aria-labelledby="my-history-title">
+        <div class="history-modal-head">
+            <h3 id="my-history-title">Lịch sử giao dịch (phiên hiện tại)</h3>
+            <button type="button" class="history-modal-close" onclick="closeMyTransactionHistory()" aria-label="Đóng">&times;</button>
+        </div>
+        <div class="history-modal-body">
+            <div id="my-history-content" class="empty-text">Đang tải...</div>
+        </div>
     </div>
 </div>
 
@@ -397,7 +520,8 @@
 
             document.querySelectorAll("button.vote-btn").forEach(btn => {
                 const isCancelButton = btn.id === "cancel-btn";
-                if (!isCancelButton) {
+                const isHistoryButton = btn.id === "my-history-btn";
+                if (!isCancelButton && !isHistoryButton) {
                     btn.disabled = true;
                     btn.title = "Tài khoản chưa được kích hoạt";
                 }
@@ -746,6 +870,107 @@
                 container.innerHTML = `<div class="empty-text" style="color:#d0002f;">Không tải được danh sách vote.</div>`;
             }
         }
+
+        async function loadMyTransactionHistoryContent() {
+            const container = document.getElementById("my-history-content");
+            if (!container) return;
+
+            if (!session || !zalo_id) {
+                container.innerHTML = `<div class="empty-text" style="color:#d0002f;">Thiếu session hoặc zalo_id.</div>`;
+                return;
+            }
+
+            container.innerHTML = `<div class="empty-text">Đang tải...</div>`;
+
+            try {
+                const res = await frappe.call({
+                    method: "food_order_app.api.get_my_session_transactions",
+                    args: { session: session, zalo_id: zalo_id }
+                });
+
+                const payload = res && res.message ? res.message : null;
+                if (!payload || !payload.success) {
+                    throw new Error((payload && payload.message) || "Không tải được lịch sử");
+                }
+
+                const rows = Array.isArray(payload.data) ? payload.data : [];
+                if (!rows.length) {
+                    container.innerHTML = `<div class="empty-text">Chưa có giao dịch nào trong phiên này.</div>`;
+                    return;
+                }
+
+                let tableHtml = `
+                    <div class="table-wrap">
+                        <table class="history-table">
+                            <thead>
+                                <tr>
+                                    <th>STT</th>
+                                    <th>Tên</th>
+                                    <th>Menu</th>
+                                    <th>Giá</th>
+                                    <th>Số tiền còn lại</th>
+                                    <th>Thông tin giao dịch</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                `;
+
+                rows.forEach((row) => {
+                    const name = escapeHtml(row.voter_name || "-");
+                    const menu = escapeHtml(row.menu_item_name || "—");
+                    const price = Number(row.price || 0).toLocaleString("vi-VN");
+                    const bal = Number(row.balance_after || 0).toLocaleString("vi-VN");
+                    const txInfo = escapeHtml(row.transaction_info || "—");
+
+                    tableHtml += `
+                        <tr>
+                            <td>${row.stt}</td>
+                            <td>${name}</td>
+                            <td>${menu}</td>
+                            <td>${price} đ</td>
+                            <td>${bal} đ</td>
+                            <td class="tx-info">${txInfo}</td>
+                        </tr>
+                    `;
+                });
+
+                tableHtml += `
+                            </tbody>
+                        </table>
+                    </div>
+                `;
+
+                container.innerHTML = tableHtml;
+            } catch (error) {
+                console.error("loadMyTransactionHistoryContent error:", error);
+                container.innerHTML = `<div class="empty-text" style="color:#d0002f;">Không tải được lịch sử giao dịch.</div>`;
+            }
+        }
+
+        window.openMyTransactionHistory = async function () {
+            const modal = document.getElementById("my-history-modal");
+            if (!modal) return;
+            modal.classList.add("active");
+            modal.setAttribute("aria-hidden", "false");
+            await loadMyTransactionHistoryContent();
+        };
+
+        window.closeMyTransactionHistory = function () {
+            const modal = document.getElementById("my-history-modal");
+            if (!modal) return;
+            modal.classList.remove("active");
+            modal.setAttribute("aria-hidden", "true");
+        };
+
+        const historyModalEl = document.getElementById("my-history-modal");
+        if (historyModalEl) {
+            historyModalEl.addEventListener("click", function (e) {
+                if (e.target === historyModalEl) {
+                    closeMyTransactionHistory();
+                }
+            });
+        }
+
         await checkUserActivation();
         loadMenu()
     });

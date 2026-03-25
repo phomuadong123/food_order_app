@@ -415,7 +415,7 @@ def vote(session, menu_item, zalo_id):
         # 1. VALIDATE INPUT
         # ====================================
         if not session or not menu_item or not zalo_id:
-            return {"success": False, "message": "Missing parameters"}
+            return {"success": False, "message": "Thiếu thông tin cần thiết"}
 
         # ====================================
         # 2. GET SESSION
@@ -424,17 +424,17 @@ def vote(session, menu_item, zalo_id):
             session_doc = frappe.get_doc("Lunch Session", session)
         except Exception:
             logger.error(f"[VOTE] Session not found: {session}")
-            return {"success": False, "message": "Session not found"}
+            return {"success": False, "message": "Không tìm thấy phiên đăng ký bữa ăn"}
 
         if session_doc.status != "Open":
-            return {"success": False, "message": "Session is not open"}
+            return {"success": False, "message": "Phiên bữa ăn đã đóng, không thể đăng ký"}
 
         # ====================================
         # 3. GET USER
         # ====================================
         user = frappe.db.get_value("Zalo User Map", {"zalo_id": zalo_id}, "name")
         if not user:
-            return {"success": False, "message": "User not found"}
+            return {"success": False, "message": "Người dùng không tồn tại"}
 
         is_active = frappe.db.get_value("Zalo User Map", user, "is_active")
         if not int(is_active or 0):
@@ -445,7 +445,7 @@ def vote(session, menu_item, zalo_id):
         # ====================================
         existed = frappe.db.exists("Lunch Order", {"session": session, "zalo_user": user, "is_active": 1})
         if existed:
-            return {"success": False, "message": "User already ordered (active order exists)"}
+            return {"success": False, "message": "Người dùng đã đăng ký bữa ăn cho phiên này rồi"}
 
         # ====================================
         # 5. GET PRICE (JOIN Lunch Session Menu + Lunch Menu Item)
@@ -460,7 +460,7 @@ def vote(session, menu_item, zalo_id):
         """, (session, menu_item), as_dict=True)
 
         if not row:
-            return {"success": False, "message": "Menu item not available today"}
+            return {"success": False, "message": "Danh sách đăng ký bữa ăn không có sẵn hôm nay"}
 
         price = row[0].price
         logger.info(f"[VOTE] PRICE={price}")
@@ -472,7 +472,7 @@ def vote(session, menu_item, zalo_id):
         wallet_balance = frappe.db.get_value("Lunch Wallet", wallet_name, "balance")
 
         if wallet_balance is None:
-            return {"success": False, "message": "Wallet not found"}
+            return {"success": False, "message": "không tìm thấy ví của người dùng"}
 
         logger.info(f"[VOTE] WALLET balance={wallet_balance}")
 
@@ -508,14 +508,14 @@ def vote(session, menu_item, zalo_id):
         except Exception:
             frappe.db.rollback()
             logger.error(traceback.format_exc())
-            return {"success": False, "message": "Failed to create order"}
+            return {"success": False, "message": "Tạo order đăng ký bữa ăn thất bại"}
 
         logger.info(f"[VOTE] ORDER CREATED name={order_doc.name}")
 
         # ====================================
         # 9. SUCCESS
         # ====================================
-        return {"success": True, "message": "Order success", "order": order_doc.name}
+        return {"success": True, "message": "Đăng ký bữa ăn thành công", "order": order_doc.name}
 
     except Exception:
         frappe.db.rollback()
@@ -531,7 +531,7 @@ def cancel_vote(session, zalo_id):
 
         user = frappe.db.get_value("Zalo User Map", {"zalo_id": zalo_id}, "name")
         if not user:
-            return {"success": False, "message": "User not found"}
+            return {"success": False, "message": "Người dùng không tồn tại"}
 
         order_name = frappe.db.get_value("Lunch Order", {"session": session, "zalo_user": user, "is_active": 1}, "name")
         if not order_name:
@@ -550,7 +550,7 @@ def cancel_vote(session, zalo_id):
         """, (session, order_doc.menu_item), as_dict=True)
 
         if not row:
-            return {"success": False, "message": "Menu item not found for session"}
+            return {"success": False, "message": "Danh sách đăng ký bữa ăn không có sẵn hôm nay"}
 
         price = row[0].price
 
@@ -564,7 +564,7 @@ def cancel_vote(session, zalo_id):
             "amount": price,
             "reference": order_doc.name,
             "session": session,
-            "description": "Hoàn tiền khi hủy order",
+            "description": "Hoàn tiền khi hủy đăng ký bữa ăn",
             "date": now()
         })
 
@@ -572,7 +572,7 @@ def cancel_vote(session, zalo_id):
 
         frappe.db.commit()
 
-        return {"success": True, "message": "Cancel success"}
+        return {"success": True, "message": "Hủy đăng ký bữa ăn thành công"}
 
     except Exception:
         frappe.db.rollback()
@@ -588,11 +588,11 @@ def get_order_status(session, zalo_id):
 
         user = frappe.db.get_value("Zalo User Map", {"zalo_id": zalo_id}, "name")
         if not user:
-            return {"success": False, "message": "User not found"}
+            return {"success": False, "message": "Người dùng không tồn tại"}
 
         session_date = frappe.db.get_value("Lunch Session", session, "date")
         if not session_date:
-            return {"success": False, "message": "Session date not found"}
+            return {"success": False, "message": "Phiên đăng ký bữa ăn không tồn tại"}
 
         has_order = frappe.db.exists("Lunch Order", {"session": session, "zalo_user": user, "is_active": 1})
 
@@ -681,6 +681,101 @@ def get_session_votes(session):
         error = traceback.format_exc()
         logger.error(f"[GET_SESSION_VOTES] ERROR {error}")
         return {"success": False, "message": "Internal error"}
+
+
+@frappe.whitelist(allow_guest=True)
+def get_my_session_transactions(session, zalo_id):
+    """
+    Lịch sử giao dịch của user hiện tại trong session (tab Transaction).
+    Số dư còn lại: tính sau mỗi giao dịch trong session (theo thứ tự thời gian).
+    """
+    try:
+        if not session or not zalo_id:
+            return {"success": False, "message": "Thiếu thông tin tham số"}
+
+        user = frappe.db.get_value("Zalo User Map", {"zalo_id": zalo_id}, "name")
+        if not user:
+            return {"success": False, "message": "Người dùng không tồn tại"}
+
+        voter_name = frappe.db.get_value(
+            "Zalo User Map",
+            user,
+            ["full_name", "real_name", "zalo_id"],
+            as_dict=True,
+        )
+        display_name = (
+            (voter_name.get("real_name") or "").strip()
+            or (voter_name.get("full_name") or "").strip()
+            or voter_name.get("zalo_id")
+            or user
+        )
+
+        wallet_name = frappe.db.get_value("Lunch Wallet", {"zalo_user": user}, "name")
+        wallet_balance = frappe.db.get_value("Lunch Wallet", wallet_name, "balance")
+        if wallet_balance is None:
+            wallet_balance = 0
+
+        rows = frappe.db.sql(
+            """
+            SELECT
+                t.name AS transaction_id,
+                t.type,
+                t.amount,
+                t.reference,
+                t.date,
+                t.description,
+                COALESCE(NULLIF(lmi.item_name, ''), '') AS menu_item_name,
+                COALESCE(lmi.price, ABS(t.amount)) AS menu_price
+            FROM `tabTransaction` t
+            LEFT JOIN `tabLunch Order` lo ON t.reference = lo.name
+            LEFT JOIN `tabLunch Menu Item` lmi ON lo.menu_item = lmi.name
+            WHERE t.zalo_user = %s AND t.session = %s
+            ORDER BY t.date ASC, t.creation ASC
+            """,
+            (user, session),
+            as_dict=True,
+        )
+
+        sum_session = sum(float(r.get("amount") or 0) for r in rows)
+        running = float(wallet_balance) - sum_session
+
+        out = []
+        for idx, r in enumerate(rows, start=1):
+            amt = float(r.get("amount") or 0)
+            running += amt
+            price = r.get("menu_price")
+            if price is None:
+                price = abs(amt) if amt else 0
+            info_parts = [
+                r.get("type") or "",
+                str(r.get("transaction_id") or ""),
+                frappe.utils.format_datetime(r.get("date")) if r.get("date") else "",
+                (r.get("description") or "").strip(),
+            ]
+            transaction_info = " | ".join(p for p in info_parts if p)
+
+            out.append(
+                {
+                    "stt": idx,
+                    "voter_name": display_name,
+                    "menu_item_name": r.get("menu_item_name") or "—",
+                    "price": float(price or 0),
+                    "balance_after": running,
+                    "transaction_info": transaction_info,
+                }
+            )
+
+        return {
+            "success": True,
+            "data": out,
+            "voter_name": display_name,
+            "wallet_balance": float(wallet_balance),
+        }
+    except Exception:
+        error = traceback.format_exc()
+        logger.error(f"[GET_MY_SESSION_TRANSACTIONS] ERROR {error}")
+        return {"success": False, "message": "Internal error"}
+
 
 @frappe.whitelist()
 def update_wallet_on_transaction(doc, method=None):
@@ -897,7 +992,7 @@ def check_and_renew_sessions():
                 creation,
                 modified
             )
-            VALUES (%s,%s,%s,%s,%s,'Open',%s,'Schedule',%s,%s)
+            VALUES (%s,%s,%s,%s,%s,'Open',%s,'Administrator',%s,%s)
         """, (
             new_name,
             f"Menu {today_date}",
@@ -986,7 +1081,7 @@ def remind_vote_today():
         """, session_name)[0][0]
 
         message = (
-            f"⏰ Nhắc nhẹ bữa trưa hôm nay!\n"
+            f"⏰ Nhắc hẹn đăng ký bữa trưa ngày {today_date}!\n"
             f"Hiện tại đã có {vote_count} người đăng ký bữa rồi.\n"
             f"Đừng quên đăng ký tại đây nhé!\n"
             f"{vote_link}"
