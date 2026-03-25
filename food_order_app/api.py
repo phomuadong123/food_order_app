@@ -26,22 +26,21 @@ BASE_URL = os.getenv("BASE_URL")
 @frappe.whitelist(allow_guest=True)
 def start_vote(session):
     if not ZALO_APP_ID:
-        logger.warning("ZALO_APP_ID is not configured")
+        frappe.log_error("ZALO_APP_ID is not configured", "start_vote")
         return {"error": "start_vote_failed", "detail": "ZALO_APP_ID not configured"}
 
     if not REDIRECT_URI:
-        logger.warning("REDIRECT_URI is not configured")
+        frappe.log_error("REDIRECT_URI is not configured", "start_vote")
         return {"error": "start_vote_failed", "detail": "REDIRECT_URI not configured"}
 
     if not session:
-        logger.warning("Session is missing")
+        frappe.log_error("Session is missing", "start_vote")
         return {"error": "start_vote_failed", "detail": "Missing session"}
 
     try:
         base = BASE_URL or frappe.utils.get_url()
         redirect_uri = f"{base}{REDIRECT_URI}"
 
-        # encode redirect URI to be safe
         from urllib.parse import quote_plus
         encoded_redirect_uri = quote_plus(redirect_uri)
 
@@ -52,17 +51,18 @@ def start_vote(session):
             f"&state={session}"
         )
 
-        # Logger chỉ ghi ngắn gọn để tránh Value too big
-        logger.info(f"ZALO OAuth URL generated for session {session}")
+        # Nếu muốn log luôn (debug flow)
+        frappe.log_error(f"Generated OAuth URL for session: {session}", "start_vote")
 
         frappe.local.response["type"] = "redirect"
         frappe.local.response["location"] = oauth_url
         return
 
     except Exception as err:
-        err_trace = frappe.get_traceback()
-        logger.error(f"start_vote failed: {err}")
-        logger.debug(err_trace)
+        frappe.log_error(
+            message=frappe.get_traceback(),
+            title=f"start_vote failed: {str(err)}"
+        )
         return {"error": "start_vote_failed", "detail": str(err)}
 
 
@@ -73,12 +73,12 @@ def start_vote(session):
 @frappe.whitelist(allow_guest=True)
 def zalo_callback(code=None, state=None):
 
-    logger.info(f"ZALO CALLBACK START (code={'<redacted>' if code else None}, state={state})")
+    frappe.log_error(f"ZALO CALLBACK START (code={'<redacted>' if code else None}, state={state})", "zalo_callback")
 
     try:
 
         if not code:
-            logger.warning("Missing OAuth code")
+            frappe.log_error("Missing OAuth code", "zalo_callback")
             return {"error": "missing_code"}
 
         # =====================================================
