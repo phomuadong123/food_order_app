@@ -95,7 +95,6 @@ def zalo_callback(code=None, state=None):
         # =====================================================
 
         try:
-            log("STEP 1 | Request access token")
 
             token_res = requests.post(
                 "https://oauth.zaloapp.com/v4/access_token",
@@ -111,10 +110,8 @@ def zalo_callback(code=None, state=None):
                 timeout=15
             )
 
-            log(f"STEP 1 | status={token_res.status_code}")
 
             token_json = token_res.json()
-            log(f"STEP 1 | response={str(token_json)[:300]}")
 
         except Exception as e:
             log(f"STEP 1 FAILED | {str(e)}")
@@ -134,7 +131,6 @@ def zalo_callback(code=None, state=None):
         # =====================================================
 
         try:
-            log("STEP 2 | Request profile")
 
             profile_res = requests.get(
                 "https://graph.zalo.me/v2.0/me",
@@ -145,10 +141,8 @@ def zalo_callback(code=None, state=None):
                 timeout=15
             )
 
-            log(f"STEP 2 | status={profile_res.status_code}")
 
             profile = profile_res.json()
-            log(f"STEP 2 | response={str(profile)[:300]}")
 
         except Exception as e:
             log(f"STEP 2 FAILED | {str(e)}")
@@ -161,8 +155,6 @@ def zalo_callback(code=None, state=None):
         picture = profile.get("picture", {})
         avatar = picture.get("data", {}).get("url", "") if isinstance(picture, dict) else picture
 
-        log(f"STEP 2 OK | id={zalo_id} | name={name}")
-
         if not zalo_id:
             log("STEP 2 ERROR | missing zalo_id")
             return {"error": "profile_failed"}
@@ -173,7 +165,6 @@ def zalo_callback(code=None, state=None):
 
         try:
             user = frappe.db.exists("Zalo User Map", {"zalo_id": zalo_id})
-            log(f"STEP 3 | user_exists={user}")
 
         except Exception as e:
             log(f"STEP 3 FAILED | {str(e)}")
@@ -186,7 +177,6 @@ def zalo_callback(code=None, state=None):
 
         if not user:
             try:
-                log("STEP 4 | creating user")
 
                 user_doc = frappe.get_doc({
                     "doctype": "Zalo User Map",
@@ -202,7 +192,6 @@ def zalo_callback(code=None, state=None):
 
                 user = user_doc.name
 
-                log(f"STEP 4 OK | created user={user}")
 
             except Exception as e:
                 log(f"STEP 4 FAILED | {str(e)}")
@@ -211,7 +200,6 @@ def zalo_callback(code=None, state=None):
 
             # STEP 5: WALLET
             try:
-                log("STEP 5 | creating wallet")
 
                 wallet_doc = frappe.get_doc({
                     "doctype": "Lunch Wallet",
@@ -495,7 +483,7 @@ def vote(session, menu_item, zalo_id):
             frappe.db.commit()
         except Exception:
             frappe.db.rollback()
-            logger.error(traceback.format_exc())
+            frappe.log_error(frappe.get_traceback(), "Error Trace")
             return {"success": False, "message": "Tạo order đăng ký bữa ăn thất bại"}
 
         logger.info(f"[VOTE] ORDER CREATED name={order_doc.name}")
