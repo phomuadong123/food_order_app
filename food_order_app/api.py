@@ -40,7 +40,12 @@ def start_vote(session):
     try:
         base = BASE_URL or frappe.utils.get_url()
         redirect_uri = f"{base}{REDIRECT_URI}"
+        frappe.log_error(
+            message=f"redirect_uri RAW: {redirect_uri}",
+            title="DEBUG redirect_uri"
+        )
 
+        redirect_uri = "https://cortically-summational-brain.ngrok-free.dev/api/method/food_order_app.api.callback"
         from urllib.parse import quote_plus
         encoded_redirect_uri = quote_plus(redirect_uri)
 
