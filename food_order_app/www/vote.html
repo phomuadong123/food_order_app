@@ -775,7 +775,7 @@
                         statusDiv.innerHTML = `<p style="color:#0584fe;font-weight:600;font-size: 20px;">Bạn đã đăng ký ăn vào ngày ${date}</p>`;
                     } else {
                         btnCancel.setAttribute("disabled", "disabled");
-                        statusDiv.innerHTML = `<p style="color:#666;">Bạn chưa đăng ký</p>`;
+                        statusDiv.innerHTML = `<p style="color:#0584fe;font-size: 20px;">Bạn chưa đăng ký ăn vào ngày hôm nay</p>`;
                     }
                 } else {
                     console.error("Failed to get order status:", statusRes.message ? statusRes.message.message : "Unknown error");
