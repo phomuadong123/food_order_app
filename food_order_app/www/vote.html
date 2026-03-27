@@ -769,14 +769,15 @@
 
 
                 if (statusRes.message && statusRes.message.success) {
-                    const { has_order, date } = statusRes.message;
+                    const { has_order, date, start_date, end_date, full_name } = statusRes.message;
                     const statusDiv = document.getElementById("order-status");
+                    const deadlineDiv = document.getElementById("deadline");
+                    deadlineDiv.innerHTML = `<p style="color:#0584fe;font-weight:600;font-size: 18px;">Hạn đăng ký từ ${start_date} đến ${end_date}</p>`;
 
                     if (has_order) {
-                        statusDiv.innerHTML = `<p style="color:#0584fe;font-weight:600;font-size: 20px;">Bạn đã đăng ký ăn vào ngày ${date}</p>`;
+                        statusDiv.innerHTML = `<p style="color:#0584fe;font-weight:600;font-size: 18px;">Chào mừng ${full_name}! Bạn đã đăng ký ăn vào ngày ${date}</p>`;
                     } else {
-                        btnCancel.setAttribute("disabled", "disabled");
-                        statusDiv.innerHTML = `<p style="color:#0584fe;font-size: 20px;">Bạn chưa đăng ký ăn vào ngày hôm nay</p>`;
+                        statusDiv.innerHTML = `<p style="color:#0584fe;font-size: 18px;">Chào mừng ${full_name}! Bạn chưa đăng ký ăn vào ngày hôm nay</p>`;
                     }
                 } else {
                     console.error("Failed to get order status:", statusRes.message ? statusRes.message.message : "Unknown error");
@@ -985,13 +986,10 @@
                 <p class="copyright">Sản phẩm được Đoàn thanh niên Viễn thông Tuyên Quang phối hợp với Phòng Nhân sự - Tổng hợp triển khai</p>
                      <p>
                 Ban quản trị: <strong>Nguyễn Trường Sơn - Quản lý</strong> |
-                <strong>Bùi Ánh Tuyết - Kế toán</strong>
+                <strong>Bùi Ánh Tuyết - Kế toán</strong> | 
                 <strong>Hà Văn Tín - Kỹ thuật</strong>
             </p>
             </div>
-
-
-           
         </div>
     </footer>
 {% endblock %}

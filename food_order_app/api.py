@@ -511,7 +511,7 @@ def cancel_vote(session, zalo_id):
 
         order_name = frappe.db.get_value("Lunch Order", {"session": session, "zalo_user": user, "is_active": 1}, "name")
         if not order_name:
-            return {"success": False, "message": "Active order not found"}
+            return {"success": False, "message": "Không tìm thấy đăng ký bữa ăn nào để hủy"}
 
         order_doc = frappe.get_doc("Lunch Order", order_name)
 
@@ -562,11 +562,13 @@ def get_order_status(session, zalo_id):
         if not session or not zalo_id:
             return {"success": False, "message": "Missing parameters"}
 
-        user = frappe.db.get_value("Zalo User Map", {"zalo_id": zalo_id}, "name")
-        if not user:
+        full_name = frappe.db.get_value("Zalo User Map", {"zalo_id": zalo_id}, "full_name")
+        if not full_name:
             return {"success": False, "message": "Người dùng không tồn tại"}
 
         session_date = frappe.db.get_value("Lunch Session", session, "date")
+        start_date = frappe.db.get_value("Lunch Session", session, "start_date")
+        end_date = frappe.db.get_value("Lunch Session", session, "end_date")
         if not session_date:
             return {"success": False, "message": "Phiên đăng ký bữa ăn không tồn tại"}
 
@@ -575,7 +577,10 @@ def get_order_status(session, zalo_id):
         return {
             "success": True,
             "has_order": bool(has_order),
-            "date": str(session_date)
+            "date": str(session_date),
+            "start_date": str(start_date),
+            "end_date": str(end_date),
+            "full_name": full_name
         }
 
     except Exception:
