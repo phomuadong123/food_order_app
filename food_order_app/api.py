@@ -24,7 +24,7 @@ BASE_URL = os.getenv("BASE_URL")
 # =========================
 
 @frappe.whitelist(allow_guest=True)
-def start_vote(session):
+def start_vote(session = None):
     if not ZALO_APP_ID:
         frappe.log_error("ZALO_APP_ID is not configured", "start_vote")
         return {"error": "start_vote_failed", "detail": "ZALO_APP_ID not configured"}
@@ -406,6 +406,13 @@ def vote(session, menu_item, zalo_id):
 
         if session_doc.status != "Open":
             return {"success": False, "message": "Phiên bữa ăn đã đóng, không thể đăng ký"}
+        if session_doc.end_date:
+            current_time = now_datetime()
+            if current_time > session_doc.end_date:
+                return {
+                    "success": False, 
+                    "message": f"Đã quá hạn đăng ký (Hạn cuối: {frappe.utils.format_datetime(session_doc.end_date, 'HH:mm dd/MM/yyyy')})"
+                }
 
         # ====================================
         # 3. GET USER
