@@ -95,7 +95,9 @@ def zalo_callback(code=None, state=None):
         # =====================================================
         # STEP 1: GET ACCESS TOKEN
         # =====================================================
-
+        all_headers = dict(frappe.request.headers)
+        log(f"DEBUG ENV | URL: {frappe.request.url} | Scheme: {frappe.request.scheme}")
+        log(f"DEBUG HEADERS | {all_headers.get('X-Forwarded-Proto')} | Full: {all_headers}")
         try:
 
             token_res = requests.post(
@@ -111,9 +113,8 @@ def zalo_callback(code=None, state=None):
                 },
                 timeout=15
             )
-
-
             token_json = token_res.json()
+            log(f"STEP 1 RAW RESPONSE | {token_json}")
 
         except Exception as e:
             log(f"STEP 1 FAILED | {str(e)}")
@@ -145,6 +146,7 @@ def zalo_callback(code=None, state=None):
 
 
             profile = profile_res.json()
+            log(f"STEP 2 RAW PROFILE | {profile}")
 
         except Exception as e:
             log(f"STEP 2 FAILED | {str(e)}")

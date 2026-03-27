@@ -15,19 +15,19 @@ doc_events = {
     }
 }
 
-scheduler_events = {
-    "cron": {
-        # chạy 12h trưa mỗi ngày
-        "0 12 * * *": [
-            "food_order_app.api.check_and_renew_sessions"
-        ],
+# scheduler_events = {
+#     "cron": {
+#         # chạy 12h trưa mỗi ngày
+#         "0 12 * * *": [
+#             "food_order_app.api.check_and_renew_sessions"
+#         ],
 
-        # chạy 9h sáng mỗi ngày
-        "0 9 * * *": [
-            "food_order_app.api.remind_vote_today"
-        ],
-    }
-}
+#         # chạy 9h sáng mỗi ngày
+#         "0 9 * * *": [
+#             "food_order_app.api.remind_vote_today"
+#         ],
+#     }
+# }
 
 fixtures = [
     "Workspace",
