@@ -423,9 +423,9 @@
     <h3 style="margin: 0;">Bếp ăn VNPT Tuyên Quang</h3>
 
     <div style="display: flex;align-items: center;justify-content: space-between; flex-wrap: wrap; gap: 12px;">
-        <h1 id="order-status" style="margin-bottom:10px; margin-top: 5px;"></h1>
-        <h1 id="deadline" style="margin-bottom:10px; margin-top: 5px;"></h1>
-
+        <div style="margin-bottom:10px; margin-top: 5px;">
+            <h1 id="order-status"></h1><h1 id="deadline" ></h1>
+        </div>
         <div class="vote-header-actions">
             <button type="button" id="my-history-btn" class="vote-btn vote-btn-secondary" onclick="openMyTransactionHistory()">
                 Lịch sử của tôi
@@ -436,8 +436,6 @@
         </div>
     </div>
 </div>
-
-
 
 <div id="menu">Loading...</div>
 
@@ -769,10 +767,15 @@
 
 
                 if (statusRes.message && statusRes.message.success) {
-                    const { has_order, date, start_date, end_date, full_name } = statusRes.message;
                     const statusDiv = document.getElementById("order-status");
                     const deadlineDiv = document.getElementById("deadline");
-                    deadlineDiv.innerHTML = `<p style="color:#0584fe;font-weight:600;font-size: 18px;">Hạn đăng ký từ ${start_date} đến ${end_date}</p>`;
+                    const { has_order, date, start_date, end_date, full_name } = statusRes.message;
+                    deadlineDiv.innerHTML = `
+                    <p style="color:#0584fe; font-weight:600; font-size: 18px;">
+                        Hạn đăng ký: <br> 
+                        Từ <span style="color: #333;">${formatDateTime(start_date)}</span> <br>
+                        đến <span style="color: #333;">${formatDateTime(end_date)}</span>
+                    </p>`;
 
                     if (has_order) {
                         statusDiv.innerHTML = `<p style="color:#0584fe;font-weight:600;font-size: 18px;">Chào mừng ${full_name}! Bạn đã đăng ký ăn vào ngày ${date}</p>`;
@@ -786,6 +789,21 @@
                 console.error("Error getting order status:", statusError);
             }
         }
+
+        function formatDateTime(dateStr) {
+            if (!dateStr) return "";
+            const d = new Date(dateStr);
+            
+            const hours = d.getHours().toString().padStart(2, '0');
+            const minutes = d.getMinutes().toString().padStart(2, '0');
+            
+            // Lấy ngày, tháng, năm
+            const day = d.getDate().toString().padStart(2, '0');
+            const month = (d.getMonth() + 1).toString().padStart(2, '0');
+            const year = d.getFullYear();
+
+            return `${hours}:${minutes} ngày ${day}/${month}/${year}`;
+        };
 
         function escapeHtml(value) {
             if (value === null || value === undefined) return "";
