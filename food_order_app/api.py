@@ -384,20 +384,12 @@ def get_menu(session):
         }
 
 @frappe.whitelist(allow_guest=True)
-def vote(session, menu_item, zalo_id):
-
+def vote(session, menu_item, zalo_id, quantity=1):
     try:
-        logger.info(f"[VOTE] session={session}, menu_item={menu_item}, zalo_id={zalo_id}")
-
-        # ====================================
-        # 1. VALIDATE INPUT
-        # ====================================
         if not session or not menu_item or not zalo_id:
             return {"success": False, "message": "Thiếu thông tin cần thiết"}
 
-        # ====================================
         # 2. GET SESSION
-        # ====================================
         try:
             session_doc = frappe.get_doc("Lunch Session", session)
         except Exception:
@@ -413,10 +405,7 @@ def vote(session, menu_item, zalo_id):
                     "success": False, 
                     "message": f"Đã quá hạn đăng ký (Hạn cuối: {frappe.utils.format_datetime(session_doc.end_date, 'HH:mm dd/MM/yyyy')})"
                 }
-
-        # ====================================
         # 3. GET USER
-        # ====================================
         user = frappe.db.get_value("Zalo User Map", {"zalo_id": zalo_id}, "name")
         if not user:
             return {"success": False, "message": "Người dùng không tồn tại"}
@@ -425,16 +414,12 @@ def vote(session, menu_item, zalo_id):
         if not int(is_active or 0):
             return {"success": False, "message": "Vui lòng đợi admin kích hoạt tài khoản"}
 
-        # ====================================
         # 4. CHECK DUPLICATE ORDER (only active)
-        # ====================================
         existed = frappe.db.exists("Lunch Order", {"session": session, "zalo_user": user, "is_active": 1})
         if existed:
             return {"success": False, "message": "Người dùng đã đăng ký bữa ăn cho phiên này rồi"}
 
-        # ====================================
         # 5. GET PRICE (JOIN Lunch Session Menu + Lunch Menu Item)
-        # ====================================
         row = frappe.db.sql("""
             SELECT mi.price
             FROM `tabLunch Session Menu` sm
@@ -448,11 +433,8 @@ def vote(session, menu_item, zalo_id):
             return {"success": False, "message": "Danh sách đăng ký bữa ăn không có sẵn hôm nay"}
 
         price = row[0].price
-        logger.info(f"[VOTE] PRICE={price}")
 
-        # ====================================
         # 6. GET WALLET
-        # ====================================
         wallet_name = frappe.db.get_value("Lunch Wallet", {"zalo_user": user}, "name")
         wallet_balance = frappe.db.get_value("Lunch Wallet", wallet_name, "balance")
 
@@ -461,33 +443,31 @@ def vote(session, menu_item, zalo_id):
 
         logger.info(f"[VOTE] WALLET balance={wallet_balance}")
 
-        # ====================================
         # 7. INSERT ORDER
-        # ====================================
         try:
-            order_doc = frappe.get_doc({
-                "doctype": "Lunch Order",
-                "session": session,
-                "zalo_user": user,
-                "is_active": 1,
-                "menu_item": menu_item,
-                "created_at": now()
-            })
+            quantity = int(quantity or 1)
+            for i in range(quantity):
+                order_doc = frappe.get_doc({
+                    "doctype": "Lunch Order",
+                    "session": session,
+                    "zalo_user": user,
+                    "is_active": 1,
+                    "menu_item": menu_item,
+                    "created_at": now()
+                })
+                order_doc.insert(ignore_permissions=True)
 
-            order_doc.insert(ignore_permissions=True)
-
-            transaction = frappe.get_doc({
-                "doctype": "Transaction",
-                "zalo_user": user,
-                "type": "Pay",
-                "amount": -price,  # Trừ tiền nên số âm
-                "reference": order_doc.name, # Ghi nhận order vừa tạo
-                "session": session,
-                "description": "Trừ tiền cho order",
-                "date": now()
-            })
-
-            transaction.insert(ignore_permissions=True)
+                transaction = frappe.get_doc({
+                    "doctype": "Transaction",
+                    "zalo_user": user,
+                    "type": "Pay",
+                    "amount": -price, 
+                    "reference": order_doc.name,
+                    "session": session,
+                    "description": f"Trừ tiền cho suất ăn {i+1}/{quantity}",
+                    "date": now()
+                })
+                transaction.insert(ignore_permissions=True)
 
             frappe.db.commit()
         except Exception:
@@ -495,11 +475,7 @@ def vote(session, menu_item, zalo_id):
             frappe.log_error(frappe.get_traceback(), "Error Trace")
             return {"success": False, "message": "Tạo order đăng ký bữa ăn thất bại"}
 
-        logger.info(f"[VOTE] ORDER CREATED name={order_doc.name}")
-
-        # ====================================
         # 9. SUCCESS
-        # ====================================
         return {"success": True, "message": "Đăng ký bữa ăn thành công", "order": order_doc.name}
 
     except Exception:

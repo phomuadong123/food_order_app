@@ -188,15 +188,18 @@
                     console.log("Render item:", i)
 
                     html += `
-			<div class="menu-card">
-				<h3>${i.item_name}</h3>
-				<p>${i.price.toLocaleString()} đ</p>
-
-				<button class="vote-btn" onclick="vote('${i.name}')">
-					Đăng ký ăn
-				</button>
-			</div>
-			`
+                    <div class="menu-card">
+                        <h3>${i.item_name}</h3>
+                        <p>${i.price.toLocaleString()} đ</p>
+                        <div class="quantity-wrapper">
+                            <span>Số lượng:</span>
+                            <input type="number" id="number-menu-${i.name}" value="1" min="1" max="10">
+                        </div>
+                        <button class="vote-btn" onclick="vote('${i.name}')">
+                            Đăng ký ăn
+                        </button>
+                    </div>
+                    `
                 })
 
                 const container = document.getElementById("menu")
@@ -248,7 +251,8 @@
             console.log("Vote clicked:", menu_item);
 
             try {
-
+                
+                const number = document.getElementById("number-menu-" + menu_item).value;
                 // Loading state (optional)
                 frappe.show_alert({
                     message: "Đang gửi vote...",
@@ -260,17 +264,13 @@
                     args: {
                         session: session,
                         menu_item: menu_item,
-                        zalo_id: zalo_id
+                        zalo_id: zalo_id,
+                        quantity: number
                     }
                 });
 
                 console.log("Vote API response:", res.message);
-
                 const payload = res.message;
-
-                // =========================
-                // Validate response
-                // =========================
                 if (!payload) {
                     frappe.msgprint({
                         title: "Lỗi",
@@ -289,27 +289,20 @@
                     return;
                 }
 
-                // =========================
-                // SUCCESS
-                // =========================
-
                 frappe.msgprint({
                     title: "Thành công",
-                    message: payload.message || "Vote thành công!",
+                    message: payload.message || "Đăng ký thành công!",
                     indicator: "green"
                 });
 
-                await updateOrderStatus();
-                await loadSessionVotes();
                 window.location.reload();
 
             } catch (err) {
 
                 console.error("Vote error:", err);
-
                 frappe.msgprint({
-                    title: "Vote lỗi",
-                    message: "Không gửi được vote. Vui lòng thử lại.",
+                    title: "Đăng ký lỗi",
+                    message: "Không gửi được đăng ký. Vui lòng thử lại.",
                     indicator: "red"
                 });
             }
@@ -373,6 +366,9 @@
 
                     if (has_order) {
                         statusDiv.innerHTML = `<p style="color:#0584fe;font-weight:600;font-size: 18px;">Chào mừng ${full_name}! Bạn đã đăng ký ăn vào ngày ${date}</p>`;
+                        document.querySelectorAll('.vote-btn').forEach(btn => {
+                            btn.textContent = 'Đăng ký ăn thêm';
+                        });
                     } else {
                         statusDiv.innerHTML = `<p style="color:#0584fe;font-size: 18px;">Chào mừng ${full_name}! Bạn chưa đăng ký ăn vào ngày hôm nay</p>`;
                     }
