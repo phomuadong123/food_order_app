@@ -28,8 +28,7 @@
    "fieldname": "full_name_zalo",
    "fieldtype": "Data",
    "in_list_view": 1,
-   "label": "Họ và tên Zalo",
-   "read_only": 1
+   "label": "Họ và tên Zalo"
   },
   {
    "fieldname": "type",

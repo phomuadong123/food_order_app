@@ -34,8 +34,10 @@ def start_vote(session):
         return {"error": "start_vote_failed", "detail": "REDIRECT_URI not configured"}
 
     if not session:
-        frappe.log_error("Session is missing", "start_vote")
-        return {"error": "start_vote_failed", "detail": "Missing session"}
+        session = frappe.db.get_value("Lunch Session", filters={}, fieldname="name", order_by="creation desc")
+        if not session:
+            frappe.log_error("No Lunch Session found in database", "start_vote")
+            return {"error": "start_vote_failed", "detail": "No active session available"}
 
     try:
         base = BASE_URL or frappe.utils.get_url()
