@@ -562,31 +562,37 @@ def get_order_status(session, zalo_id):
         if not session or not zalo_id:
             return {"success": False, "message": "Missing parameters"}
 
-        full_name = frappe.db.get_value("Zalo User Map", {"zalo_id": zalo_id}, "full_name")
-        if not full_name:
+        user_info = frappe.db.get_value("Zalo User Map", {"zalo_id": zalo_id}, ["name", "full_name"], as_dict=True)
+        
+        if not user_info:
             return {"success": False, "message": "Người dùng không tồn tại"}
 
-        session_date = frappe.db.get_value("Lunch Session", session, "date")
-        start_date = frappe.db.get_value("Lunch Session", session, "start_date")
-        end_date = frappe.db.get_value("Lunch Session", session, "end_date")
-        if not session_date:
+        # Lấy thông tin phiên ăn
+        session_data = frappe.db.get_value("Lunch Session", session, ["date", "start_date", "end_date"], as_dict=True)
+        
+        if not session_data:
             return {"success": False, "message": "Phiên đăng ký bữa ăn không tồn tại"}
 
-        has_order = frappe.db.exists("Lunch Order", {"session": session, "zalo_user": user, "is_active": 1})
+        has_order = frappe.db.exists("Lunch Order", {
+            "session": session, 
+            "zalo_user": user_info.name,
+            "is_active": 1
+        })
 
         return {
             "success": True,
             "has_order": bool(has_order),
-            "date": str(session_date),
-            "start_date": str(start_date),
-            "end_date": str(end_date),
-            "full_name": full_name
+            "date": str(session_data.date),
+            "start_date": str(session_data.start_date),
+            "end_date": str(session_data.end_date),
+            "full_name": user_info.full_name
         }
 
     except Exception:
         error = traceback.format_exc()
-        logger.error(f"[GET_ORDER_STATUS] ERROR {error}")
-        return {"success": False, "message": "Internal error"}
+        # Đảm bảo bạn đã import logger hoặc dùng frappe.log_error
+        frappe.log_error(title="GET_ORDER_STATUS Error", message=error)
+        return {"success": False, "message": "An error occurred. Please check logs."}
 
 @frappe.whitelist(allow_guest=True)
 def get_user_activation_status(zalo_id):
