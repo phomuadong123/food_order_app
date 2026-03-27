@@ -53,7 +53,10 @@ def start_vote(session = None):
             f"&state={session}"
         )
 
-        frappe.log_error(f"FORCING NGROK CALLBACK: {oauth_url}", "start_vote_debug")
+        frappe.log_error(
+            title="start_vote_debug",
+            message=f"FORCING NGROK CALLBACK: {oauth_url}"
+        )
 
         frappe.local.response["type"] = "redirect"
         frappe.local.response["location"] = oauth_url
