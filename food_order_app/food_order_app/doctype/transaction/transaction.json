@@ -24,10 +24,18 @@
    "options": "Zalo User Map"
   },
   {
+   "fetch_from": "zalo_user.full_name",
+   "fieldname": "full_name_zalo",
+   "fieldtype": "Data",
+   "in_list_view": 1,
+   "label": "Họ và tên Zalo",
+   "read_only": 1
+  },
+  {
    "fieldname": "type",
    "fieldtype": "Select",
    "in_list_view": 1,
-   "label": "Loại giao dịch (Deposit: Thêm tiền, /Pay: Trả tiền)",
+   "label": "Loại giao dịch (Deposit: Thêm tiền, /Pay: Trừ tiền)",
    "options": "Deposit\nPay"
   },
   {
