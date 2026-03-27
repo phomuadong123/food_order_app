@@ -190,10 +190,12 @@
                     html += `
                     <div class="menu-card">
                         <h3>${i.item_name}</h3>
-                        <p>${i.price.toLocaleString()} đ</p>
-                        <div class="quantity-wrapper">
-                            <span>Số lượng:</span>
-                            <input type="number" id="number-menu-${i.name}" value="1" min="1" max="10">
+                        <div style="display: flex; align-items: center; justify-content: space-between; margin-top: 10px; ">
+                            <p>${i.price.toLocaleString()} đ</p>
+                            <div class="quantity-wrapper">
+                                <span>Số lượng:</span>
+                                <input type="number" id="number-menu-${i.name}" value="1" min="1" max="10">
+                            </div>
                         </div>
                         <button class="vote-btn" onclick="vote('${i.name}')">
                             Đăng ký ăn

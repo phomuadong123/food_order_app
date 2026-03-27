@@ -40,7 +40,7 @@ def start_vote(session = None):
             return {"error": "start_vote_failed", "detail": "No active session available"}
 
     try:
-        base = BASE_URL or frappe.utils.get_url()
+        base = "https://cortically-summational-brain.ngrok-free.dev"
         redirect_uri = f"{base}{REDIRECT_URI}"
 
         from urllib.parse import quote_plus
@@ -53,8 +53,7 @@ def start_vote(session = None):
             f"&state={session}"
         )
 
-        # Nếu muốn log luôn (debug flow)
-        frappe.log_error(f"Generated OAuth URL for session: {session}", "start_vote")
+        frappe.log_error(f"FORCING NGROK CALLBACK: {oauth_url}", "start_vote_debug")
 
         frappe.local.response["type"] = "redirect"
         frappe.local.response["location"] = oauth_url
@@ -98,6 +97,7 @@ def zalo_callback(code=None, state=None):
         all_headers = dict(frappe.request.headers)
         log(f"DEBUG ENV | URL: {frappe.request.url} | Scheme: {frappe.request.scheme}")
         log(f"DEBUG HEADERS | {all_headers.get('X-Forwarded-Proto')} | Full: {all_headers}")
+        
         try:
 
             token_res = requests.post(
