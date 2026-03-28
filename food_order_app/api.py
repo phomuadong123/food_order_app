@@ -40,7 +40,7 @@ def start_vote(session = None):
             return {"error": "start_vote_failed", "detail": "No active session available"}
 
     try:
-        base = "https://bepan.vnpt-tuyenquang.vn"
+        base = BASE_URL or frappe.utils.get_url()
         redirect_uri = f"{base}{REDIRECT_URI}"
 
         from urllib.parse import quote_plus
@@ -84,8 +84,6 @@ def zalo_callback(code=None, state=None):
             message=f"[{trace_id}] {msg}",
             title="zalo_callback"
         )
-
-    log(f"START | code={'YES' if code else 'NO'} | state={state}")
 
     try:
         log(f"CALLBACK URL HIT | {frappe.request.url}")
@@ -168,10 +166,7 @@ def zalo_callback(code=None, state=None):
             log("STEP 2 ERROR | missing zalo_id")
             return {"error": "profile_failed"}
 
-        # =====================================================
         # STEP 3: FIND USER
-        # =====================================================
-
         try:
             user = frappe.db.exists("Zalo User Map", {"zalo_id": zalo_id})
 
@@ -180,10 +175,7 @@ def zalo_callback(code=None, state=None):
             frappe.log_error(frappe.get_traceback(), f"[{trace_id}] USER LOOKUP TRACE")
             return {"error": "user_lookup_failed"}
 
-        # =====================================================
         # STEP 4: CREATE USER
-        # =====================================================
-
         if not user:
             try:
 
@@ -226,11 +218,9 @@ def zalo_callback(code=None, state=None):
                 log(f"STEP 5 FAILED | {str(e)}")
                 frappe.log_error(frappe.get_traceback(), f"[{trace_id}] WALLET TRACE")
 
-        # =====================================================
         # STEP 6: REDIRECT
-        # =====================================================
 
-        PRODUCTION_DOMAIN = "https://bepan.vnpt-tuyenquang.vn"
+        PRODUCTION_DOMAIN = BASE_URL
         final_url = f"{PRODUCTION_DOMAIN}/vote?session={state or ''}&zalo_id={zalo_id}"
 
         frappe.local.response["type"] = "redirect"
