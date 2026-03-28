@@ -228,12 +228,11 @@ def zalo_callback(code=None, state=None):
         # STEP 6: REDIRECT
         # =====================================================
 
-        vote_page = f"/vote?session={state}&zalo_id={zalo_id}"
-
-        log(f"STEP 6 | redirect={vote_page}")
+        PRODUCTION_DOMAIN = "https://bepan.vnpt-tuyenquang.vn"
+        final_url = f"{PRODUCTION_DOMAIN}/vote?session={state or ''}&zalo_id={zalo_id}"
 
         frappe.local.response["type"] = "redirect"
-        frappe.local.response["location"] = vote_page
+        frappe.local.response["location"] = final_url
 
         return
 
