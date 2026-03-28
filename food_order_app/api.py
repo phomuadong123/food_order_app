@@ -40,7 +40,7 @@ def start_vote(session = None):
             return {"error": "start_vote_failed", "detail": "No active session available"}
 
     try:
-        base = "https://cortically-summational-brain.ngrok-free.dev"
+        base = "https://bepan.vnpt-tuyenquang.vn"
         redirect_uri = f"{base}{REDIRECT_URI}"
 
         from urllib.parse import quote_plus
@@ -130,11 +130,12 @@ def zalo_callback(code=None, state=None):
             log("STEP 1 ERROR | access_token missing")
             return {"error": "token_failed"}
 
-        log("STEP 1 OK | access_token received")
-
-        # =====================================================
         # STEP 2: GET PROFILE
-        # =====================================================
+        proxy_url = "http://157.66.100.192:3128"
+        proxies = {
+            "http": proxy_url,
+            "https": proxy_url,
+        }
 
         try:
 
@@ -144,6 +145,7 @@ def zalo_callback(code=None, state=None):
                     "fields": "id,name,picture",
                     "access_token": access_token
                 },
+                proxies=proxies,
                 timeout=15
             )
 
