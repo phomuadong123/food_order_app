@@ -26,7 +26,7 @@
             <button type="button" id="my-history-btn" class="vote-btn vote-btn-secondary" onclick="openMyTransactionHistory()">
                 Lịch sử của tôi
             </button>
-            <button id="cancel-btn" class="vote-btn" style="background:#de0f0f; max-width: 180px;" onclick="cancelOrder()">
+            <button id="cancel-btn" class="vote-btn" style="background:#de0f0f; max-width: 180px;" onclick="confirmCancel()">
                 Hủy đăng ký
             </button>
         </div>
@@ -362,9 +362,7 @@
                     const deadlineDiv = document.getElementById("deadline");
                     const { has_order, date, start_date, end_date, full_name } = statusRes.message;
                     deadlineDiv.innerHTML = `
-                    <p style="color:#0584fe; font-weight:600; font-size: 18px;">
-                        Hạn đăng ký: Từ <span style="color: #333;">${formatDateTime(start_date)}</span> đến <span style="color: #333;">${formatDateTime(end_date)}</span>
-                    </p>`;
+                    <p style="color:#0584fe; font-weight:600; font-size: 18px;">Hạn đăng ký: Từ <span>${formatDateTime(start_date)}</span> đến <span>${formatDateTime(end_date)}</span></p>`;
 
                     if (has_order) {
                         statusDiv.innerHTML = `<p style="color:#0584fe;font-weight:600;font-size: 18px;">Chào mừng ${full_name}! Bạn đã đăng ký ăn vào ngày ${date}</p>`;
@@ -405,13 +403,6 @@
                 .replace(/>/g, "&gt;")
                 .replace(/"/g, "&quot;")
                 .replace(/'/g, "&#39;");
-        }
-
-        function formatDateTime(dateValue) {
-            if (!dateValue) return "-";
-            const d = new Date(dateValue);
-            if (Number.isNaN(d.getTime())) return dateValue;
-            return d.toLocaleString("vi-VN");
         }
 
         async function loadSessionVotes() {
