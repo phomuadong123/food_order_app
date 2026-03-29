@@ -34,6 +34,11 @@
    "fieldtype": "Text",
    "in_list_view": 1,
    "label": "secret_key"
+  },
+  {
+   "fieldname": "proxy_url",
+   "fieldtype": "Text",
+   "label": "proxy_url"
   }
  ],
  "grid_page_length": 50,

@@ -129,7 +129,14 @@ def zalo_callback(code=None, state=None):
             return {"error": "token_failed"}
 
         # STEP 2: GET PROFILE
-        proxy_url = "http://109.198.107.237:3128"
+        config = frappe.db.sql("""
+            SELECT name, app_id, secret_key, refresh_token 
+            FROM `tabZalo Config` 
+            LIMIT 1
+        """, as_dict=True)
+        
+        config = config[0]
+        proxy_url = config.get("proxy_url")
         proxies = {
             "http": proxy_url,
             "https": proxy_url,
@@ -773,8 +780,6 @@ def update_wallet_on_transaction(doc, method=None):
 
 def refresh_zalo_tokens():
     try:
-        # 1. Lấy thông tin từ bảng tabZalo Config (Lấy bản ghi đầu tiên)
-        # Vì đây là bảng cấu hình, ta thường chỉ có 1 dòng duy nhất
         config = frappe.db.sql("""
             SELECT name, app_id, secret_key, refresh_token 
             FROM `tabZalo Config` 
