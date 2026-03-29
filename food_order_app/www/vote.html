@@ -362,7 +362,9 @@
                     const deadlineDiv = document.getElementById("deadline");
                     const { has_order, date, start_date, end_date, full_name } = statusRes.message;
                     deadlineDiv.innerHTML = `
-                    <p style="color:#0584fe; font-weight:600; font-size: 18px;">Hạn đăng ký: Từ <span>${formatDateTime(start_date)}</span> đến <span>${formatDateTime(end_date)}</span></p>`;
+                    <p style="color:#333; font-weight:600; font-size: 18px; font-style: italic;">
+                        (Thời gian đăng ký: Từ <span>${formatDateTime(start_date)}</span> đến <span>${formatDateTime(end_date)}</span>)
+                    </p>`;
 
                     if (has_order) {
                         statusDiv.innerHTML = `<p style="color:#0584fe;font-weight:600;font-size: 18px;">Chào mừng ${full_name}! Bạn đã đăng ký ăn vào ngày ${date}</p>`;
