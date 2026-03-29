@@ -129,7 +129,7 @@ def zalo_callback(code=None, state=None):
             return {"error": "token_failed"}
 
         # STEP 2: GET PROFILE
-        proxy_url = "http://157.66.100.192:3128"
+        proxy_url = "http://109.198.107.237:3128"
         proxies = {
             "http": proxy_url,
             "https": proxy_url,
