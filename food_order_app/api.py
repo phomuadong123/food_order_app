@@ -518,8 +518,7 @@ def cancel_vote(session, zalo_id):
                 "doctype": "Transaction",
                 "zalo_user": user,
                 "type": "Deposit",
-                "amount": total_refund_amount,
-                "reference": ", ".join(cancelled_order_names),
+                "amount": total_refund_amount
                 "session": session,
                 "description": f"Hoàn tiền cho {len(cancelled_order_names)} đơn hàng đã hủy",
                 "date": frappe.utils.now()
