@@ -141,6 +141,7 @@ def zalo_callback(code=None, state=None):
             "http": proxy_url,
             "https": proxy_url,
         }
+        log(f"DEBUG PROXY | Using proxy: {proxy_url}" if proxy_url else "DEBUG PROXY | No proxy configured")
 
         try:
 
