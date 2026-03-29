@@ -130,7 +130,7 @@ def zalo_callback(code=None, state=None):
 
         # STEP 2: GET PROFILE
         config = frappe.db.sql("""
-            SELECT name, app_id, secret_key, refresh_token 
+            SELECT name, app_id, secret_key, refresh_token, proxy_url
             FROM `tabZalo Config` 
             LIMIT 1
         """, as_dict=True)
