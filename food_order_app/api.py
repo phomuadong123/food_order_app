@@ -627,13 +627,20 @@ def get_session_votes(session):
             return {"success": False, "message": "Missing session"}
 
         rows = frappe.db.sql("""
-            SELECT
+            SELECT 
                 lo.name AS order_id,
                 zum.zalo_id,
                 COALESCE(NULLIF(zum.real_name, ''), NULLIF(zum.full_name, ''), zum.zalo_id) AS voter_name,
                 lmi.item_name AS menu_item_name,
                 lmi.price,
-                lo.created_at
+                lo.created_at,
+                CASE 
+                    WHEN ROW_NUMBER() OVER (
+                        PARTITION BY lo.zalo_user 
+                        ORDER BY lo.created_at ASC, lo.creation ASC
+                    ) > 1 THEN 'Đăng ký thêm'
+                    ELSE '' 
+                END AS note
             FROM `tabLunch Order` lo
             LEFT JOIN `tabZalo User Map` zum
                 ON lo.zalo_user = zum.name

@@ -437,6 +437,7 @@
                                     <th>Đã đăng ký</th>
                                     <th>Giá</th>
                                     <th>Thời gian</th>
+                                    <th>Ghi chú</th>
                                 </tr>
                             </thead>
                             <tbody>
@@ -447,6 +448,7 @@
                     const itemName = escapeHtml(row.menu_item_name || "-");
                     const price = Number(row.price || 0).toLocaleString("vi-VN");
                     const createdAt = escapeHtml(formatDateTime(row.created_at));
+                    const note = escapeHtml(row.note || "");
 
                     tableHtml += `
                         <tr>
@@ -455,6 +457,7 @@
                             <td>${itemName}</td>
                             <td>${price} đ</td>
                             <td>${createdAt}</td>
+                            <td>${note}</td>
                         </tr>
                     `;
                 });
