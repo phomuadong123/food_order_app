@@ -151,6 +151,7 @@ h1 {
     gap: 8px;
     background: #f8f9fa;
     padding: 4px 8px;
+    margin-bottom: 8px;
     border-radius: 6px;
     border: 1px solid #ddd;
 }

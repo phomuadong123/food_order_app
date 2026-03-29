@@ -484,58 +484,58 @@ def vote(session, menu_item, zalo_id, quantity=1):
 def cancel_vote(session, zalo_id):
     try:
         if not session or not zalo_id:
-            return {"success": False, "message": "Missing parameters"}
+            return {"success": False, "message": "Thiếu tham số đầu vào"}
 
         user = frappe.db.get_value("Zalo User Map", {"zalo_id": zalo_id}, "name")
         if not user:
             return {"success": False, "message": "Người dùng không tồn tại"}
 
-        order_name = frappe.db.get_value("Lunch Order", {"session": session, "zalo_user": user, "is_active": 1}, "name")
-        if not order_name:
+        active_orders = frappe.get_all("Lunch Order", 
+            filters={
+                "session": session, 
+                "zalo_user": user, 
+                "is_active": 1
+            }, 
+            fields=["name", "menu_item"]
+        )
+
+        if not active_orders:
             return {"success": False, "message": "Không tìm thấy đăng ký bữa ăn nào để hủy"}
 
-        order_doc = frappe.get_doc("Lunch Order", order_name)
+        total_refund_amount = 0
+        cancelled_order_names = []
 
-        # Get price of menu item for this session
-        row = frappe.db.sql("""
-            SELECT mi.price
-            FROM `tabLunch Session Menu` sm
-            JOIN `tabLunch Menu Item` mi
-                ON sm.menu_item = mi.name
-            WHERE sm.parent = %s AND sm.menu_item = %s
-            LIMIT 1
-        """, (session, order_doc.menu_item), as_dict=True)
+        for order in active_orders:
+            price = frappe.db.get_value("Lunch Menu Item", order.menu_item, "price") or 0
+            
+            frappe.db.set_value("Lunch Order", order.name, "is_active", 0)
+            
+            total_refund_amount += price
+            cancelled_order_names.append(order.name)
 
-        if not row:
-            return {"success": False, "message": "Danh sách đăng ký bữa ăn không có sẵn hôm nay"}
-
-        price = row[0].price
-
-        order_doc.is_active = 0
-        order_doc.save(ignore_permissions=True)
-
-        refund_tx = frappe.get_doc({
-            "doctype": "Transaction",
-            "zalo_user": user,
-            "type": "Deposit",
-            "amount": price,
-            "reference": order_doc.name,
-            "session": session,
-            "description": "Hoàn tiền khi hủy đăng ký bữa ăn",
-            "date": now()
-        })
-
-        refund_tx.insert(ignore_permissions=True)
+        if total_refund_amount > 0:
+            refund_tx = frappe.get_doc({
+                "doctype": "Transaction",
+                "zalo_user": user,
+                "type": "Deposit",
+                "amount": total_refund_amount,
+                "reference": ", ".join(cancelled_order_names),
+                "session": session,
+                "description": f"Hoàn tiền cho {len(cancelled_order_names)} đơn hàng đã hủy",
+                "date": frappe.utils.now()
+            })
+            refund_tx.insert(ignore_permissions=True)
 
         frappe.db.commit()
 
-        return {"success": True, "message": "Hủy đăng ký bữa ăn thành công"}
+        return {
+            "success": True, 
+            "message": f"Đã hủy thành công {len(cancelled_order_names)} đăng ký. Tổng tiền hoàn: {total_refund_amount}"
+        }
 
-    except Exception:
-        frappe.db.rollback()
-        error = traceback.format_exc()
-        logger.error(f"[CANCEL] ERROR {error}")
-        return {"success": False, "message": "Internal error"}
+    except Exception as e:
+        frappe.log_error(frappe.get_traceback(), "Cancel Vote Error")
+        return {"success": False, "message": f"Có lỗi xảy ra: {str(e)}"}
 
 @frappe.whitelist(allow_guest=True)
 def get_order_status(session, zalo_id):

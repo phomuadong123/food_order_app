@@ -191,7 +191,6 @@
                     <div class="menu-card">
                         <h3>${i.item_name}</h3>
                         <div style="display: flex; align-items: center; justify-content: space-between; margin-top: 10px; ">
-                            <p>${i.price.toLocaleString()} đ</p>
                             <div class="quantity-wrapper">
                                 <span>Số lượng:</span>
                                 <input type="number" id="number-menu-${i.name}" value="1" min="1" max="10">
@@ -363,7 +362,7 @@
                     const { has_order, date, start_date, end_date, full_name } = statusRes.message;
                     deadlineDiv.innerHTML = `
                     <p style="color:#333; font-weight:600; font-size: 18px; font-style: italic;">
-                        (Thời gian đăng ký: Từ <span>${formatDateTime(start_date)}</span> đến <span>${formatDateTime(end_date)}</span>)
+                        (Thời gian đăng ký: Từ <span>${formatDateTime(start_date)}</span> - <span>${formatDateTime(end_date)}</span>)
                     </p>`;
 
                     if (has_order) {
@@ -394,7 +393,7 @@
             const month = (d.getMonth() + 1).toString().padStart(2, '0');
             const year = d.getFullYear();
 
-            return `${hours}:${minutes} ngày ${day}/${month}/${year}`;
+            return `${hours}:${minutes} ${day}/${month}/${year}`;
         };
 
         function escapeHtml(value) {
