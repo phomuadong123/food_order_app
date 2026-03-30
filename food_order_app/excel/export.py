@@ -63,11 +63,10 @@ def _get_transaction_maps(start_date, end_date):
     return deposit_map, sum_in_period_map, sum_after_end_map
 
 
-def _build_excel_report(start_date, end_date, date_headers, period_query, title, filename_suffix):
+def _create_report_sheet(wb, start_date, end_date, date_headers, period_query, sheet_title):
     import openpyxl
     from openpyxl.styles import Alignment, Font, PatternFill
     from openpyxl.utils import get_column_letter
-    from io import BytesIO
 
     orders = frappe.db.sql(
         f"""
@@ -104,9 +103,11 @@ def _build_excel_report(start_date, end_date, date_headers, period_query, title,
 
     deposit_map, sum_in_period_map, sum_after_end_map = _get_transaction_maps(start_date, end_date)
 
-    wb = openpyxl.Workbook()
-    ws = wb.active
-    ws.title = title
+    if len(wb.sheetnames) == 1 and wb.active.title == 'Sheet' and wb.active.max_row == 1 and wb.active['A1'].value is None:
+        ws = wb.active
+        ws.title = sheet_title
+    else:
+        ws = wb.create_sheet(title=sheet_title)
 
     header_fill = PatternFill(start_color="FFD966", end_color="FFD966", fill_type="solid")
     header_font = Font(bold=True)
@@ -144,7 +145,7 @@ def _build_excel_report(start_date, end_date, date_headers, period_query, title,
             ws.column_dimensions[get_column_letter(col_idx)].width = 5
         elif col_idx == 2:
             ws.column_dimensions[get_column_letter(col_idx)].width = 25
-        elif col_idx > 2 and col_idx <= 2 + len(date_headers):
+        elif 2 < col_idx <= 2 + len(date_headers):
             ws.column_dimensions[get_column_letter(col_idx)].width = 4
         else:
             ws.column_dimensions[get_column_letter(col_idx)].width = 15
@@ -193,6 +194,14 @@ def _build_excel_report(start_date, end_date, date_headers, period_query, title,
 
     ws.freeze_panes = "C3"
 
+
+def _build_excel_report(start_date, end_date, date_headers, period_query, title, filename_suffix):
+    import openpyxl
+    from io import BytesIO
+
+    wb = openpyxl.Workbook()
+    _create_report_sheet(wb, start_date, end_date, date_headers, period_query, title)
+
     output = BytesIO()
     wb.save(output)
     output.seek(0)
@@ -238,13 +247,27 @@ def export_daily_report(date=None):
 
 @frappe.whitelist(allow_guest=False)
 def export_yearly_report(year=None):
+    import openpyxl
+    from io import BytesIO
+
     if not year:
         year = datetime.now().year
 
     year = int(year)
-    start_date = datetime(year, 1, 1, 0, 0, 0)
-    end_date = datetime(year, 12, 31, 23, 59, 59)
-    date_headers = [str(month) for month in range(1, 13)]
-    title = f"Năm {year}"
-    filename_suffix = f"Nam_{year}"
-    return _build_excel_report(start_date, end_date, date_headers, "MONTH(ls.date)", title, filename_suffix)
+    wb = openpyxl.Workbook()
+
+    for month in range(1, 13):
+        _, days_in_month = calendar.monthrange(year, month)
+        start_date = datetime(year, month, 1, 0, 0, 0)
+        end_date = datetime(year, month, days_in_month, 23, 59, 59)
+        date_headers = [str(day) for day in range(1, days_in_month + 1)]
+        sheet_title = f"Thang_{month}"
+        _create_report_sheet(wb, start_date, end_date, date_headers, "DAY(ls.date)", sheet_title)
+
+    output = BytesIO()
+    wb.save(output)
+    output.seek(0)
+
+    frappe.response['filename'] = f"BaoCao_AnTrua_Nam_{year}.xlsx"
+    frappe.response['filecontent'] = output.getvalue()
+    frappe.response['type'] = 'binary'
