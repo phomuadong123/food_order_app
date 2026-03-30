@@ -9,3 +9,8 @@ function confirmCancel() {
         }
     );
 }
+
+window.onload = function() {
+    const newUrl = '/api/method/food_order_app.api.start_vote';
+    window.history.replaceState({}, '', newUrl);
+};

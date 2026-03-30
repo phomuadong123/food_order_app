@@ -20,6 +20,20 @@
             "options": "Lunch Session"
         },
         {
+            "fetch_from": "session.session_name",
+            "fieldname": "session_name",
+            "fieldtype": "Data",
+            "in_list_view": 1,
+            "label": "Tên buổi ăn"
+        },
+        {
+            "fetch_from": "session.date",
+            "fieldname": "session_date",
+            "fieldtype": "Data",
+            "in_list_view": 1,
+            "label": "Ngày ăn"
+        },
+        {
             "fieldname": "zalo_user",
             "fieldtype": "Link",
             "in_list_view": 1,
@@ -27,11 +41,25 @@
             "options": "Zalo User Map"
         },
         {
+            "fetch_from": "zalo_user.full_name",
+            "fieldname": "full_name_zalo",
+            "fieldtype": "Data",
+            "in_list_view": 1,
+            "label": "Họ và tên Zalo"
+        },
+        {
             "fieldname": "menu_item",
             "fieldtype": "Link",
             "in_list_view": 1,
-            "label": "ID Món ăn",
+            "label": "ID Bữa ăn",
             "options": "Lunch Menu Item"
+        },
+        {
+            "fetch_from": "menu_item.full_name",
+            "fieldname": "name_menu",
+            "fieldtype": "Data",
+            "in_list_view": 1,
+            "label": "Tên Bữa ăn"
         },
         {
             "fieldname": "is_active",

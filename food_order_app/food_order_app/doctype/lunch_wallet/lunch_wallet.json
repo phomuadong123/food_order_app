@@ -1,74 +1,95 @@
 {
- "actions": [],
- "allow_rename": 1,
- "creation": "2026-03-08 20:20:57.141339",
- "custom": 1,
- "doctype": "DocType",
- "engine": "InnoDB",
- "field_order": [
-  "zalo_user",
-  "balance",
-  "updated_at"
- ],
- "fields": [
-  {
-   "fieldname": "zalo_user",
-   "fieldtype": "Link",
-   "in_list_view": 1,
-   "in_standard_filter": 1,
-   "label": "Người dùng Zalo",
-   "options": "Zalo User Map"
-  },
-  {
-   "fieldname": "balance",
-   "fieldtype": "Currency",
-   "in_list_view": 1,
-   "label": "Số dư trong ví"
-  },
-  {
-   "fieldname": "updated_at",
-   "fieldtype": "Datetime",
-   "in_list_view": 1,
-   "label": "Thời gian cập nhật"
-  }
- ],
- "grid_page_length": 50,
- "index_web_pages_for_search": 1,
- "links": [],
- "modified": "2026-03-09 16:23:54.446564",
- "modified_by": "tuantigiatq@gmail.com",
- "module": "Food Order App",
- "name": "Lunch Wallet",
- "owner": "tuantigiatq@gmail.com",
- "permissions": [
-  {
-   "create": 1,
-   "delete": 1,
-   "email": 1,
-   "export": 1,
-   "print": 1,
-   "read": 1,
-   "report": 1,
-   "role": "System Manager",
-   "share": 1,
-   "write": 1
-  },
-  {
-   "create": 1,
-   "delete": 1,
-   "email": 1,
-   "export": 1,
-   "print": 1,
-   "read": 1,
-   "report": 1,
-   "role": "Lunch Management",
-   "share": 1,
-   "write": 1
-  }
- ],
- "row_format": "Dynamic",
- "rows_threshold_for_grid_search": 20,
- "sort_field": "creation",
- "sort_order": "DESC",
- "states": []
+    "actions": [],
+    "allow_rename": 1,
+    "creation": "2026-03-08 20:20:57.141339",
+    "custom": 1,
+    "doctype": "DocType",
+    "engine": "InnoDB",
+    "field_order": [
+        "zalo_user",
+        "balance",
+        "updated_at"
+    ],
+    "fields": [
+        {
+            "fieldname": "zalo_user",
+            "fieldtype": "Link",
+            "in_list_view": 1,
+            "in_standard_filter": 1,
+            "label": "Người dùng Zalo",
+            "options": "Zalo User Map"
+        },
+        {
+            "fetch_from": "zalo_user.full_name",
+            "fieldname": "full_name_zalo",
+            "fieldtype": "Data",
+            "in_list_view": 1,
+            "label": "Họ và tên Zalo"
+        },
+        {
+            "fetch_from": "zalo_user.real_name",
+            "fieldname": "real_name",
+            "fieldtype": "Data",
+            "in_list_view": 1,
+            "label": "Họ và tên thật"
+        },
+        {
+            "fetch_from": "zalo_user.department",
+            "fieldname": "department",
+            "fieldtype": "Data",
+            "in_list_view": 1,
+            "label": "Phòng ban"
+        },
+        {
+            "fieldname": "balance",
+            "fieldtype": "Currency",
+            "in_list_view": 1,
+            "label": "Số dư trong ví"
+        },
+        {
+            "fieldname": "updated_at",
+            "fieldtype": "Datetime",
+            "in_list_view": 1,
+            "label": "Thời gian cập nhật"
+        }
+    ],
+    "grid_page_length": 50,
+    "index_web_pages_for_search": 1,
+    "links": [],
+    "modified": "2026-03-09 16:23:54.446564",
+    "modified_by": "tuantigiatq@gmail.com",
+    "module": "Food Order App",
+    "name": "Lunch Wallet",
+    "owner": "tuantigiatq@gmail.com",
+    "permissions": [
+        {
+            "create": 1,
+            "delete": 1,
+            "email": 1,
+            "export": 1,
+            "print": 1,
+            "read": 1,
+            "report": 1,
+            "role": "System Manager",
+            "share": 1,
+            "write": 1
+        },
+        {
+            "create": 1,
+            "delete": 1,
+            "email": 1,
+            "export": 1,
+            "print": 1,
+            "read": 1,
+            "report": 1,
+            "role": "Lunch Management",
+            "share": 1,
+            "write": 1
+        }
+    ],
+    "row_format": "Dynamic",
+    "rows_threshold_for_grid_search": 20,
+    "sort_field": "creation",
+    "sort_order": "DESC",
+    "states": []
 }

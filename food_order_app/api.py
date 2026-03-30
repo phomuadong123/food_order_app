@@ -636,7 +636,6 @@ def get_session_votes(session):
         rows = frappe.db.sql("""
             SELECT 
                 lo.name AS order_id,
-                zum.zalo_id,
                 COALESCE(NULLIF(zum.real_name, ''), NULLIF(zum.full_name, ''), zum.zalo_id) AS voter_name,
                 lmi.item_name AS menu_item_name,
                 lmi.price,
@@ -954,8 +953,8 @@ def check_and_renew_sessions():
         # tạo session mới
         new_name = frappe.generate_hash(10)
         link = f"{BASE_URL}/api/method/food_order_app.api.start_vote?session={new_name}"
-        start_time = add_days(last_session["start_date"], 1)
-        end_time = add_days(last_session["end_date"], 1)
+        start_time = datetime.combine(today_date, last_session["start_date"].time())
+        end_time = datetime.combine(today_date, last_session["end_date"].time())
 
         frappe.db.sql("""
             INSERT INTO `tabLunch Session`
