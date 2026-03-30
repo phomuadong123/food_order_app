@@ -1,0 +1,250 @@
+import frappe
+import os
+import requests
+import traceback
+from frappe.utils import now, now_datetime, add_days, getdate
+from datetime import datetime, timedelta
+import calendar
+
+
+def _to_datetime_start(date_obj):
+    return datetime(date_obj.year, date_obj.month, date_obj.day, 0, 0, 0)
+
+
+def _to_datetime_end(date_obj):
+    return datetime(date_obj.year, date_obj.month, date_obj.day, 23, 59, 59)
+
+
+def _get_transaction_maps(start_date, end_date):
+    deposits = frappe.db.sql(
+        """
+        SELECT
+            t.zalo_user,
+            SUM(t.amount) AS deposit_amount
+        FROM `tabTransaction` t
+        WHERE t.type = 'Deposit'
+            AND (t.reference IS NULL OR t.reference = '')
+            AND t.date BETWEEN %s AND %s
+        GROUP BY t.zalo_user
+        """,
+        (start_date, end_date),
+        as_dict=True,
+    )
+    deposit_map = {d.zalo_user: float(d.deposit_amount or 0) for d in deposits}
+
+    sum_in_period = frappe.db.sql(
+        """
+        SELECT
+            t.zalo_user,
+            SUM(t.amount) AS sum_amount
+        FROM `tabTransaction` t
+        WHERE t.date BETWEEN %s AND %s
+        GROUP BY t.zalo_user
+        """,
+        (start_date, end_date),
+        as_dict=True,
+    )
+    sum_in_period_map = {d.zalo_user: float(d.sum_amount or 0) for d in sum_in_period}
+
+    sum_after_end = frappe.db.sql(
+        """
+        SELECT
+            t.zalo_user,
+            SUM(t.amount) AS sum_amount
+        FROM `tabTransaction` t
+        WHERE t.date > %s
+        GROUP BY t.zalo_user
+        """,
+        (end_date,),
+        as_dict=True,
+    )
+    sum_after_end_map = {d.zalo_user: float(d.sum_amount or 0) for d in sum_after_end}
+
+    return deposit_map, sum_in_period_map, sum_after_end_map
+
+
+def _build_excel_report(start_date, end_date, date_headers, period_query, title, filename_suffix):
+    import openpyxl
+    from openpyxl.styles import Alignment, Font, PatternFill
+    from openpyxl.utils import get_column_letter
+    from io import BytesIO
+
+    orders = frappe.db.sql(
+        f"""
+        SELECT
+            lo.zalo_user,
+            {period_query} as period_index,
+            lmi.price
+        FROM `tabLunch Order` lo
+        JOIN `tabLunch Session` ls ON lo.session = ls.name
+        JOIN `tabLunch Menu Item` lmi ON lo.menu_item = lmi.name
+        WHERE ls.date BETWEEN %s AND %s
+            AND ls.status != 'Draft'
+        """,
+        (start_date, end_date),
+        as_dict=True,
+    )
+
+    user_orders = {}
+    for o in orders:
+        if not o.zalo_user:
+            continue
+        period_index = int(o.period_index or 0)
+        if period_index < 1 or period_index > len(date_headers):
+            continue
+
+        if o.zalo_user not in user_orders:
+            user_orders[o.zalo_user] = {'days': set(), 'total_amount': 0}
+
+        user_orders[o.zalo_user]['days'].add(period_index)
+        user_orders[o.zalo_user]['total_amount'] += (o.price or 0)
+
+    wallets = frappe.get_all("Lunch Wallet", fields=["zalo_user", "balance"])
+    wallet_map = {w.zalo_user: float(w.balance or 0) for w in wallets}
+
+    deposit_map, sum_in_period_map, sum_after_end_map = _get_transaction_maps(start_date, end_date)
+
+    wb = openpyxl.Workbook()
+    ws = wb.active
+    ws.title = title
+
+    header_fill = PatternFill(start_color="FFD966", end_color="FFD966", fill_type="solid")
+    header_font = Font(bold=True)
+    center_align = Alignment(horizontal='center', vertical='center')
+
+    ws.merge_cells(start_row=1, start_column=3, end_row=1, end_column=2 + len(date_headers))
+    day_cell = ws.cell(row=1, column=3, value="Ngày")
+    day_cell.alignment = center_align
+    day_cell.font = header_font
+    day_cell.fill = header_fill
+
+    num_columns = 2 + len(date_headers) + 6
+    for col in range(1, num_columns + 1):
+        c = ws.cell(row=1, column=col)
+        c.fill = header_fill
+
+    summary_headers = [
+        "Số ngày ăn",
+        "Đơn giá suất ăn \n(VNĐ)",
+        "Thành tiền \n(VNĐ)",
+        "Số tiền đầu kỳ \n(VNĐ)",
+        "Số tiền nạp vào \n(VNĐ)",
+        "Số tiền còn lại \n(VNĐ)",
+    ]
+    headers = ["STT", "Họ và tên"] + date_headers + summary_headers
+    ws.append(headers)
+
+    for col_idx, _ in enumerate(headers, 1):
+        cell = ws.cell(row=2, column=col_idx)
+        cell.font = header_font
+        cell.alignment = Alignment(horizontal='center', vertical='center', wrap_text=True)
+        cell.fill = header_fill
+
+        if col_idx == 1:
+            ws.column_dimensions[get_column_letter(col_idx)].width = 5
+        elif col_idx == 2:
+            ws.column_dimensions[get_column_letter(col_idx)].width = 25
+        elif col_idx > 2 and col_idx <= 2 + len(date_headers):
+            ws.column_dimensions[get_column_letter(col_idx)].width = 4
+        else:
+            ws.column_dimensions[get_column_letter(col_idx)].width = 15
+
+    users = frappe.get_all("Zalo User Map", fields=["name", "full_name"])
+    stt = 1
+    for u in users:
+        u_data = user_orders.get(u.name, {'days': set(), 'total_amount': 0})
+        num_days = len(u_data['days'])
+        total_price = u_data['total_amount']
+        avg_price = (total_price / num_days) if num_days > 0 else 0
+        current_balance = wallet_map.get(u.name, 0)
+        sum_in_period = sum_in_period_map.get(u.name, 0)
+        sum_after_end = sum_after_end_map.get(u.name, 0)
+        end_balance = current_balance - sum_after_end
+        beginning_balance = end_balance - sum_in_period
+        deposit_amount = deposit_map.get(u.name, 0)
+
+        row_data = [stt, u.full_name or u.name]
+        for idx in range(1, len(date_headers) + 1):
+            row_data.append(1 if idx in u_data['days'] else "")
+
+        row_data.extend([
+            num_days,
+            avg_price,
+            total_price,
+            beginning_balance,
+            deposit_amount,
+            end_balance,
+        ])
+
+        ws.append(row_data)
+
+        curr_row = ws.max_row
+        for col_idx in range(1, len(row_data) + 1):
+            cell = ws.cell(row=curr_row, column=col_idx)
+            if col_idx > 2:
+                cell.alignment = center_align
+
+        currency_start = 2 + len(date_headers) + 2
+        currency_end = 2 + len(date_headers) + 6
+        for col_idx in range(currency_start, currency_end + 1):
+            ws.cell(row=curr_row, column=col_idx).number_format = '#,##0'
+
+        stt += 1
+
+    ws.freeze_panes = "C3"
+
+    output = BytesIO()
+    wb.save(output)
+    output.seek(0)
+
+    frappe.response['filename'] = f"BaoCao_AnTrua_{filename_suffix}.xlsx"
+    frappe.response['filecontent'] = output.getvalue()
+    frappe.response['type'] = 'binary'
+
+
+@frappe.whitelist(allow_guest=False)
+def export_monthly_report(month=None, year=None):
+    if not month or not year:
+        current = datetime.now()
+        month = current.month
+        year = current.year
+
+    month = int(month)
+    year = int(year)
+    _, days_in_month = calendar.monthrange(year, month)
+
+    start_date = datetime(year, month, 1, 0, 0, 0)
+    end_date = datetime(year, month, days_in_month, 23, 59, 59)
+    date_headers = [str(day) for day in range(1, days_in_month + 1)]
+    title = f"Tháng {month}-{year}"
+    filename_suffix = f"Thang_{month}_{year}"
+    return _build_excel_report(start_date, end_date, date_headers, "DAY(ls.date)", title, filename_suffix)
+
+
+@frappe.whitelist(allow_guest=False)
+def export_daily_report(date=None):
+    if not date:
+        date = datetime.now().date()
+    else:
+        date = getdate(date)
+
+    start_date = _to_datetime_start(date)
+    end_date = _to_datetime_end(date)
+    date_headers = [date.strftime('%d/%m/%Y')]
+    title = f"Ngày {date.strftime('%d-%m-%Y')}"
+    filename_suffix = f"Ngay_{date.strftime('%Y%m%d')}"
+    return _build_excel_report(start_date, end_date, date_headers, '1', title, filename_suffix)
+
+
+@frappe.whitelist(allow_guest=False)
+def export_yearly_report(year=None):
+    if not year:
+        year = datetime.now().year
+
+    year = int(year)
+    start_date = datetime(year, 1, 1, 0, 0, 0)
+    end_date = datetime(year, 12, 31, 23, 59, 59)
+    date_headers = [str(month) for month in range(1, 13)]
+    title = f"Năm {year}"
+    filename_suffix = f"Nam_{year}"
+    return _build_excel_report(start_date, end_date, date_headers, "MONTH(ls.date)", title, filename_suffix)
