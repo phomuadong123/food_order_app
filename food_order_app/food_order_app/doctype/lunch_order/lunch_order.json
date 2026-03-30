@@ -55,7 +55,7 @@
             "options": "Lunch Menu Item"
         },
         {
-            "fetch_from": "menu_item.full_name",
+            "fetch_from": "menu_item.item_name",
             "fieldname": "name_menu",
             "fieldtype": "Data",
             "in_list_view": 1,
