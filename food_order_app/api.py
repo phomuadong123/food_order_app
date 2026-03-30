@@ -923,7 +923,7 @@ def check_and_renew_sessions():
         # tạo session mới
         new_name = frappe.generate_hash(10)
         link = f"{BASE_URL}/api/method/food_order_app.api.start_vote?session={new_name}"
-        start_time = datetime.combine(today_date, last_session["start_date"].time())
+        start_time = datetime.combine(getdate(), last_session["start_date"].time())
         end_time = datetime.combine(today_date, last_session["end_date"].time())
 
         frappe.db.sql("""
