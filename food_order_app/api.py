@@ -607,7 +607,8 @@ def get_session_votes(session):
         rows = frappe.db.sql("""
             SELECT 
                 lo.name AS order_id,
-                COALESCE(NULLIF(zum.real_name, ''), NULLIF(zum.full_name, ''), zum.zalo_id) AS voter_name,
+                zum.real_name AS voter_name,
+                zum.full_name AS zalo_name,
                 lmi.item_name AS menu_item_name,
                 lmi.price,
                 lo.created_at,
@@ -636,7 +637,7 @@ def get_session_votes(session):
 
 
 @frappe.whitelist(allow_guest=True)
-def get_my_session_transactions(session, zalo_id):
+def get_my_session_transactions(session, zalo_id, from_date=None, to_date=None, page=1, page_size=10):
     """
     Lịch sử giao dịch của user hiện tại trong session (tab Transaction).
     Số dư còn lại: tính sau mỗi giao dịch trong session (theo thứ tự thời gian).
@@ -668,7 +669,7 @@ def get_my_session_transactions(session, zalo_id):
             wallet_balance = 0
 
         rows = frappe.db.sql(
-            """
+            f"""
             SELECT
                 t.name AS transaction_id,
                 t.type,
@@ -676,52 +677,28 @@ def get_my_session_transactions(session, zalo_id):
                 t.reference,
                 t.date,
                 t.description,
-                COALESCE(NULLIF(lmi.item_name, ''), '') AS menu_item_name,
-                COALESCE(lmi.price, ABS(t.amount)) AS menu_price
+                COALESCE(lmi.item_name, '') AS menu_item_name,
+                COALESCE(lmi.price, ABS(t.amount)) AS menu_price,
+                SUM(t.amount) OVER (PARTITION BY t.zalo_user ORDER BY t.date ASC, t.name ASC) AS running_balance
             FROM `tabTransaction` t
             LEFT JOIN `tabLunch Order` lo ON t.reference = lo.name
             LEFT JOIN `tabLunch Menu Item` lmi ON lo.menu_item = lmi.name
-            WHERE t.zalo_user = %s AND t.session = %s
-            ORDER BY t.date ASC, t.creation ASC
+            WHERE {' AND '.join(filters)}
+            ORDER BY t.date ASC, t.name ASC
+            LIMIT %s OFFSET %s
             """,
-            (user, session),
+            tuple(args) + (page_size, offset),
             as_dict=True,
         )
 
-        sum_session = sum(float(r.get("amount") or 0) for r in rows)
-        running = float(wallet_balance) - sum_session
-
-        out = []
-        for idx, r in enumerate(rows, start=1):
-            amt = float(r.get("amount") or 0)
-            running += amt
-            price = r.get("menu_price")
-            if price is None:
-                price = abs(amt) if amt else 0
-            info_parts = [
-                r.get("type") or "",
-                str(r.get("transaction_id") or ""),
-                frappe.utils.format_datetime(r.get("date")) if r.get("date") else "",
-                (r.get("description") or "").strip(),
-            ]
-            transaction_info = " | ".join(p for p in info_parts if p)
-
-            out.append(
-                {
-                    "stt": idx,
-                    "voter_name": display_name,
-                    "menu_item_name": r.get("menu_item_name") or "—",
-                    "price": float(price or 0),
-                    "balance_after": running,
-                    "transaction_info": transaction_info,
-                }
-            )
-
         return {
             "success": True,
-            "data": out,
+            "data": rows,
             "voter_name": display_name,
             "wallet_balance": float(wallet_balance),
+            "page": page,
+            "page_size": page_size,
+            "total": total,
         }
     except Exception:
         error = traceback.format_exc()

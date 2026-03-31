@@ -57,7 +57,17 @@
             <button type="button" class="history-modal-close" onclick="closeMyTransactionHistory()" aria-label="Đóng">&times;</button>
         </div>
         <div class="history-modal-body">
+            <div class="history-filter-row" style="display:flex;flex-wrap:wrap;gap:12px;align-items:center;margin-bottom:12px;">
+                <label style="display:flex;flex-direction:column;font-size:13px;">Từ ngày
+                    <input type="date" id="my-history-from-date" style="padding:6px 8px;border:1px solid #ccc;border-radius:4px;min-width:160px;" />
+                </label>
+                <label style="display:flex;flex-direction:column;font-size:13px;">Đến ngày
+                    <input type="date" id="my-history-to-date" style="padding:6px 8px;border:1px solid #ccc;border-radius:4px;min-width:160px;" />
+                </label>
+                <button id="my-history-search-btn" class="vote-btn vote-btn-secondary" type="button" style="height:38px;">Tìm</button>
+            </div>
             <div id="my-history-content" class="empty-text">Đang tải...</div>
+            <div id="my-history-pagination" style="margin-top:12px;display:flex;align-items:center;gap:12px;flex-wrap:wrap;"></div>
         </div>
     </div>
 </div>
@@ -72,6 +82,16 @@
         const zalo_id = urlParams.get("zalo_id")
         let userIsActive = true
         let supportGroupLoaded = false
+
+        let voteHistoryPage = 1
+        const voteHistoryPageSize = 10
+        let voteHistoryFromDate = ""
+        let voteHistoryToDate = ""
+
+        let myHistoryPage = 1
+        const myHistoryPageSize = 10
+        let myHistoryFromDate = ""
+        let myHistoryToDate = ""
 
         async function updateInactiveSupportText() {
             if (supportGroupLoaded) return;
@@ -446,9 +466,9 @@
                                 <tr>
                                     <th>STT</th>
                                     <th>Người đăng ký</th>
+                                    <th>Tên Zalo</th>
                                     <th>Đã đăng ký</th>
-                                    <th>Giá</th>
-                                    <th>Thời gian</th>
+                                    <th>Ngày đăng ký</th>
                                     <th>Ghi chú</th>
                                 </tr>
                             </thead>
@@ -456,7 +476,8 @@
                 `;
 
                 rows.forEach((row, index) => {
-                    const voterName = escapeHtml(row.voter_name || row.zalo_id || "-");
+                    const voterName = escapeHtml(row.voter_name || "-");
+                    const zaloName = escapeHtml(row.zalo_name || "-");
                     const itemName = escapeHtml(row.menu_item_name || "-");
                     const price = Number(row.price || 0).toLocaleString("vi-VN");
                     const createdAt = escapeHtml(formatDateTime(row.created_at));
@@ -466,8 +487,8 @@
                         <tr>
                             <td>${index + 1}</td>
                             <td>${voterName}</td>
+                            <td>${zaloName}</td>
                             <td>${itemName}</td>
-                            <td>${price} đ</td>
                             <td>${createdAt}</td>
                             <td>${note}</td>
                         </tr>
@@ -489,19 +510,35 @@
 
         async function loadMyTransactionHistoryContent() {
             const container = document.getElementById("my-history-content");
+            const paginationContainer = document.getElementById("my-history-pagination");
             if (!container) return;
 
             if (!session || !zalo_id) {
                 container.innerHTML = `<div class="empty-text" style="color:#d0002f;">Thiếu session hoặc zalo_id.</div>`;
+                if (paginationContainer) paginationContainer.innerHTML = "";
                 return;
             }
 
+            myHistoryFromDate = document.getElementById("my-history-from-date")?.value || "";
+            myHistoryToDate = document.getElementById("my-history-to-date")?.value || "";
+
             container.innerHTML = `<div class="empty-text">Đang tải...</div>`;
+            if (paginationContainer) paginationContainer.innerHTML = "";
 
             try {
+                const args = {
+                    session: session,
+                    zalo_id: zalo_id,
+                    page: myHistoryPage,
+                    page_size: myHistoryPageSize
+                };
+
+                if (myHistoryFromDate) args.from_date = myHistoryFromDate;
+                if (myHistoryToDate) args.to_date = myHistoryToDate;
+
                 const res = await frappe.call({
                     method: "food_order_app.api.get_my_session_transactions",
-                    args: { session: session, zalo_id: zalo_id }
+                    args: args
                 });
 
                 const payload = res && res.message ? res.message : null;
@@ -510,8 +547,15 @@
                 }
 
                 const rows = Array.isArray(payload.data) ? payload.data : [];
+                const total = Number(payload.total || 0);
+                const page = Number(payload.page || myHistoryPage);
+                const pageSize = Number(payload.page_size || myHistoryPageSize);
+
+                myHistoryPage = page;
+
                 if (!rows.length) {
                     container.innerHTML = `<div class="empty-text">Chưa có giao dịch nào trong phiên này.</div>`;
+                    renderMyHistoryPagination(total, page, pageSize);
                     return;
                 }
 
@@ -557,11 +601,36 @@
                 `;
 
                 container.innerHTML = tableHtml;
+                renderMyHistoryPagination(total, page, pageSize);
             } catch (error) {
                 console.error("loadMyTransactionHistoryContent error:", error);
                 container.innerHTML = `<div class="empty-text" style="color:#d0002f;">Không tải được lịch sử giao dịch.</div>`;
+                if (paginationContainer) paginationContainer.innerHTML = "";
             }
         }
+
+        function renderMyHistoryPagination(total, page, pageSize) {
+            const paginationContainer = document.getElementById("my-history-pagination");
+            if (!paginationContainer) return;
+
+            const totalPages = Math.ceil(total / pageSize);
+            if (totalPages <= 1) {
+                paginationContainer.innerHTML = total > 0 ? `<span>Trang ${page} / ${totalPages}</span>` : "";
+                return;
+            }
+
+            const prevDisabled = page <= 1;
+            const nextDisabled = page >= totalPages;
+            const prevBtn = `<button type="button" class="vote-btn vote-btn-secondary" style="height:34px;" ${prevDisabled ? 'disabled' : ''} onclick="window.changeMyHistoryPage(${page - 1})">Trước</button>`;
+            const nextBtn = `<button type="button" class="vote-btn vote-btn-secondary" style="height:34px;" ${nextDisabled ? 'disabled' : ''} onclick="window.changeMyHistoryPage(${page + 1})">Sau</button>`;
+            paginationContainer.innerHTML = `${prevBtn}<span>Trang ${page} / ${totalPages}</span>${nextBtn}`;
+        }
+
+        window.changeMyHistoryPage = async function (newPage) {
+            if (newPage < 1) return;
+            myHistoryPage = newPage;
+            await loadMyTransactionHistoryContent();
+        };
 
         window.openMyTransactionHistory = async function () {
             const modal = document.getElementById("my-history-modal");
@@ -584,6 +653,14 @@
                 if (e.target === historyModalEl) {
                     closeMyTransactionHistory();
                 }
+            });
+        }
+
+        const myHistorySearchBtn = document.getElementById("my-history-search-btn");
+        if (myHistorySearchBtn) {
+            myHistorySearchBtn.addEventListener("click", async function () {
+                myHistoryPage = 1;
+                await loadMyTransactionHistoryContent();
             });
         }
 
