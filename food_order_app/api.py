@@ -656,12 +656,6 @@ def get_my_session_transactions(zalo_id, from_date=None, to_date=None, page=1, p
             ["full_name", "real_name", "zalo_id"],
             as_dict=True,
         )
-        display_name = (
-            (voter_name.get("real_name") or "").strip()
-            or (voter_name.get("full_name") or "").strip()
-            or voter_name.get("zalo_id")
-            or user
-        )
 
         wallet_name = frappe.db.get_value("Lunch Wallet", {"zalo_user": user}, "name")
         wallet_balance = frappe.db.get_value("Lunch Wallet", wallet_name, "balance")
@@ -724,7 +718,7 @@ def get_my_session_transactions(zalo_id, from_date=None, to_date=None, page=1, p
         return {
             "success": True,
             "data": all_rows,
-            "voter_name": display_name,
+            "voter_name": voter_name.get("full_name"),
             "wallet_balance": float(wallet_balance),
             "page": page,
             "page_size": page_size,
@@ -733,7 +727,7 @@ def get_my_session_transactions(zalo_id, from_date=None, to_date=None, page=1, p
     except Exception:
         error = traceback.format_exc()
         logger.error(f"[GET_MY_SESSION_TRANSACTIONS] ERROR {error}")
-        return {"success": False, "message": "Internal error"}
+        return {"success": False, "message": error}
 
 
 @frappe.whitelist()
