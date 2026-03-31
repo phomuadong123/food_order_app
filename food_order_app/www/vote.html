@@ -53,7 +53,7 @@
 <div id="my-history-modal" class="history-modal" aria-hidden="true">
     <div class="history-modal-card" role="dialog" aria-labelledby="my-history-title">
         <div class="history-modal-head">
-            <h3 id="my-history-title">Lịch sử giao dịch (phiên hiện tại)</h3>
+            <h3 id="my-history-title">Lịch sử giao dịch</h3>
             <button type="button" class="history-modal-close" onclick="closeMyTransactionHistory()" aria-label="Đóng">&times;</button>
         </div>
         <div class="history-modal-body">
@@ -587,12 +587,12 @@
                             <td>${stt}</td>
                             <td>${row.user_real_name}</td>
                             <td>${row.user_zalo_name}</td>
-                            <td>${row.transaction_type_vn} đ</td>
-                            <td>${row.registration_time} đ</td>
-                            <td>${row.menu_item_name} đ</td>
-                            <td>${row.display_description} đ</td>
-                            <td>${row.amount} đ</td>
-                            <td>${row.running_balance} đ</td>
+                            <td>${row.transaction_type_vn}</td>
+                            <td>${formatDateTime(row.registration_time)}</td>
+                            <td>${row.menu_item_name}</td>
+                            <td>${row.display_description}</td>
+                            <td>${row.amount} VND</td>
+                            <td>${row.running_balance} VND</td>
                         </tr>
                     `;
                 });

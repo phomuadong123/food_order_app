@@ -19,3 +19,18 @@ window.addEventListener('load', function() {
         console.log("URL đã được làm sạch thành: " + newUrl);
     }, 1000); 
 });
+
+document.addEventListener("DOMContentLoaded", function() {
+    const fromInput = document.getElementById('my-history-from-date');
+    const toInput = document.getElementById('my-history-to-date');
+    
+    const now = new Date();
+    
+    const todayStr = now.toISOString().split('T')[0];
+    if(toInput) toInput.value = todayStr;
+    
+    const lastMonth = new Date();
+    lastMonth.setMonth(now.getMonth() - 1);
+    const lastMonthStr = lastMonth.toISOString().split('T')[0];
+    if(fromInput) fromInput.value = lastMonthStr;
+});

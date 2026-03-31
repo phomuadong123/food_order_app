@@ -687,6 +687,7 @@ def get_my_session_transactions(zalo_id, from_date=None, to_date=None, page=1, p
                 CASE 
                     WHEN t.type = 'pay' THEN N'Trả tiền'
                     WHEN t.type = 'deposit' THEN N'Nạp tiền'
+                    WHEN t.type = 'refund' THEN N'Hoàn tiền'
                     ELSE t.type 
                 END AS transaction_type_vn,
                 t.amount,
