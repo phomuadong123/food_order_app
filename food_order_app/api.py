@@ -1049,7 +1049,9 @@ def remind_close_session():
         message = (
             f"⏰ Thông báo kết thúc phiên đặt bữa trưa ngày {today_date}!\n"
             f"Hiện tại đã có {vote_count} anh chị đã đăng ký ăn trưa.\n"
-            f"Chúc anh chị có bữa trưa ngon miệng!"
+            f"Chúc các anh chị có bữa trưa ngon miệng!\n"
+            f"Các anh chị có thể xem lịch sử đăng ký tại đây:\n"
+            f"{vote_link}"
         )
 
         # gửi group zalo
