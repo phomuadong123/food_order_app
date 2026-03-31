@@ -539,6 +539,7 @@
                     method: "food_order_app.api.get_my_session_transactions",
                     args: args
                 });
+                console.log("get_my_session_transactions response:", res);
 
                 const payload = res && res.message ? res.message : null;
                 if (!payload || !payload.success) {
@@ -551,7 +552,6 @@
                 const total = Number(payload.total || 0);
                 const page = Number(payload.page || myHistoryPage);
                 const pageSize = Number(payload.page_size || myHistoryPageSize);
-                console.log(rows);
 
                 myHistoryPage = page;
 

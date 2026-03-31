@@ -672,16 +672,11 @@ def get_my_session_transactions(zalo_id, from_date=None, to_date=None, page=1, p
         args = [user]
 
         if from_date:
-            start_date = getdate(from_date)
-            if start_date:
-                filters.append("t.date >= %s")
-                args.append(datetime(start_date.year, start_date.month, start_date.day, 0, 0, 0))
-
+            filters.append("t.date >= %s")
+            args.append(f"{from_date}")
         if to_date:
-            end_date = getdate(to_date)
-            if end_date:
-                filters.append("t.date <= %s")
-                args.append(datetime(end_date.year, end_date.month, end_date.day, 23, 59, 59))
+            filters.append("t.date <= %s")
+            args.append(f"{to_date}")
 
         page = max(1, int(page or 1))
         page_size = max(1, int(page_size or 10))
@@ -697,51 +692,38 @@ def get_my_session_transactions(zalo_id, from_date=None, to_date=None, page=1, p
             f"""
             SELECT
                 t.name AS transaction_id,
-                t.type AS transaction_type,
+                zu.full_name AS user_real_name,
+                zu.real_name AS user_zalo_name,
+                CASE 
+                    WHEN t.type = 'pay' THEN N'Trả tiền'
+                    WHEN t.type = 'deposit' THEN N'Nạp tiền'
+                    ELSE t.type 
+                END AS transaction_type_vn,
                 t.amount,
-                t.reference,
-                t.date AS registration_time,
-                CASE
-                    WHEN t.type = 'pay' AND lo.created_at IS NOT NULL
+                -- Tạo mô tả chi tiết: Trừ tiền cho bữa ăn ngày...
+                CASE 
+                    WHEN t.type = 'pay' AND lo.created_at IS NOT NULL 
                     THEN CONCAT(N'Trừ tiền cho bữa ăn ngày ', DATE_FORMAT(lo.created_at, '%d/%m/%Y'))
-                    ELSE t.description
+                    ELSE t.description 
                 END AS display_description,
-                COALESCE(lmi.item_name, '') AS menu_item_name
+                t.date AS registration_time,           -- Ngày ăn
+                COALESCE(lmi.item_name, '') AS menu_item_name,
+                -- Tính tổng số dư lũy kế (Window Function)
+                SUM(t.amount) OVER (PARTITION BY t.zalo_user ORDER BY t.date, t.name) AS running_balance
             FROM `tabTransaction` t
+            LEFT JOIN `tabZalo User Map` zu ON t.zalo_user = zu.name
             LEFT JOIN `tabLunch Order` lo ON t.reference = lo.name
             LEFT JOIN `tabLunch Menu Item` lmi ON lo.menu_item = lmi.name
             WHERE {where_clause}
-            ORDER BY t.date ASC, t.name ASC
+            ORDER BY t.date DESC
             """,
             tuple(args),
             as_dict=True,
         )
 
-        running_balance = 0.0
-        for row in all_rows:
-            try:
-                running_balance += float(row.get("amount") or 0)
-            except Exception:
-                running_balance += 0
-            row["running_balance"] = running_balance
-
-        page_rows = all_rows[offset: offset + page_size]
-        result = []
-        for idx, r in enumerate(page_rows, start=1 + offset):
-            price = abs(float(r.get("amount") or 0))
-
-            result.append({
-                "stt": idx,
-                "voter_name": display_name,
-                "menu_item_name": r.get("menu_item_name") or "—",
-                "price": float(price or 0),
-                "balance_after": float(r.get("running_balance") or 0),
-                "transaction_info": r.get("display_description") or "",
-            })
-
         return {
             "success": True,
-            "data": result,
+            "data": all_rows,
             "voter_name": display_name,
             "wallet_balance": float(wallet_balance),
             "page": page,
