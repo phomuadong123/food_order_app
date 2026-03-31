@@ -796,7 +796,7 @@ def refresh_zalo_tokens():
 
     except Exception:
         error_msg = traceback.format_exc()
-        frappe.log_error(error_msg, "refresh_zalo_tokens SQL Failed")
+        frappe.log_error(title="Zalo SQL refresh Error", message=error_msg)
         return None
     
 def call_zalo_api(endpoint, method="GET", data=None):
