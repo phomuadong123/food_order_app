@@ -56,6 +56,12 @@
             "label": "Thời gian kết thúc"
         },
         {
+            "fieldname": "remind_date",
+            "fieldtype": "Datetime",
+            "in_list_view": 0,
+            "label": "Thời gian nhắc nhở"
+        },
+        {
             "fieldname": "status",
             "fieldtype": "Select",
             "in_list_view": 1,

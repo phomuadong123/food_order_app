@@ -439,7 +439,7 @@ def vote(session, menu_item, zalo_id, quantity=1):
                     "amount": -price, 
                     "reference": order_doc.name,
                     "session": session,
-                    "description": f"Trừ tiền cho suất ăn {i+1}/{quantity}",
+                    "description": f"Trừ tiền cho suất đăng ký ăn{f' thứ {i+1} (Tổng số suất ăn: {quantity})' if quantity > 1 else ''}",
                     "date": now()
                 })
                 transaction.insert(ignore_permissions=True)
@@ -496,7 +496,7 @@ def cancel_vote(session, zalo_id):
             refund_tx = frappe.get_doc({
                 "doctype": "Transaction",
                 "zalo_user": user,
-                "type": "Deposit",
+                "type": "Refund",
                 "amount": total_refund_amount,
                 "session": session,
                 "description": f"Hoàn tiền cho {len(cancelled_order_names)} đơn hàng đã hủy",
@@ -1001,7 +1001,7 @@ def check_and_renew_sessions():
 @frappe.whitelist(allow_guest=True)
 def remind_vote_today():
     """
-    Gửi tin nhắc lúc 9h sáng: 
+    Gửi tin nhắc lúc 7h sáng: 
     Đã có X người chọn món rồi, đừng quên bình chọn nhé!
     """
     try:
@@ -1038,7 +1038,45 @@ def remind_vote_today():
         # gửi group zalo
         send_zalo_vote_link_group(message)
 
-        logger.info(f"Sent reminder message for session {session_name}")
+    except Exception:
+        error = traceback.format_exc()
+        logger.error(error)
+        frappe.log_error("remind_vote_today failed", error)
+
+@frappe.whitelist(allow_guest=True)
+def remind_close_session():
+    try:
+        today_date = getdate()
+
+        session = frappe.db.sql("""
+            SELECT name, vote_link
+            FROM `tabLunch Session`
+            WHERE date=%s AND status='Open'
+            LIMIT 1
+        """, today_date, as_dict=True)
+
+        if not session:
+            logger.info("No open session for today -> EXIT")
+            return
+
+        session = session[0] 
+        session_name = session["name"]
+        vote_link = session["vote_link"]
+
+        vote_count = frappe.db.sql("""
+            SELECT COUNT(*) 
+            FROM `tabLunch Order`
+            WHERE session=%s AND is_active=1
+        """, session_name)[0][0]
+
+        message = (
+            f"⏰ Thông báo kết thúc phiên đặt bữa trưa ngày {today_date}!\n"
+            f"Hiện tại đã có {vote_count} anh chị đã đăng ký ăn trưa.\n"
+            f"Chúc anh chị có bữa trưa ngon miệng!"
+        )
+
+        # gửi group zalo
+        send_zalo_vote_link_group(message)
 
     except Exception:
         error = traceback.format_exc()

@@ -48,8 +48,8 @@
             "fieldname": "type",
             "fieldtype": "Select",
             "in_list_view": 1,
-            "label": "Loại giao dịch (Deposit: Thêm tiền, /Pay: Trừ tiền)",
-            "options": "Deposit\nPay"
+            "label": "Loại giao dịch (Deposit: Thêm tiền, /Pay: Trừ tiền, /Refund: Hoàn tiền)",
+            "options": "Deposit\nPay\nRefund"
         },
         {
             "fieldname": "amount",

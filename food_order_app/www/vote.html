@@ -369,12 +369,12 @@
                     </p>`;
 
                     if (has_order) {
-                        statusDiv.innerHTML = `<p style="color:#0584fe;font-weight:600;font-size: 18px;">Chào mừng ${full_name}! Bạn đã đăng ký ăn vào ngày ${date}</p>`;
+                        statusDiv.innerHTML = `<p style="color:#0584fe;font-weight:600;font-size: 18px;">Chào mừng ${full_name}! Bạn đã đăng ký ăn vào ngày ${formatDate(date)}</p>`;
                         document.querySelectorAll('.vote-order').forEach(btn => {
                             btn.textContent = 'Đăng ký ăn thêm';
                         });
                     } else {
-                        statusDiv.innerHTML = `<p style="color:#0584fe;font-size: 18px;">Chào mừng ${full_name}! Bạn chưa đăng ký ăn vào ngày hôm nay</p>`;
+                        statusDiv.innerHTML = `<p style="color:#0584fe;font-size: 18px;">Chào mừng ${full_name}! Bạn chưa đăng ký ăn vào ngày ${formatDate(date)}</p>`;
                     }
                 } else {
                     console.error("Failed to get order status:", statusRes.message ? statusRes.message.message : "Unknown error");
@@ -382,6 +382,15 @@
             } catch (statusError) {
                 console.error("Error getting order status:", statusError);
             }
+        }
+
+        function formatDate(dateInput) {
+            if (!dateInput) return '';
+            const d = new Date(dateInput);
+            const day = String(d.getDate()).padStart(2, '0');
+            const month = String(d.getMonth() + 1).padStart(2, '0');
+            const year = d.getFullYear();
+            return `${day}/${month}/${year}`;
         }
 
         function formatDateTime(dateStr) {
