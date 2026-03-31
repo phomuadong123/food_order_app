@@ -637,13 +637,13 @@ def get_session_votes(session):
 
 
 @frappe.whitelist(allow_guest=True)
-def get_my_session_transactions(session, zalo_id, from_date=None, to_date=None, page=1, page_size=10):
+def get_my_session_transactions(zalo_id, from_date=None, to_date=None, page=1, page_size=10):
     """
     Lịch sử giao dịch của user hiện tại trong session (tab Transaction).
     Số dư còn lại: tính sau mỗi giao dịch trong session (theo thứ tự thời gian).
     """
     try:
-        if not session or not zalo_id:
+        if not zalo_id:
             return {"success": False, "message": "Thiếu thông tin tham số"}
 
         user = frappe.db.get_value("Zalo User Map", {"zalo_id": zalo_id}, "name")
@@ -668,32 +668,78 @@ def get_my_session_transactions(session, zalo_id, from_date=None, to_date=None, 
         if wallet_balance is None:
             wallet_balance = 0
 
+        filters = ["t.zalo_user = %s"]
+        args = [user]
+
+        if from_date:
+            start_date = getdate(from_date)
+            filters.append("t.date >= %s")
+            args.append(datetime(start_date.year, start_date.month, start_date.day, 0, 0, 0))
+
+        if to_date:
+            end_date = getdate(to_date)
+            filters.append("t.date <= %s")
+            args.append(datetime(end_date.year, end_date.month, end_date.day, 23, 59, 59))
+
+        page = int(page or 1)
+        page_size = int(page_size or 10)
+        offset = (page - 1) * page_size
+
+        total = frappe.db.sql(
+            f"SELECT COUNT(*) FROM `tabTransaction` t WHERE {' AND '.join(filters)}",
+            tuple(args),
+        )[0][0] or 0
+
         rows = frappe.db.sql(
             f"""
             SELECT
                 t.name AS transaction_id,
-                t.type,
+                zu.full_name AS user_real_name,
+                zu.real_name AS user_zalo_name,
+                CASE
+                    WHEN t.type = 'pay' THEN N'Trả tiền'
+                    WHEN t.type = 'deposit' THEN N'Nạp tiền'
+                    ELSE t.type
+                END AS transaction_type_vn,
                 t.amount,
-                t.reference,
-                t.date,
-                t.description,
+                CASE
+                    WHEN t.type = 'pay' AND lo.created_at IS NOT NULL
+                    THEN CONCAT(N'Trừ tiền cho bữa ăn ngày ', DATE_FORMAT(lo.created_at, '%d/%m/%Y'))
+                    ELSE t.description
+                END AS display_description,
+                t.date AS registration_time,
                 COALESCE(lmi.item_name, '') AS menu_item_name,
-                COALESCE(lmi.price, ABS(t.amount)) AS menu_price,
-                SUM(t.amount) OVER (PARTITION BY t.zalo_user ORDER BY t.date ASC, t.name ASC) AS running_balance
+                SUM(t.amount) OVER (PARTITION BY t.zalo_user ORDER BY t.date, t.name) AS running_balance
             FROM `tabTransaction` t
+            LEFT JOIN `tabZalo User Map` zu ON t.zalo_user = zu.name
             LEFT JOIN `tabLunch Order` lo ON t.reference = lo.name
             LEFT JOIN `tabLunch Menu Item` lmi ON lo.menu_item = lmi.name
             WHERE {' AND '.join(filters)}
-            ORDER BY t.date ASC, t.name ASC
+            ORDER BY t.date DESC, t.name DESC
             LIMIT %s OFFSET %s
             """,
             tuple(args) + (page_size, offset),
             as_dict=True,
         )
 
+        result = []
+        for idx, r in enumerate(rows, start=1 + offset):
+            price = r.get("menu_price")
+            if price is None:
+                price = abs(float(r.get("amount") or 0))
+
+            result.append({
+                "stt": idx,
+                "voter_name": display_name,
+                "menu_item_name": r.get("menu_item_name") or "—",
+                "price": float(price or 0),
+                "balance_after": float(r.get("running_balance") or 0),
+                "transaction_info": r.get("description") or "",
+            })
+
         return {
             "success": True,
-            "data": rows,
+            "data": result,
             "voter_name": display_name,
             "wallet_balance": float(wallet_balance),
             "page": page,

@@ -527,7 +527,6 @@
 
             try {
                 const args = {
-                    session: session,
                     zalo_id: zalo_id,
                     page: myHistoryPage,
                     page_size: myHistoryPageSize
@@ -546,10 +545,13 @@
                     throw new Error((payload && payload.message) || "Không tải được lịch sử");
                 }
 
+                
+
                 const rows = Array.isArray(payload.data) ? payload.data : [];
                 const total = Number(payload.total || 0);
                 const page = Number(payload.page || myHistoryPage);
                 const pageSize = Number(payload.page_size || myHistoryPageSize);
+                console.log(rows);
 
                 myHistoryPage = page;
 
