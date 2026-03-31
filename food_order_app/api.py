@@ -638,10 +638,6 @@ def get_session_votes(session):
 
 @frappe.whitelist(allow_guest=True)
 def get_my_session_transactions(zalo_id, from_date=None, to_date=None, page=1, page_size=10):
-    """
-    Lịch sử giao dịch của user hiện tại trong session (tab Transaction).
-    Số dư còn lại: tính sau mỗi giao dịch trong session (theo thứ tự thời gian).
-    """
     try:
         if not zalo_id:
             return {"success": False, "message": "Thiếu thông tin tham số"}
@@ -650,40 +646,40 @@ def get_my_session_transactions(zalo_id, from_date=None, to_date=None, page=1, p
         if not user:
             return {"success": False, "message": "Người dùng không tồn tại"}
 
-        voter_name = frappe.db.get_value(
+        voter_data = frappe.db.get_value(
             "Zalo User Map",
             user,
             ["full_name", "real_name", "zalo_id"],
             as_dict=True,
         )
 
-        wallet_name = frappe.db.get_value("Lunch Wallet", {"zalo_user": user}, "name")
-        wallet_balance = frappe.db.get_value("Lunch Wallet", wallet_name, "balance")
-        if wallet_balance is None:
-            wallet_balance = 0
+        wallet_balance = frappe.db.get_value("Lunch Wallet", {"zalo_user": user}, "balance") or 0
 
         filters = ["t.zalo_user = %s"]
         args = [user]
 
         if from_date:
             filters.append("t.date >= %s")
-            args.append(f"{from_date}")
+            args.append(from_date)
         if to_date:
             filters.append("t.date <= %s")
-            args.append(f"{to_date}")
+            args.append(to_date)
 
+        where_clause = " AND ".join(filters)
+        
+        # Xử lý phân trang
         page = max(1, int(page or 1))
         page_size = max(1, int(page_size or 10))
         offset = (page - 1) * page_size
-        where_clause = " AND ".join(filters)
 
+        # 1. Lấy tổng số bản ghi
         total = frappe.db.sql(
             f"SELECT COUNT(*) FROM `tabTransaction` t WHERE {where_clause}",
             tuple(args),
         )[0][0] or 0
 
-        all_rows = frappe.db.sql(
-            f"""
+        # 2. Truy vấn dữ liệu (Lưu ý dấu %% để fix lỗi bạn gặp)
+        query = f"""
             SELECT
                 t.name AS transaction_id,
                 zu.full_name AS user_real_name,
@@ -694,31 +690,31 @@ def get_my_session_transactions(zalo_id, from_date=None, to_date=None, page=1, p
                     ELSE t.type 
                 END AS transaction_type_vn,
                 t.amount,
-                -- Tạo mô tả chi tiết: Trừ tiền cho bữa ăn ngày...
                 CASE 
-                    WHEN t.type = 'pay' AND lo.created_at IS NOT NULL 
-                    THEN CONCAT(N'Trừ tiền cho bữa ăn ngày ', DATE_FORMAT(lo.created_at, '%d/%m/%Y'))
+                    WHEN t.type = 'pay' AND lo.name IS NOT NULL 
+                    THEN CONCAT(N'Trừ tiền cho bữa ăn ngày ', DATE_FORMAT(lo.created_at, '%%d/%%m/%%Y'))
                     ELSE t.description 
                 END AS display_description,
-                t.date AS registration_time,           -- Ngày ăn
+                t.date AS registration_time,
                 COALESCE(lmi.item_name, '') AS menu_item_name,
-                -- Tính tổng số dư lũy kế (Window Function)
-                SUM(t.amount) OVER (PARTITION BY t.zalo_user ORDER BY t.date, t.name) AS running_balance
+                SUM(t.amount) OVER (PARTITION BY t.zalo_user ORDER BY t.date ASC, t.name ASC) AS running_balance
             FROM `tabTransaction` t
             LEFT JOIN `tabZalo User Map` zu ON t.zalo_user = zu.name
             LEFT JOIN `tabLunch Order` lo ON t.reference = lo.name
             LEFT JOIN `tabLunch Menu Item` lmi ON lo.menu_item = lmi.name
             WHERE {where_clause}
-            ORDER BY t.date DESC
-            """,
-            tuple(args),
-            as_dict=True,
-        )
+            ORDER BY t.date DESC, t.name DESC
+            LIMIT %s OFFSET %s
+        """
+        
+        selection_args = args + [page_size, offset]
+
+        all_rows = frappe.db.sql(query, tuple(selection_args), as_dict=True)
 
         return {
             "success": True,
             "data": all_rows,
-            "voter_name": voter_name.get("full_name"),
+            "voter_name": voter_data.get("full_name") if voter_data else "",
             "wallet_balance": float(wallet_balance),
             "page": page,
             "page_size": page_size,
@@ -726,7 +722,6 @@ def get_my_session_transactions(zalo_id, from_date=None, to_date=None, page=1, p
         }
     except Exception:
         error = traceback.format_exc()
-        logger.error(f"[GET_MY_SESSION_TRANSACTIONS] ERROR {error}")
         return {"success": False, "message": error}
 
 
