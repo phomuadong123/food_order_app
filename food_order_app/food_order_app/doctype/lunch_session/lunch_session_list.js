@@ -1,5 +1,35 @@
 frappe.listview_settings['Lunch Session'] = {
-    refresh: function(listview) {
+    refresh: function(listview) {        listview.page.add_inner_button(__('Import Báo Cáo'), function() {
+            frappe.prompt(
+                [
+                    {
+                        fieldname: 'file_url',
+                        label: __('URL file Excel (năm)'),
+                        fieldtype: 'Data',
+                        reqd: 1
+                    }
+                ],
+                function(values) {
+                    frappe.call({
+                        method: 'food_order_app.excel.import.import_yearly_report',
+                        args: { file_url: values.file_url },
+                        callback: function(r) {
+                            if (r.message) {
+                                frappe.msgprint(r.message);
+                            } else {
+                                frappe.msgprint(__('Import thành công'));
+                            }
+                            listview.refresh();
+                        },
+                        error: function(err) {
+                            frappe.msgprint(__('Import lỗi: ') + (err?.message || ''));
+                        }
+                    });
+                },
+                __('Import báo cáo theo file Excel năm'),
+                __('Import')
+            );
+        });
         listview.page.add_inner_button(__("Xuất Báo Cáo"), function() {
             frappe.prompt(
                 [

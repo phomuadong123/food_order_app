@@ -24,6 +24,7 @@
             "fieldname": "session_name",
             "fieldtype": "Data",
             "in_list_view": 1,
+            "in_standard_filter": 1,
             "label": "Tên buổi ăn"
         },
         {
@@ -31,6 +32,7 @@
             "fieldname": "session_date",
             "fieldtype": "Data",
             "in_list_view": 1,
+            "in_standard_filter": 1,
             "label": "Ngày ăn"
         },
         {
@@ -45,6 +47,7 @@
             "fieldname": "full_name_zalo",
             "fieldtype": "Data",
             "in_list_view": 1,
+            "in_standard_filter": 1,
             "label": "Họ và tên Zalo"
         },
         {
@@ -72,6 +75,7 @@
             "fieldname": "created_at",
             "fieldtype": "Datetime",
             "in_list_view": 1,
+            "in_standard_filter": 1,
             "label": "Thời gian tạo"
         }
     ],

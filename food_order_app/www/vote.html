@@ -1,5 +1,5 @@
 {% extends "templates/web.html" %}
-<link rel="stylesheet" href="/vote.css?v={{ frappe.generate_hash(8) }}">
+<link rel="stylesheet" href="/css/vote.css?v={{ frappe.generate_hash(8) }}">
 {% block navbar %}
 <header class="vnpt-header-main">
         <div class="vnpt-logo-container">
@@ -71,7 +71,7 @@
         </div>
     </div>
 </div>
-<script src="/vote.js"></script>
+<script src="/js/vote.js"></script>
 <script>
 
     frappe.ready(async function () {

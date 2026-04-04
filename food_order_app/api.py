@@ -728,6 +728,10 @@ def get_my_session_transactions(zalo_id, from_date=None, to_date=None, page=1, p
 
 @frappe.whitelist()
 def update_wallet_on_transaction(doc, method=None):
+    # Khi import bulk, có thể set frappe.flags.skip_update_wallet = True để bỏ qua cập nhật số dư
+    if getattr(frappe.flags, "skip_update_wallet", False):
+        return
+
     wallet = frappe.get_doc("Lunch Wallet", {"zalo_user": doc.zalo_user})
     
     if not wallet:
