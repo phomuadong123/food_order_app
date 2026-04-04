@@ -6,6 +6,7 @@ from frappe.utils import now, now_datetime, add_days, getdate
 from datetime import datetime, timedelta
 import calendar
 import openpyxl
+from frappe.utils.file_manager import get_file_path
 
 
 @frappe.whitelist(allow_guest=False)
@@ -19,14 +20,10 @@ def import_yearly_report(file_url=None):
 
     frappe.flags.skip_update_wallet = True
     try:
-        # Download file từ file_url
-        response = requests.get(file_url)
-        if response.status_code != 200:
-            frappe.throw("Không thể tải file từ URL")
-
-        from io import BytesIO
-        file_content = BytesIO(response.content)
-        wb = openpyxl.load_workbook(file_content)
+        file_path = get_file_path(file_url)
+        
+        # 2. Mở file trực tiếp từ ổ cứng (Nhanh và không lỗi URL)
+        wb = openpyxl.load_workbook(file_path, data_only=True)
 
         # Xử lý từng sheet (mỗi sheet là một tháng)
         for sheet_name in wb.sheetnames:
