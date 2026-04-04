@@ -3,7 +3,7 @@ import os
 import requests
 import traceback
 from frappe.utils import now, now_datetime, add_days, getdate
-from datetime import datetime, timedelta
+from datetime import date, datetime, timedelta
 import calendar
 
 
@@ -82,6 +82,10 @@ def _create_report_sheet(wb, start_date, end_date, date_headers, period_query, s
         """,
         (start_date, end_date),
         as_dict=True,
+    )
+    frappe.log_error(
+        title="Zalo SQL Error", # Viết tay tiêu đề ngắn gọn ở đây
+        message=str(orders)  # Toàn bộ nội dung lỗi dài nằm ở đây
     )
 
     user_orders = {}
@@ -226,8 +230,8 @@ def export_monthly_report(month=None, year=None):
     year = int(year)
     _, days_in_month = calendar.monthrange(year, month)
 
-    start_date = datetime(year, month, 1, 0, 0, 0)
-    end_date = datetime(year, month, days_in_month, 23, 59, 59)
+    start_date = date(year, month, 1)
+    end_date = date(year, month, days_in_month)
     date_headers = [str(day) for day in range(1, days_in_month + 1)]
     title = f"Tháng {month}-{year}"
     filename_suffix = f"Thang_{month}_{year}"
