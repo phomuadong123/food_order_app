@@ -101,7 +101,7 @@ def import_yearly_report(file_url=None):
                         transaction = frappe.get_doc({
                             "doctype": "Transaction",
                             "zalo_user": zalo_user,
-                            "type": "pay",
+                            "type": "Pay",
                             "amount": -abs(frappe.db.get_value("Lunch Menu Item", menu_item, "price") or 0),
                             "reference": order.name,
                             "date": order_date,
