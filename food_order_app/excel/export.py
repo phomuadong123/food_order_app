@@ -98,6 +98,10 @@ def _create_report_sheet(wb, start_date, end_date, date_headers, period_query, s
         user_orders[o.zalo_user]['days'].add(period_index)
         user_orders[o.zalo_user]['total_amount'] += (o.price or 0)
 
+    frappe.log_error(
+        title="Zalo SQL Error", # Viết tay tiêu đề ngắn gọn ở đây
+        message=str(user_orders)  # Toàn bộ nội dung lỗi dài nằm ở đây
+    )
     wallets = frappe.get_all("Lunch Wallet", fields=["zalo_user", "balance"])
     wallet_map = {w.zalo_user: float(w.balance or 0) for w in wallets}
 
