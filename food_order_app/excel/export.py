@@ -150,7 +150,7 @@ def _create_report_sheet(wb, start_date, end_date, date_headers, period_query, s
         else:
             ws.column_dimensions[get_column_letter(col_idx)].width = 15
 
-    users = frappe.get_all("Zalo User Map", fields=["name", "full_name"])
+    users = frappe.get_all("Zalo User Map", fields=["name", "real_name"])
     stt = 1
     for u in users:
         u_data = user_orders.get(u.name, {'days': set(), 'total_amount': 0})
@@ -164,7 +164,7 @@ def _create_report_sheet(wb, start_date, end_date, date_headers, period_query, s
         beginning_balance = end_balance - sum_in_period
         deposit_amount = deposit_map.get(u.name, 0)
 
-        row_data = [stt, u.full_name or u.name]
+        row_data = [stt, u.real_name or u.name]
         for idx in range(1, len(date_headers) + 1):
             row_data.append(1 if idx in u_data['days'] else "")
 
