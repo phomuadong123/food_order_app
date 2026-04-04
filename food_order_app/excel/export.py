@@ -235,7 +235,7 @@ def export_monthly_report(month=None, year=None):
     date_headers = [str(day) for day in range(1, days_in_month + 1)]
     title = f"Tháng {month}-{year}"
     filename_suffix = f"Thang_{month}_{year}"
-    return _build_excel_report(start_date, end_date, date_headers, "DAY(ls.date)", title, filename_suffix)
+    return _build_excel_report(start_date, end_date, date_headers, "DAY(lo.created_at)", title, filename_suffix)
 
 
 @frappe.whitelist(allow_guest=False)

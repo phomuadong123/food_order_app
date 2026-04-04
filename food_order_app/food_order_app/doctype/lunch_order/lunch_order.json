@@ -31,8 +31,6 @@
             "fetch_from": "session.date",
             "fieldname": "session_date",
             "fieldtype": "Data",
-            "in_list_view": 1,
-            "in_standard_filter": 1,
             "label": "Ngày ăn"
         },
         {
