@@ -4,8 +4,8 @@ frappe.listview_settings['Lunch Session'] = {
                 [
                     {
                         fieldname: 'file_url',
-                        label: __('URL file Excel (năm)'),
-                        fieldtype: 'Data',
+                        label: __('File Excel (năm)'),
+                        fieldtype: 'Attach',
                         reqd: 1
                     }
                 ],
