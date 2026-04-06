@@ -1,5 +1,5 @@
 {% extends "templates/web.html" %}
-<link rel="stylesheet" href="/css/vote.css">
+<link rel="stylesheet" href="/css/vote.css?v={{ frappe.generate_hash(8) }}">
 {% block navbar %}
 <header class="vnpt-header-main">
         <div class="vnpt-logo-container">
