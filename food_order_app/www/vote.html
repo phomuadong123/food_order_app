@@ -1,5 +1,5 @@
 {% extends "templates/web.html" %}
-<link rel="stylesheet" href="/css/vote.css?v={{ frappe.generate_hash(8) }}">
+<link rel="stylesheet" href="/css/vote.css">
 {% block navbar %}
 <header class="vnpt-header-main">
         <div class="vnpt-logo-container">
@@ -26,6 +26,9 @@
             <button style="width: 181px;" type="button" id="my-history-btn" class="vote-btn vote-btn-secondary" onclick="openMyTransactionHistory()">
                 Lịch sử của tôi
             </button>
+            <button style="width: 181px;" type="button" id="deposit-btn" class="vote-btn vote-btn-primary" onclick="openDepositModal()">
+                Nạp tiền
+            </button>
             <button id="cancel-btn" class="vote-btn" style="background:#de0f0f; max-width: 180px;" onclick="confirmCancel()">
                 Hủy đăng ký
             </button>
@@ -47,6 +50,26 @@
         <P id="inactive-lock-title" class="lock-modal-text"></P>
         <p id="inactive-lock-message" class="lock-modal-text">Vui lòng liên hệ admin hoặc join vào nhóm zalo để được hỗ
             trợ</p>
+    </div>
+</div>
+
+<div id="deposit-modal" class="lock-modal" aria-hidden="true">
+    <div class="lock-modal-card" style="max-width: 500px;">
+        <h3 class="lock-modal-title">Nạp tiền vào ví</h3>
+        <div style="margin-bottom: 20px;">
+            <label for="deposit-amount">Số tiền (VNĐ):</label>
+            <input type="number" id="deposit-amount" min="10000" step="10000" style="width: 100%; padding: 8px; margin-top: 5px;">
+        </div>
+        <div id="qr-container" style="display: none; text-align: center; margin-bottom: 20px;">
+            <p>Quét mã QR để chuyển khoản:</p>
+            <img id="qr-code" src="" alt="QR Code" style="max-width: 200px;">
+            <p id="bank-info" style="margin-top: 10px; font-size: 12px;"></p>
+        </div>
+        <div class="modal-actions" style="display: flex; gap: 10px; justify-content: flex-end;">
+            <button id="generate-qr-btn" class="vote-btn vote-btn-primary" onclick="generateQR()">Tạo mã QR</button>
+            <button id="confirm-payment-btn" class="vote-btn vote-btn-secondary" style="display: none;" onclick="confirmPayment()">Đã thanh toán</button>
+            <button class="vote-btn" onclick="closeDepositModal()">Đóng</button>
+        </div>
     </div>
 </div>
 

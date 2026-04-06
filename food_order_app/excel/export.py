@@ -172,7 +172,7 @@ def _create_report_sheet(wb, start_date, end_date, date_headers, period_query, s
         beginning_balance = end_balance - sum_in_period
         deposit_amount = deposit_map.get(u.name, 0)
 
-        row_data = [stt, u.real_name or u.name]
+        row_data = [stt, u.real_name or u.full_name]
         for idx in range(1, len(date_headers) + 1):
             row_data.append(1 if idx in u_data['days'] else "")
 

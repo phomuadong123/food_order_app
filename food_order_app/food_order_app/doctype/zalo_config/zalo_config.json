@@ -8,7 +8,9 @@
   "access_token",
   "refresh_token",
   "app_id",
-  "secret_key"
+  "secret_key",
+  "can_approve_payments",
+  "zalo_user_id"
  ],
  "fields": [
   {
@@ -34,6 +36,16 @@
    "fieldtype": "Text",
    "in_list_view": 1,
    "label": "secret_key"
+  },
+  {
+   "fieldname": "can_approve_payments",
+   "fieldtype": "Check",
+   "label": "Can Approve Payments"
+  },
+  {
+   "fieldname": "zalo_user_id",
+   "fieldtype": "Data",
+   "label": "Zalo User ID"
   },
   {
    "fieldname": "proxy_url",

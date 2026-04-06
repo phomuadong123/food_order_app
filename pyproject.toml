@@ -9,7 +9,8 @@ readme = "README.md"
 dynamic = ["version"]
 dependencies = [
     # "frappe~=16.0.0" # Installed and managed by bench.
-    "openpyxl>=3.0.0"
+    "openpyxl>=3.0.0",
+    "qrcode[pil]>=7.0.0"
 ]
 
 [build-system]
