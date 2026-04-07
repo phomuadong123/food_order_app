@@ -54,7 +54,7 @@ def _get_transaction_maps(start_date, end_date):
         FROM `tabTransaction` t
             where t.date >= (%s - INTERVAL 1 MONTH)
     	    AND t.date <= LAST_DAY(%s - INTERVAL 1 MONTH) and t.type = 'Pay'
-        GROUP BY u.zalo_user;
+        GROUP BY t.zalo_user;
         """,
         (start_date, end_date),
         as_dict=True,
