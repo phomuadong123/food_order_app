@@ -36,7 +36,7 @@ def _get_transaction_maps(start_date, end_date):
         """
         SELECT
             t.zalo_user,
-            SUM(t.amount) * -1 AS sum_amount
+            SUM(t.amount) AS sum_amount
         FROM `tabTransaction` t
         WHERE t.date BETWEEN %s AND %s
         GROUP BY t.zalo_user
@@ -50,7 +50,7 @@ def _get_transaction_maps(start_date, end_date):
     """
         SELECT
             u.zalo_user,
-            COALESCE(SUM(t.amount) * -1, 0) AS sum_amount
+            COALESCE(SUM(t.amount), 0) AS sum_amount
         FROM (SELECT DISTINCT zalo_user FROM `tabTransaction`) u
         LEFT JOIN `tabTransaction` t 
             ON t.zalo_user = u.zalo_user
@@ -111,14 +111,19 @@ def _create_report_sheet(wb, start_date, end_date, date_headers, period_query, s
         user_orders[o.zalo_user]['days'].add(period_index)
         user_orders[o.zalo_user]['total_amount'] += (o.price or 0)
 
-    frappe.log_error(
-        title="Zalo SQL Error", # Viết tay tiêu đề ngắn gọn ở đây
-        message=str(user_orders)  # Toàn bộ nội dung lỗi dài nằm ở đây
-    )
+   
     wallets = frappe.get_all("Lunch Wallet", fields=["zalo_user", "balance"])
     wallet_map = {w.zalo_user: float(w.balance or 0) for w in wallets}
 
     deposit_map, sum_in_period_map, sum_after_end_map = _get_transaction_maps(start_date, end_date)
+    frappe.log_error(
+        title="Important Debug Info", 
+        message=str(sum_in_period_map)
+    )
+    frappe.log_error(
+        title="Important Debug Info", 
+        message=str(sum_after_end_map)
+    )
 
     if len(wb.sheetnames) == 1 and wb.active.title == 'Sheet' and wb.active.max_row == 1 and wb.active['A1'].value is None:
         ws = wb.active
@@ -175,9 +180,9 @@ def _create_report_sheet(wb, start_date, end_date, date_headers, period_query, s
         total_price = u_data['total_amount']
         avg_price = (total_price / num_days) if num_days > 0 else 0
         current_balance = wallet_map.get(u.name, 0)
-        sum_in_period = sum_in_period_map.get(u.name, 0)
-        sum_after_end = sum_after_end_map.get(u.name, 0)
-        beginning_balance = (sum_in_period + sum_after_end) - total_price
+        sum_in_period = abs(sum_in_period_map.get(u.name, 0))
+        sum_after_end = abs(sum_after_end_map.get(u.name, 0))
+        beginning_balance = sum_in_period + sum_after_end - total_price
         end_balance = beginning_balance + total_price
         deposit_amount = deposit_map.get(u.name, 0)
 
