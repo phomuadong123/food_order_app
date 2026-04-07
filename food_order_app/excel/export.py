@@ -78,7 +78,7 @@ def _create_report_sheet(wb, start_date, end_date, date_headers, period_query, s
         JOIN `tabLunch Session` ls ON lo.session = ls.name
         JOIN `tabLunch Menu Item` lmi ON lo.menu_item = lmi.name
         WHERE ls.date BETWEEN %s AND %s
-            AND ls.status != 'Draft'
+            AND ls.status != 'Draft' AND lo.is_active = 1
         """,
         (start_date, end_date),
         as_dict=True,
