@@ -11,7 +11,7 @@
             </div>
         </div>
 </header>
-<link rel="stylesheet" href="/assets/food_order_app/css/vote.css?v={{ frappe.utils.generate_hash(8) }}">
+<link rel="stylesheet" href="/css/vote.css?v={{ frappe.utils.generate_hash(8) }}">
 {% endblock %}
 
 {% block page_content %}
@@ -89,6 +89,7 @@
                 </label>
                 <button id="my-history-search-btn" class="vote-btn vote-btn-secondary" type="button" style="height:38px;margin-top: 10px;">Tìm</button>
             </div>
+            <div id="so-du-lich-su"></div>
             <div id="my-history-content" class="empty-text">Đang tải...</div>
             <div id="my-history-pagination" style="margin-top:12px;display:flex;align-items:center;gap:12px;flex-wrap:wrap;"></div>
         </div>
@@ -575,7 +576,8 @@
                 const total = Number(payload.total || 0);
                 const page = Number(payload.page || myHistoryPage);
                 const pageSize = Number(payload.page_size || myHistoryPageSize);
-
+                const wallet_balance = Number(payload.wallet_balance || 0);
+                document.getElementById("so-du-lich-su").innerHTML = `Số tiền hiện tại trong ví của bạn: ${wallet_balance.toLocaleString()} VND`;
                 myHistoryPage = page;
 
                 if (!rows.length) {
@@ -597,7 +599,6 @@
                                     <th>Đã đăng ký</th>
                                     <th>Mô tả</th>
                                     <th>Số tiền</th>
-                                    <th>Số dư tại thời điểm giao dịch</th>
                                 </tr>
                             </thead>
                             <tbody>
@@ -615,7 +616,6 @@
                             <td>${row.menu_item_name}</td>
                             <td>${row.display_description}</td>
                             <td>${row.amount} VND</td>
-                            <td>${row.running_balance} VND</td>
                         </tr>
                     `;
                 });

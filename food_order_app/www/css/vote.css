@@ -464,3 +464,173 @@ h1 {
         font-size: 12px;
     }
 }
+
+.payment-container {
+    max-width: 1200px;
+    margin: 30px auto;
+    padding: 0 20px;
+}
+
+.payment-section {
+    background: white;
+    border-radius: 8px;
+    padding: 20px;
+    margin-bottom: 30px;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+}
+
+.payment-section h2 {
+    color: #333;
+    margin-bottom: 20px;
+    border-bottom: 2px solid #007bff;
+    padding-bottom: 10px;
+}
+
+.qr-section {
+    text-align: center;
+}
+
+.qr-section img {
+    max-width: 300px;
+    margin: 20px auto;
+}
+
+.bank-info {
+    background-color: #f5f5f5;
+    border: 1px solid #ddd;
+    border-radius: 4px;
+    padding: 15px;
+    margin-top: 15px;
+    font-size: 14px;
+    line-height: 1.8;
+}
+
+.transaction-table, .payment-request-table {
+    width: 100%;
+    border-collapse: collapse;
+    margin-top: 15px;
+}
+
+.transaction-table th, .payment-request-table th {
+    background-color: #007bff;
+    color: white;
+    padding: 12px;
+    text-align: left;
+    font-weight: 600;
+}
+
+.transaction-table td, .payment-request-table td {
+    padding: 12px;
+    border-bottom: 1px solid #ddd;
+}
+
+.transaction-table tr:nth-child(even),
+.payment-request-table tr:nth-child(even) {
+    background-color: #f9f9f9;
+}
+
+.transaction-table tr:hover,
+.payment-request-table tr:hover {
+    background-color: #f0f0f0;
+}
+
+.badge {
+    display: inline-block;
+    padding: 4px 12px;
+    border-radius: 20px;
+    font-size: 12px;
+    font-weight: 600;
+}
+
+.badge-deposit {
+    background-color: #28a745;
+    color: white;
+}
+
+.badge-pay {
+    background-color: #dc3545;
+    color: white;
+}
+
+.badge-refund {
+    background-color: #ffc107;
+    color: #333;
+}
+
+.badge-pending {
+    background-color: #ffc107;
+    color: #333;
+}
+
+.badge-approved {
+    background-color: #28a745;
+    color: white;
+}
+
+.badge-rejected {
+    background-color: #dc3545;
+    color: white;
+}
+
+.action-buttons {
+    display: flex;
+    gap: 5px;
+}
+
+.btn-approve, .btn-reject {
+    padding: 6px 12px;
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+    font-size: 12px;
+    font-weight: 600;
+}
+
+.btn-approve {
+    background-color: #28a745;
+    color: white;
+}
+
+.btn-approve:hover {
+    background-color: #218838;
+}
+
+.btn-reject {
+    background-color: #dc3545;
+    color: white;
+}
+
+.btn-reject:hover {
+    background-color: #c82333;
+}
+
+.empty-message {
+    text-align: center;
+    color: #999;
+    padding: 30px;
+}
+
+.admin-badge {
+    background-color: #ff6b6b;
+    color: white;
+    padding: 8px 16px;
+    border-radius: 4px;
+    display: inline-block;
+    margin-bottom: 20px;
+    font-weight: 600;
+}
+
+.back-button {
+    background-color: #6c757d;
+    color: white;
+    padding: 10px 20px;
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+    font-size: 14px;
+    margin-bottom: 20px;
+}
+
+.back-button:hover {
+    background-color: #5a6268;
+}

@@ -693,7 +693,16 @@ def get_my_session_transactions(zalo_id, from_date=None, to_date=None, page=1, p
                 t.amount,
                 CASE 
                     WHEN t.type = 'pay' AND lo.name IS NOT NULL 
-                    THEN CONCAT(N'Trừ tiền cho bữa ăn ngày ', DATE_FORMAT(ls.date, '%%d/%%m/%%Y'))
+                    THEN CONCAT(
+                        N'Trừ tiền cho bữa ăn ngày ',
+                        DATE_FORMAT(
+                            DATE_ADD(
+                                lo.created_at,
+                                INTERVAL (TIME(lo.created_at) > '12:00:00') DAY
+                            ),
+                            '%%d/%%m/%%Y'
+                        )
+                    )
                     ELSE t.description 
                 END AS display_description,
                 t.date AS registration_time,
