@@ -1,12 +1,11 @@
 // Get URL parameters
-const urlParams = new URLSearchParams(window.location.search);
-const zaloId = urlParams.get('zalo_id');
+let params = new URLSearchParams(window.location.search);
+let zalo_id = params.get('zalo_id');
 let isAdmin = false;
 let currentApprovalData = {};
 
 frappe.ready(function() {
-    let params = new URLSearchParams(window.location.search);
-    let zalo_id = params.get('zalo_id');
+    
 
     if (!zalo_id) {
         console.error("Không tìm thấy Zalo ID");
@@ -20,14 +19,14 @@ frappe.ready(function() {
         },
         callback: function(r) {
             if (r.message && r.message.is_admin) {
-
                 document.getElementById('admin-header').style.display = 'block';
-                document.getElementById('qr-section').style.display = 'none';
+                document.querySelector('.lock-modal-card').style.display = 'none';
                 document.getElementById('payment-request-section').style.display = 'block';
                 loadPaymentRequests();
             } else {
                 // LOGIC CHO USER THƯỜNG
                 document.getElementById('admin-header').style.display = 'none';
+                document.getElementById("lock-modal-title").textContent = "Nạp tiền vào ví cho tài khoản " + (r.message.full_name) +".";
                 loadTransactions();
             }
         }
@@ -56,7 +55,7 @@ function generateQR() {
     
     frappe.call({
         method: 'food_order_app.payment.create_payment_request',
-        args: { amount: amount },
+        args: { amount: amount, zalo_id: zalo_id },
         callback: function(r) {
             if (r.message && r.message.success) {
                 const qrImg = document.getElementById('qr-code');
@@ -136,7 +135,7 @@ function loadTransactions() {
 
 function loadPaymentRequests() {
     frappe.call({
-        method: 'food_order_app.api.get_pending_payment_requests',
+        method: 'food_order_app.payment.get_payment_requests',
         args: {
             zalo_id: zaloId,
             limit: 50

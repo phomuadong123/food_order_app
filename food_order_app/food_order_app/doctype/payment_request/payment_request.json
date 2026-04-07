@@ -25,6 +25,14 @@
    "reqd": 1
   },
   {
+   "fieldname": "full_name",
+   "fieldtype": "Data",
+   "label": "Tên người thanh toán",
+   "in_list_view": 1,
+    "in_standard_filter": 1,
+   "reqd": 1
+  },
+  {
    "fieldname": "amount",
    "fieldtype": "Currency",
    "label": "Amount",
@@ -34,6 +42,8 @@
    "fieldname": "status",
    "fieldtype": "Select",
    "label": "Status",
+   "in_list_view": 1,
+    "in_standard_filter": 1,
    "options": "Pending\nApproved\nRejected",
    "default": "Pending",
    "reqd": 1
@@ -46,6 +56,8 @@
   {
    "fieldname": "bank_info",
    "fieldtype": "Text",
+   "in_list_view": 1,
+    "in_standard_filter": 1,
    "label": "Bank Info"
   },
   {
@@ -62,6 +74,8 @@
   {
    "fieldname": "approved_at",
    "fieldtype": "Datetime",
+   "in_list_view": 1,
+    "in_standard_filter": 1,
    "label": "Approved At"
   },
   {

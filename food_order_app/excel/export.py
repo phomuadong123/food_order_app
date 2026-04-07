@@ -44,7 +44,7 @@ def _get_transaction_maps(start_date, end_date):
         (start_date, end_date),
         as_dict=True,
     )
-    sum_in_period_map = {d.zalo_user: float(-d.sum_amount or 0) for d in sum_in_period}
+    sum_in_period_map = {d.zalo_user: float(d.sum_amount or 0) for d in sum_in_period}
 
     sum_after_end = frappe.db.sql(
     """
@@ -61,7 +61,7 @@ def _get_transaction_maps(start_date, end_date):
         (start_date, start_date),
         as_dict=True,
     )
-    sum_after_end_map = {d.zalo_user: float(-d.sum_amount or 0) for d in sum_after_end}
+    sum_after_end_map = {d.zalo_user: float(d.sum_amount or 0) for d in sum_after_end}
 
     return deposit_map, sum_in_period_map, sum_after_end_map
 
