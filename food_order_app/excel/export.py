@@ -38,7 +38,7 @@ def _get_transaction_maps(start_date, end_date):
             t.zalo_user,
             SUM(t.amount) AS sum_amount
         FROM `tabTransaction` t
-        WHERE t.date BETWEEN %s AND %s
+        WHERE t.date BETWEEN %s AND %s and t.type = 'Pay'
         GROUP BY t.zalo_user
         """,
         (start_date, end_date),
@@ -48,17 +48,15 @@ def _get_transaction_maps(start_date, end_date):
 
     sum_after_end = frappe.db.sql(
     """
-        SELECT
-            u.zalo_user,
-            COALESCE(SUM(t.amount), 0) AS sum_amount
-        FROM (SELECT DISTINCT zalo_user FROM `tabTransaction`) u
-        LEFT JOIN `tabTransaction` t 
-            ON t.zalo_user = u.zalo_user
-            AND t.date >= DATE_SUB(%s, INTERVAL 1 MONTH)
-            AND t.date <  %s
+       SELECT
+            t.zalo_user,
+            SUM(t.amount)  AS sum_amount
+        FROM `tabTransaction` t
+            where t.date >= (%s - INTERVAL 1 MONTH)
+    	    AND t.date <= LAST_DAY(%s - INTERVAL 1 MONTH) and t.type = 'Pay'
         GROUP BY u.zalo_user;
         """,
-        (start_date, start_date),
+        (start_date, end_date),
         as_dict=True,
     )
     sum_after_end_map = {d.zalo_user: float(d.sum_amount or 0) for d in sum_after_end}

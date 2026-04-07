@@ -21,7 +21,7 @@ frappe.ready(function() {
             if (r.message && r.message.is_admin) {
                 document.getElementById('admin-header').style.display = 'block';
                 document.querySelector('.lock-modal-card').style.display = 'none';
-                document.getElementById('payment-request-section').style.display = 'block';
+                document.querySelector('.payment-section').style.display = 'none';
                 loadPaymentRequests();
             } else {
                 // LOGIC CHO USER THƯỜNG
@@ -137,7 +137,7 @@ function loadPaymentRequests() {
     frappe.call({
         method: 'food_order_app.payment.get_payment_requests',
         args: {
-            zalo_id: zaloId,
+            zalo_id: zalo_id,
             limit: 50
         },
         callback: function(r) {
