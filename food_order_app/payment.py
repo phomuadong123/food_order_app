@@ -1,10 +1,9 @@
 import frappe
-import api
 import qrcode
 import io
 import base64
 from frappe.utils import now, now_datetime
-import requests
+from food_order_app import api
 
 
 @frappe.whitelist()
@@ -102,4 +101,249 @@ def send_user_notification(pr, action):
         else:
             message = f"Yêu cầu thanh toán {pr.name} đã bị từ chối."
         api.send_zalo_vote_link_group(message)
+
+
+
+# =========================
+# PAYMENT ADMIN REDIRECT
+# =========================
+
+@frappe.whitelist()
+def payment_admin_redirect(zalo_id=None):
+    """
+    Redirect admin user to payment admin page.
+    Only users with can_approve_payments=1 in Zalo Config can access.
+    """
+    try:
+        if not zalo_id:
+            frappe.throw("Zalo ID is required")
+        
+        # Check if user exists in Zalo User Map
+        user = frappe.db.get_value("Zalo User Map", {"zalo_id": zalo_id}, "name")
+        if not user:
+            frappe.throw("User not found")
+        
+        # Check if user is admin (can_approve_payments)
+        admin_config = frappe.db.get_value(
+            "Zalo Config",
+            {"zalo_user_id": zalo_id},
+            ["name", "can_approve_payments"],
+            as_dict=True
+        )
+        
+        if not admin_config or not admin_config.get("can_approve_payments"):
+            frappe.throw("You do not have permission to access this page", frappe.PermissionError)
+        
+        # Redirect to payment admin page
+        base_url = BASE_URL or frappe.utils.get_url()
+        payment_admin_url = f"{base_url}/payment?mode=admin&zalo_id={zalo_id}"
+        
+        frappe.local.response["type"] = "redirect"
+        frappe.local.response["location"] = payment_admin_url
+        
+        return {"success": True, "message": "Redirecting to payment admin page"}
+        
+    except frappe.PermissionError as e:
+        frappe.log_error(
+            message=f"[payment_admin_redirect] Access denied for zalo_id: {zalo_id}",
+            title="Payment Admin Permission Error"
+        )
+        return {"success": False, "message": "You do not have permission to access this page"}
+    except Exception as e:
+        frappe.log_error(
+            message=frappe.get_traceback(),
+            title="payment_admin_redirect Error"
+        )
+        return {"success": False, "message": str(e)}
+
+
+# =========================
+# GET TRANSACTIONS (for payment page)
+# =========================
+
+@frappe.whitelist()
+def get_user_transactions(zalo_id, from_date=None, to_date=None, limit=10, offset=0):
+    """
+    Get transaction history for a user
+    """
+    try:
+        if not zalo_id:
+            return {"success": False, "message": "Zalo ID is required"}
+        
+        user = frappe.db.get_value("Zalo User Map", {"zalo_id": zalo_id}, "name")
+        if not user:
+            return {"success": False, "message": "User not found"}
+        
+        filters = {"zalo_user": user}
+        
+        if from_date:
+            filters["date"] = [">=", from_date]
+        if to_date:
+            filters["date"] = ["<=", to_date]
+        
+        # Get transactions
+        transactions = frappe.get_all(
+            "Transaction",
+            filters=filters,
+            fields=[
+                "name",
+                "type",
+                "amount",
+                "description",
+                "date"
+            ],
+            order_by="date desc",
+            limit=limit,
+            offset=offset
+        )
+        
+        # Get total count
+        total_count = frappe.db.count("Transaction", filters)
+        
+        return {
+            "success": True,
+            "data": transactions,
+            "total_count": total_count
+        }
+    except Exception:
+        frappe.log_error(frappe.get_traceback(), "get_user_transactions Error")
+        return {"success": False, "message": "Error fetching transactions"}
+
+
+# =========================
+# GET PAYMENT REQUESTS (for admin approval)
+# =========================
+
+@frappe.whitelist()
+def get_pending_payment_requests(zalo_id=None, limit=20, offset=0):
+    """
+    Get pending payment requests for admin approval.
+    Only admins can access this.
+    """
+    try:
+        if not zalo_id:
+            return {"success": False, "message": "Zalo ID is required"}
+        
+        # Verify user is admin
+        admin_config = frappe.db.get_value(
+            "Zalo Config",
+            {"zalo_user_id": zalo_id},
+            "can_approve_payments"
+        )
+        
+        if not admin_config:
+            frappe.throw("You do not have permission to access this", frappe.PermissionError)
+        
+        # Get pending payment requests
+        requests = frappe.get_all(
+            "Payment Request",
+            filters={"status": "Pending"},
+            fields=[
+                "name",
+                "user",
+                "amount",
+                "status",
+                "qr_code",
+                "bank_info",
+                "transaction_id",
+                "notes",
+                "creation"
+            ],
+            order_by="creation desc",
+            limit=limit,
+            offset=offset
+        )
+        
+        # Get total count of pending requests
+        total_count = frappe.db.count("Payment Request", {"status": "Pending"})
+        
+        return {
+            "success": True,
+            "data": requests,
+            "total_count": total_count
+        }
+    except frappe.PermissionError:
+        frappe.log_error(
+            message=f"[get_pending_payment_requests] Access denied for zalo_id: {zalo_id}",
+            title="Payment Request Permission Error"
+        )
+        return {"success": False, "message": "You do not have permission to access this"}
+    except Exception:
+        frappe.log_error(frappe.get_traceback(), "get_pending_payment_requests Error")
+        return {"success": False, "message": "Error fetching payment requests"}
+
+
+# =========================
+# APPROVE/REJECT PAYMENT REQUEST (for admin)
+# =========================
+
+@frappe.whitelist()
+def approve_payment_request(payment_request_id, zalo_id, action, notes=""):
+    """
+    Approve or reject a payment request (admin only)
+    action: 'Approved' or 'Rejected'
+    """
+    try:
+        if not zalo_id:
+            return {"success": False, "message": "Zalo ID is required"}
+        
+        if not payment_request_id or action not in ["Approved", "Rejected"]:
+            return {"success": False, "message": "Invalid parameters"}
+        
+        # Verify user is admin
+        admin_config = frappe.db.get_value(
+            "Zalo Config",
+            {"zalo_user_id": zalo_id},
+            "can_approve_payments"
+        )
+        
+        if not admin_config:
+            frappe.throw("You do not have permission to approve payments", frappe.PermissionError)
+        
+        # Get current user info
+        current_user = frappe.session.user
+        
+        # Update payment request
+        payment_req = frappe.get_doc("Payment Request", payment_request_id)
+        payment_req.status = action
+        payment_req.approved_by = current_user
+        payment_req.approved_at = now_datetime()
+        payment_req.notes = notes
+        
+        payment_req.save(ignore_permissions=True)
+        frappe.db.commit()
+        
+        # If approved, add deposit transaction
+        if action == "Approved":
+            user_name = payment_req.user
+            amount = payment_req.amount
+            
+            # Update wallet balance
+            wallet = frappe.db.get_value("Lunch Wallet", {"zalo_user": user_name}, "name")
+            if wallet:
+                transaction = frappe.get_doc({
+                    "doctype": "Transaction",
+                    "zalo_user": user_name,
+                    "type": "Deposit",
+                    "amount": amount,
+                    "description": f"Nạp tiền được duyệt - Payment Request: {payment_request_id}",
+                    "date": now_datetime()
+                })
+                transaction.insert(ignore_permissions=True)
+                frappe.db.commit()
+        
+        return {
+            "success": True,
+            "message": f"Payment request {action.lower()} successfully"
+        }
+    except frappe.PermissionError:
+        frappe.log_error(
+            message=f"[approve_payment_request] Access denied for zalo_id: {zalo_id}",
+            title="Approve Payment Permission Error"
+        )
+        return {"success": False, "message": "You do not have permission to approve payments"}
+    except Exception:
+        frappe.log_error(frappe.get_traceback(), "approve_payment_request Error")
+        return {"success": False, "message": "Error processing payment request"}
+
 

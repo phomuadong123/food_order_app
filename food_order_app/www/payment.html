@@ -1,0 +1,96 @@
+{% extends "templates/web.html" %}
+{% block navbar %}
+<header class="vnpt-header-main">
+        <div class="vnpt-logo-container">
+            <a href="https://tuyenquang.vnpt.vn" class="site-logo">
+                <img src="https://tuyenquang.vnpt.vn/static/images/logo.png" alt="VNPT Tuyên Quang Logo">
+            </a>
+            <div class="vnpt-text-group">
+                <div class="text-line1">VNPT TUYÊN QUANG</div>
+                <div class="text-line2">HỆ THỐNG QUẢN LÝ BẾP ĂN</div>
+            </div>
+        </div>
+</header>
+<link rel="stylesheet" href="/css/vote.css?v={{ frappe.utils.generate_hash(8) }}">
+{% endblock %}
+
+{% block page_content %}
+<div class="payment-container">
+    <!-- Back Button -->
+    <button class="back-button" onclick="goBack()">← Quay lại</button>
+
+    <!-- Admin Header -->
+    <div id="admin-header" style="display: none;">
+        <div class="admin-badge">CHUYÊN VIÊN DUYỆT THANH TOÁN</div>
+    </div>
+
+    <!-- QR Code Section -->
+    <div id="qr-section" class="payment-section qr-section">
+        <h2>Mã QR Chuyển Khoản</h2>
+        <div id="qr-code-container">
+            <p style="color: #666; font-size: 14px;">Đang tải mã QR...</p>
+        </div>
+    </div>
+
+    <!-- Transaction History Section -->
+    <div class="payment-section">
+        <h2>Lịch Sử Giao Dịch</h2>
+        <div id="transaction-filters" style="margin-bottom: 15px; display: flex; gap: 10px; flex-wrap: wrap;">
+            <input type="date" id="trans-from-date" style="padding: 8px; border: 1px solid #ddd; border-radius: 4px;">
+            <input type="date" id="trans-to-date" style="padding: 8px; border: 1px solid #ddd; border-radius: 4px;">
+            <button class="vote-btn vote-btn-secondary" onclick="loadTransactions()">Tìm kiếm</button>
+        </div>
+        <div id="transaction-list">
+            <p style="color: #666; text-align: center;">Đang tải giao dịch...</p>
+        </div>
+    </div>
+
+    <!-- Payment Request Section (Admin Only) -->
+    <div id="payment-request-section" class="payment-section" style="display: none;">
+        <h2>Duyệt Các Yêu Cầu Nạp Tiền</h2>
+        <div id="payment-request-list">
+            <p style="color: #666; text-align: center;">Đang tải yêu cầu thanh toán...</p>
+        </div>
+    </div>
+</div>
+
+<!-- Approval Modal -->
+<div id="approval-modal" class="lock-modal" aria-hidden="true">
+    <div class="lock-modal-card" style="max-width: 500px;">
+        <h3 class="lock-modal-title">Duyệt Yêu Cầu Nạp Tiền</h3>
+        <div style="margin-bottom: 15px;">
+            <label>Yêu cầu ID:</label>
+            <p id="approval-request-id" style="margin: 5px 0; font-weight: 600;"></p>
+        </div>
+        <div style="margin-bottom: 15px;">
+            <label>Số tiền:</label>
+            <p id="approval-amount" style="margin: 5px 0; font-weight: 600;"></p>
+        </div>
+        <div style="margin-bottom: 15px;">
+            <label for="approval-notes">Ghi chú:</label>
+            <textarea id="approval-notes" style="width: 100%; padding: 8px; border: 1px solid #ddd; border-radius: 4px; min-height: 80px;"></textarea>
+        </div>
+        <div class="modal-actions" style="display: flex; gap: 10px; justify-content: flex-end;">
+            <button class="vote-btn vote-btn-primary" onclick="submitApproval('Approved')">Phê Duyệt</button>
+            <button class="vote-btn" style="background: #dc3545; color: white;" onclick="submitApproval('Rejected')">Từ Chối</button>
+            <button class="vote-btn" onclick="closeApprovalModal()">Đóng</button>
+        </div>
+    </div>
+</div>
+<script src="/js/payment.js"></script>
+{% endblock %}
+
+{% block footer %}
+<footer class="vnpt-footer-wrapper">
+    <div class="container footer">
+        <div>
+            <p class="copyright">Sản phẩm được Đoàn thanh niên Viễn thông Tuyên Quang phối hợp với Phòng Nhân sự - Tổng hợp triển khai</p>
+            <p>
+                Ban quản trị: <strong>Nguyễn Trường Sơn - Quản lý</strong> |
+                <strong>Bùi Ánh Tuyết - Kế toán</strong> | 
+                <strong>Hà Văn Tín - Kỹ thuật</strong>
+            </p>
+        </div>
+    </div>
+</footer>
+{% endblock %}
