@@ -24,13 +24,24 @@
         <div class="admin-badge">CHUYÊN VIÊN DUYỆT THANH TOÁN</div>
     </div>
 
-    <!-- QR Code Section -->
-    <div id="qr-section" class="payment-section qr-section">
-        <h2>Mã QR Chuyển Khoản</h2>
-        <div id="qr-code-container">
-            <p style="color: #666; font-size: 14px;">Đang tải mã QR...</p>
+    <div class="lock-modal-card" style="max-width: 500px;">
+        <h3 class="lock-modal-title">Nạp tiền vào ví</h3>
+        <div style="margin-bottom: 20px;">
+            <label for="deposit-amount">Số tiền (VNĐ):</label>
+            <input type="number" id="deposit-amount" min="10000" step="10000" style="width: 100%; padding: 8px; margin-top: 5px;">
+        </div>
+        <div id="qr-container" style="display: none; text-align: center; margin-bottom: 20px;">
+            <p>Quét mã QR để chuyển khoản:</p>
+            <img id="qr-code" src="" alt="QR Code" style="max-width: 200px;">
+            <p id="bank-info" style="margin-top: 10px; font-size: 12px;"></p>
+        </div>
+        <div class="modal-actions" style="display: flex; gap: 10px; justify-content: flex-end;">
+            <button id="generate-qr-btn" class="vote-btn vote-btn-primary" onclick="generateQR()">Tạo mã QR</button>
+            <button id="confirm-payment-btn" class="vote-btn vote-btn-secondary" style="display: none;" onclick="confirmPayment()">Đã thanh toán</button>
         </div>
     </div>
+
+
 
     <!-- Transaction History Section -->
     <div class="payment-section">

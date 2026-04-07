@@ -121,10 +121,19 @@
     z-index: 1000;
     justify-content: center;
     align-items: center;
+    flex-direction: column;
+}
+
+.lock-modal {
+    display: flex !important;
+}
+
+.lock-modal[aria-hidden="true"] {
+    display: none !important;
 }
 
 .lock-modal[aria-hidden="false"] {
-    display: flex;
+    display: flex !important;
 }
 
 .lock-modal-card {

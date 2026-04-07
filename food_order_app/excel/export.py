@@ -178,15 +178,15 @@ def _create_report_sheet(wb, start_date, end_date, date_headers, period_query, s
         total_price = u_data['total_amount']
         avg_price = (total_price / num_days) if num_days > 0 else 0
         current_balance = wallet_map.get(u.name, 0)
-        sum_in_period = abs(sum_in_period_map.get(u.name, 0))
-        sum_after_end = abs(sum_after_end_map.get(u.name, 0))
+        sum_in_period = sum_in_period_map.get(u.name, 0)
+        sum_after_end = sum_after_end_map.get(u.name, 0)
         deposit_amount = deposit_map.get(u.name, 0)
 
         if is_future:
             beginning_balance = 0
             end_balance = 0
         else:
-            beginning_balance = sum_in_period + sum_after_end - total_price
+            beginning_balance = sum_in_period + sum_after_end + total_price
             end_balance = beginning_balance - total_price + deposit_amount
 
         row_data = [stt, u.real_name or u.full_name]
