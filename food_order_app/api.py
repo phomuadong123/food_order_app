@@ -711,7 +711,6 @@ def get_my_session_transactions(zalo_id, from_date=None, to_date=None, page=1, p
             FROM `tabTransaction` t
             LEFT JOIN `tabZalo User Map` zu ON t.zalo_user = zu.name
             LEFT JOIN `tabLunch Order` lo ON t.reference = lo.name
-            LEFT JOIN `tabLunch Session` ls ON lo.session = ls.name
             LEFT JOIN `tabLunch Menu Item` lmi ON lo.menu_item = lmi.name
             WHERE {where_clause}
             ORDER BY t.date DESC, t.name DESC
