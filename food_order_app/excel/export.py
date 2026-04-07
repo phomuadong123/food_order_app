@@ -2,7 +2,7 @@ import frappe
 import os
 import requests
 import traceback
-from frappe.utils import now, now_datetime, add_days, getdate
+from frappe.utils import now, nowdate, add_days, getdate
 from datetime import date, datetime, timedelta
 import calendar
 
@@ -92,10 +92,8 @@ def _create_report_sheet(wb, start_date, end_date, date_headers, period_query, s
         (start_date, end_date),
         as_dict=True,
     )
-    frappe.log_error(
-        title="Zalo SQL Error", # Viết tay tiêu đề ngắn gọn ở đây
-        message=str(orders)  # Toàn bộ nội dung lỗi dài nằm ở đây
-    )
+
+    is_future = getdate(start_date) > getdate(nowdate())
 
     user_orders = {}
     for o in orders:
@@ -182,9 +180,14 @@ def _create_report_sheet(wb, start_date, end_date, date_headers, period_query, s
         current_balance = wallet_map.get(u.name, 0)
         sum_in_period = abs(sum_in_period_map.get(u.name, 0))
         sum_after_end = abs(sum_after_end_map.get(u.name, 0))
-        beginning_balance = sum_in_period + sum_after_end - total_price
-        end_balance = beginning_balance + total_price
         deposit_amount = deposit_map.get(u.name, 0)
+
+        if is_future:
+            beginning_balance = 0
+            end_balance = 0
+        else:
+            beginning_balance = sum_in_period + sum_after_end - total_price
+            end_balance = beginning_balance - total_price + deposit_amount
 
         row_data = [stt, u.real_name or u.full_name]
         for idx in range(1, len(date_headers) + 1):
