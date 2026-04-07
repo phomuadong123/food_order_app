@@ -72,7 +72,13 @@ def _create_report_sheet(wb, start_date, end_date, date_headers, period_query, s
         f"""
         SELECT
             lo.zalo_user,
-            {period_query} as period_index,
+                DAY(
+                CASE 
+                    WHEN TIME(lo.created_at) > '12:00:00' 
+                    THEN DATE_ADD(lo.created_at, INTERVAL 1 DAY)
+                    ELSE lo.created_at
+                END
+            ) AS period_index,
             lmi.price
         FROM `tabLunch Order` lo
         JOIN `tabLunch Session` ls ON lo.session = ls.name
