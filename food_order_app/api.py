@@ -606,10 +606,10 @@ def get_session_votes(session):
 
         # Get session date to determine the month
         session_doc = frappe.get_doc("Lunch Session", session)
-        session_date = session_doc.date
-        start_of_month = session_date.replace(day=1, hour=0, minute=0, second=0, microsecond=0)
-        end_of_month = (start_of_month + timedelta(days=32)).replace(day=1) - timedelta(seconds=1)
-        end_of_previous_month = start_of_month - timedelta(seconds=1)
+        session_date = getdate(session_doc.date)
+        start_of_month = datetime.combine(session_date.replace(day=1), datetime.min.time())
+        end_of_month = datetime.combine((session_date.replace(day=1) + timedelta(days=32)).replace(day=1) - timedelta(days=1), datetime.max.time())
+        end_of_previous_month = datetime.combine(start_of_month - timedelta(days=1), datetime.max.time())
 
         rows = frappe.db.sql("""
             SELECT
