@@ -197,6 +197,7 @@ function renderPagination(totalCount) {
 }
 
 function openApprovalModal(requestId, amount, user) {
+    // Lưu dữ liệu vào biến toàn cục để hàm submitApproval sử dụng
     currentApprovalData = {
         requestId: requestId,
         amount: amount,
@@ -206,33 +207,49 @@ function openApprovalModal(requestId, amount, user) {
     if (!approvalDialog) {
         approvalDialog = new frappe.ui.Dialog({
             title: 'Duyệt Yêu Cầu Nạp Tiền',
-            body: `
-                <div style="padding: 15px;">
-                    <p><strong>Yêu cầu ID:</strong> <span id="dialog-request-id"></span></p>
-                    <p><strong>Số tiền:</strong> <span id="dialog-amount"></span></p>
-                    <div style="margin-top: 15px;">
-                        <label for="dialog-notes" style="display: block; margin-bottom: 5px;"><strong>Ghi chú:</strong></label>
-                        <textarea id="dialog-notes" placeholder="Ghi chú thêm (không bắt buộc)" style="width: 100%; min-height: 60px; padding: 8px; border: 1px solid #ccc; border-radius: 4px;"></textarea>
-                    </div>
-                </div>
-            `,
+            fields: [
+                {
+                    label: 'Thông tin yêu cầu',
+                    fieldname: 'info_html',
+                    fieldtype: 'HTML'
+                },
+                {
+                    label: 'Ghi chú',
+                    fieldname: 'notes',
+                    fieldtype: 'Small Text',
+                    placeholder: 'Ghi chú thêm (không bắt buộc)'
+                }
+            ],
             primary_action_label: 'Phê Duyệt',
             primary_action: function() {
-                const notes = document.getElementById('dialog-notes').value;
-                submitApproval('Approved', notes);
+                const values = approvalDialog.get_values();
+                // values.notes sẽ lấy nội dung từ Small Text phía trên
+                submitApproval('Approved', values.notes || '');
+                approvalDialog.hide();
             },
             secondary_action_label: 'Từ Chối',
             secondary_action: function() {
-                const notes = document.getElementById('dialog-notes').value;
-                submitApproval('Rejected', notes);
+                const values = approvalDialog.get_values();
+                submitApproval('Rejected', values.notes || '');
+                approvalDialog.hide();
             }
         });
     }
 
+    // Thiết lập nội dung HTML động cho dòng thông tin
+    const info_content = `
+        <div style="margin-bottom: 10px;">
+            <p><strong>Yêu cầu ID:</strong> <span class="text-info">${requestId}</span></p>
+            <p><strong>Số tiền:</strong> <span class="text-success" style="font-weight: bold;">${amount}</span></p>
+            <p><strong>Người dùng:</strong> <span>${user}</span></p>
+        </div>
+    `;
+
+    // Cập nhật giá trị vào Dialog trước khi hiển thị
+    approvalDialog.get_field('info_html').$wrapper.html(info_content);
+    approvalDialog.set_value('notes', ''); // Reset ghi chú về trống
+    
     approvalDialog.show();
-    document.getElementById('dialog-request-id').textContent = requestId;
-    document.getElementById('dialog-amount').textContent = amount + ' - ' + user;
-    document.getElementById('dialog-notes').value = '';
 }
 
 function closeApprovalModal() {
