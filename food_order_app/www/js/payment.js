@@ -199,8 +199,9 @@ function renderPagination(totalCount) {
 
 function openApprovalModal(requestId, amount, user) {
     // Lưu thông tin
-    currentApprovalData = { id: requestId, amount: amount, user: user };
-
+    currentApprovalData = { requestId: requestId, amount: amount, user: user };
+    console.log(currentApprovalData);
+    
     // Đổ dữ liệu vào HTML bằng JS thuần
     document.getElementById('m-id').innerText = requestId;
     document.getElementById('m-amount').innerText = amount;
