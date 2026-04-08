@@ -491,20 +491,20 @@
 
                 let tableHtml = `
                     <div class="table-wrap" style="overflow-x: auto; margin: 20px 0;">
-                        <table class="vote-table" style="border-collapse: collapse; width: 100%; font-size: 14px; font-family: Arial, sans-serif; box-shadow: 0 2px 8px rgba(0,0,0,0.1);">
+                        <table class="vote-table">
                             <thead>
-                                <tr style="background-color: #4CAF50; color: white;">
-                                    <th style="border: 1px solid #ddd; padding: 12px; text-align: center; font-weight: bold;">STT</th>
-                                    <th style="border: 1px solid #ddd; padding: 12px; text-align: left; font-weight: bold;">Người đăng ký</th>
-                                    <th style="border: 1px solid #ddd; padding: 12px; text-align: left; font-weight: bold;">Tên Zalo</th>
-                                    <th style="border: 1px solid #ddd; padding: 12px; text-align: left; font-weight: bold;">Đã đăng ký</th>
-                                    <th style="border: 1px solid #ddd; padding: 12px; text-align: left; font-weight: bold;">Ngày đăng ký</th>
-                                    <th style="border: 1px solid #ddd; padding: 12px; text-align: right; font-weight: bold;">Tiền đầu kỳ</th>
-                                    <th style="border: 1px solid #ddd; padding: 12px; text-align: center; font-weight: bold;">Xuất ăn trong tháng</th>
-                                    <th style="border: 1px solid #ddd; padding: 12px; text-align: right; font-weight: bold;">Tiền ăn trong tháng</th>
-                                    <th style="border: 1px solid #ddd; padding: 12px; text-align: right; font-weight: bold;">Tiền nộp trong tháng</th>
-                                    <th style="border: 1px solid #ddd; padding: 12px; text-align: right; font-weight: bold;">Tiền còn lại</th>
-                                    <th style="border: 1px solid #ddd; padding: 12px; text-align: left; font-weight: bold;">Ghi chú</th>
+                                <tr>
+                                    <th class="text-center">STT</th>
+                                    <th class="text-start">Người đăng ký</th>
+                                    <th class="text-start">Tên Zalo</th>
+                                    <th class="text-start">Đã đăng ký</th>
+                                    <th class="text-center">Ngày đăng ký</th>
+                                    <th class="text-center">Tiền đầu kỳ</th>
+                                    <th class="text-center">Xuất ăn trong tháng</th>
+                                    <th class="text-center">Tiền ăn trong tháng</th>
+                                    <th class="text-center">Tiền nộp trong tháng</th>
+                                    <th class="text-center">Tiền còn lại</th>
+                                    <th class="text-start">Ghi chú</th>
                                 </tr>
                             </thead>
                         <tbody>
@@ -526,18 +526,18 @@
                     const rowStyle = index % 2 === 0 ? 'background-color: #f9f9f9;' : 'background-color: #ffffff;';
 
                     tableHtml += `
-                        <tr style="${rowStyle} border-bottom: 1px solid #ddd;">
-                            <td style="border: 1px solid #ddd; padding: 10px; text-align: center;">${index + 1}</td>
-                            <td style="border: 1px solid #ddd; padding: 10px;">${voterName}</td>
-                            <td style="border: 1px solid #ddd; padding: 10px;">${zaloName}</td>
-                            <td style="border: 1px solid #ddd; padding: 10px;">${itemName}</td>
-                            <td style="border: 1px solid #ddd; padding: 10px;">${createdAt}</td>
-                            <td style="border: 1px solid #ddd; padding: 10px; text-align: right;">${beginningBalance}</td>
-                            <td style="border: 1px solid #ddd; padding: 10px; text-align: center;">${monthlyOrderCount}</td>
-                            <td style="border: 1px solid #ddd; padding: 10px; text-align: right;">${monthlyFoodCost}</td>
-                            <td style="border: 1px solid #ddd; padding: 10px; text-align: right;">${monthlyDepositAmount}</td>
-                            <td style="border: 1px solid #ddd; padding: 10px; text-align: right;">${walletBalance}</td>
-                            <td style="border: 1px solid #ddd; padding: 10px;">${note}</td>
+                        <tr style="${rowStyle}">
+                            <td class="text-center">${index + 1}</td>
+                            <td class="text-start">${voterName}</td>
+                            <td class="text-start">${zaloName}</td>
+                            <td class="text-start">${itemName}</td>
+                            <td class="text-center text-small">${createdAt}</td>
+                            <td class="text-center text-small">${beginningBalance}</td>
+                            <td class="text-center text-small">${monthlyOrderCount}</td>
+                            <td class="text-center text-small">${monthlyFoodCost}</td>
+                            <td class="text-center text-small">${monthlyDepositAmount}</td>
+                            <td class="text-center text-small">${walletBalance}</td>
+                            <td class="text-start note-cell">${note}</td>
                         </tr>
                     `;
                 });
