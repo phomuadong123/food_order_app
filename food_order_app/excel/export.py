@@ -41,7 +41,7 @@ def _get_transaction_maps(start_date, end_date):
         FROM `tabTransaction` t
         Left JOIN `tabLunch Order` tlo on t.reference = tlo.name
         WHERE 
-            t.date <= LAST_DAY(%s - INTERVAL 1 MONTH) 
+            t.date < %s
             AND t.type = 'Pay' and tlo.is_active = 1
         GROUP BY 
             t.zalo_user;
