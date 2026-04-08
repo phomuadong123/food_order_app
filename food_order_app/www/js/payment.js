@@ -21,9 +21,7 @@ frappe.ready(function() {
         callback: function(r) {
             console.log(r.message);
             if (r.message && r.message.is_admin) {
-                document.querySelector('.lock-modal-card').style.display = 'none';
                 document.getElementById("lock-modal-title").textContent = "Duyệt các yêu cầu nạp tiền, admin(" + (r.message.full_name) +")";
-
             } else {
                 document.getElementById("lock-modal-title").textContent = "Thực hiện giao dịch thêm tiền vào ví của bạn: " + (r.message.full_name) +".";
             }

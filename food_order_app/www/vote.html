@@ -117,13 +117,13 @@
         let myHistoryFromDate = ""
         let myHistoryToDate = ""
 
-        async function openDepositModal() {
+        window.openDepositModal = async function() {
             if (zalo_id) {
                 window.location.href = `/payment?zalo_id=${zalo_id}`;
             } else {
                 console.error("Không tìm thấy zalo_id");
             }
-        }
+        };
 
 
         async function updateInactiveSupportText() {
