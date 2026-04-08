@@ -39,8 +39,8 @@
 
 /* Card Style chung */
 .payment-card, .note-card, .history-card {
-    background-color: #181a20;
-    border: 1px solid #2b2f36;
+    background-color: #ffffff;
+    border: 1px solid #5178bd;
     border-radius: 12px;
     padding: 24px;
 }
@@ -61,9 +61,9 @@
     display: flex;
     justify-content: space-between;
     align-items: center;
-    background-color: #0b0e11;
-    border: 1px solid #474d57;
-    padding: 12px;
+    background-color: #f5f5f5;
+    border: 1px solid #4a70b1;
+    padding: 40px;
     border-radius: 8px;
     cursor: pointer;
 }
@@ -75,7 +75,7 @@
 }
 
 .icon-box {
-    background-color: #2b2f36;
+    background-color: #5780c7;
     width: 40px;
     height: 40px;
     display: flex;
@@ -104,8 +104,8 @@
 
 .amount-input {
     width: 100%;
-    background-color: #0b0e11;
-    border: 1px solid #474d57;
+    background-color: #ffffff;
+    border: 1px solid #9ca9c0;
     color: white;
     padding: 16px;
     font-size: 20px;
@@ -125,7 +125,7 @@
 
 .btn {
     flex: 1;
-    padding: 14px;
+    padding: 20px;
     border-radius: 8px;
     font-weight: bold;
     cursor: pointer;
@@ -135,12 +135,12 @@
 
 .btn-outline {
     background: transparent;
-    border: 1px solid #474d57;
-    color: white;
+    border: 1px solid #6780ac;
+    color: rgb(255, 255, 255);
 }
 
 .btn-outline:hover {
-    background: #2b2f36;
+    background: #56709c;
 }
 
 .btn-primary {

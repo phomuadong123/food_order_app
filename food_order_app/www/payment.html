@@ -19,11 +19,11 @@
 <div class="container">
         <header class="header">
             <button class="back-button" onclick="goBack()">← Quay lại</button>
-            <div class="header-text">
-                <h1>Nạp tiền</h1>
-                <p id="lock-modal-title">Thêm tiền vào số dư ví của bạn</p>
-            </div>
+            <div class="admin-badge"><span id="lock-modal-title">Thêm tiền vào số dư ví của bạn</span></div>
         </header>
+        <div id="admin-header" style="display: none;">
+            <div class="admin-badge">CHUYÊN VIÊN DUYỆT THANH TOÁN</div>
+        </div>
 
         <div class="main-content">
             <div class="payment-card">
@@ -65,7 +65,7 @@
 
             <aside class="note-card">
                 <h3>Lưu ý quan trọng</h3>
-                <ul>
+                <ul style="padding: 0;">
                     <li>Sau khi đã thanh toán và bấm Hoàn tất, tiền sẽ được hệ thống xử lý và cộng trong khoảng 5-10 phút.</li>
                     <li>Nếu sau 1 tiếng chưa thấy tiền vào, hãy liên hệ hỗ trợ.</li>
                     <li>Chỉ được tạo tối đa 5 đơn nạp ở trạng thái chờ thanh toán hoặc đang xử lý.</li>
@@ -88,13 +88,13 @@
                 <p style="color: #666; text-align: center;">Đang tải giao dịch...</p>
             </div>
         </section>
-        <section class="history-card">
-           <div id="payment-request-section" class="payment-section" style="display: none;">
+        <section class="history-card payment-section">
+           <div id="payment-request-section" style="display: none;">
             <h2>Duyệt Các Yêu Cầu Nạp Tiền</h2>
             <div id="payment-request-list">
                 <p style="color: #666; text-align: center;">Đang tải yêu cầu thanh toán...</p>
             </div>
-        </div>
+            </div>
         </section>
          
     </div>
