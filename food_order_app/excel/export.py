@@ -24,10 +24,11 @@ def _get_transaction_maps(start_date, end_date):
         FROM `tabTransaction` t
         WHERE t.type = 'Deposit'
             AND (t.reference IS NULL OR t.reference = '')
-            AND t.date BETWEEN %s AND %s
+            AND t.date >= %s
+            AND t.date < DATE_ADD(%s, INTERVAL 1 MONTH)
         GROUP BY t.zalo_user
         """,
-        (start_date, end_date),
+        (start_date, start_date),
         as_dict=True,
     )
     deposit_map = {d.zalo_user: float(d.deposit_amount or 0) for d in deposits}
@@ -57,7 +58,6 @@ def _get_transaction_maps(start_date, end_date):
         FROM `tabTransaction` t
         WHERE t.type = 'Deposit'
             AND (t.reference IS NULL OR t.reference = '')
-            AND t.date >= DATE_SUB(%s, INTERVAL 1 MONTH)
             AND t.date < %s 
         GROUP BY t.zalo_user;
         """,
