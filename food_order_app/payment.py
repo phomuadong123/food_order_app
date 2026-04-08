@@ -47,6 +47,7 @@ def create_payment_request(amount,zalo_id):
     pr = frappe.get_doc({
         "doctype": "Payment Request",
         "user": name,
+        "full_name": full_name,
         "amount": amount,
         "status": "Pending",
         "bank_info": f"Ngân hàng: {bank_info['bank']}\nSố tài khoản: {bank_info['account_number']}\nTên: {bank_info['account_name']}\nNội dung: {bank_info['content']}",
