@@ -94,29 +94,6 @@
          
     </div>
 
-<!-- Approval Modal -->
-<div id="approval-modal" class="lock-modal" aria-hidden="true">
-    <div class="lock-modal-card" style="max-width: 500px;">
-        <h3 class="lock-modal-title">Duyệt Yêu Cầu Nạp Tiền</h3>
-        <div style="margin-bottom: 15px;">
-            <label>Yêu cầu ID:</label>
-            <p id="approval-request-id" style="margin: 5px 0; font-weight: 600;"></p>
-        </div>
-        <div style="margin-bottom: 15px;">
-            <label>Số tiền:</label>
-            <p id="approval-amount" style="margin: 5px 0; font-weight: 600;"></p>
-        </div>
-        <div style="margin-bottom: 15px;">
-            <label for="approval-notes">Ghi chú:</label>
-            <textarea id="approval-notes" style="width: 100%; padding: 8px; border: 1px solid #ddd; border-radius: 4px; min-height: 80px;"></textarea>
-        </div>
-        <div class="modal-actions" style="display: flex; gap: 10px; justify-content: flex-end;">
-            <button class="vote-btn vote-btn-primary" onclick="submitApproval('Approved')">Phê Duyệt</button>
-            <button class="vote-btn" style="background: #dc3545; color: white;" onclick="submitApproval('Rejected')">Từ Chối</button>
-            <button class="vote-btn" onclick="closeApprovalModal()">Đóng</button>
-        </div>
-    </div>
-</div>
 <script src="/js/payment.js"></script>
 {% endblock %}
 

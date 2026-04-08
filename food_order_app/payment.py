@@ -4,6 +4,7 @@ import io
 import base64
 from frappe.utils import now, now_datetime
 import requests
+from food_order_app.api import call_zalo_api
 
 
 @frappe.whitelist()
@@ -56,13 +57,68 @@ def create_payment_request(amount,zalo_id):
     pr.insert()
 
     # Gửi thông báo Zalo đến admin
-
+    notify_admins_by_zalo(f'Có yêu cầu nạp tiền mới từ user: {full_name}, số tiền: {amount} VNĐ. Vui lòng kiểm tra và duyệt yêu cầu này.')
     return {
         "success": True,
         "payment_request": pr.name,
         "qr_code": pr.qr_code,
         "bank_info": pr.bank_info
     }
+
+
+def get_zalo_oa_access_token():
+    """Lấy access token Zalo OA từ bảng Zalo Config."""
+    access_token = frappe.db.get_value("Zalo Config", None, "access_token")
+    return access_token
+
+
+def send_zalo_oa_message(zalo_user_id, message):
+    """Gửi tin nhắn Zalo OA đến một user cá nhân."""
+    if not zalo_user_id:
+        return False
+
+    # Access token sẽ được lấy từ Zalo Config qua call_zalo_api
+    payload = {
+        "recipient": {
+            "user_id": zalo_user_id
+        },
+        "message": {
+            "text": message
+        }
+    }
+
+    response = call_zalo_api("https://openapi.zalo.me/v3.0/oa/message/cs", method="POST", data=payload)
+    return response.get("error") == 0
+
+
+@frappe.whitelist()
+def notify_admins_by_zalo(message):
+    """Gửi tin nhắn Zalo OA cho tất cả admin trong Zalo User Map."""
+    try:
+        admins = frappe.get_all(
+            "Zalo User Map",
+            filters={"roles": "Admin"},
+            fields=["zalo_id"]
+        )
+
+        if not admins:
+            return {"success": False, "message": "Không tìm thấy admin nào."}
+
+        sent = 0
+        for admin in admins:
+            if admin.zalo_id:
+                if send_zalo_oa_message(admin.zalo_id, message):
+                    sent += 1
+
+        return {
+            "success": True,
+            "sent": sent,
+            "total": len(admins)
+        }
+    except Exception as e:
+        frappe.log_error(frappe.get_traceback(), "notify_admins_by_zalo Error")
+        return {"success": False, "message": str(e)}
+
 
 # =========================
 # GET PAYMENT REQUESTS (for admin approval)

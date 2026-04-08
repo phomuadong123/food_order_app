@@ -35,11 +35,3 @@ document.addEventListener("DOMContentLoaded", function() {
     if(fromInput) fromInput.value = lastMonthStr;
 });
 
-function openDepositModal() {
-    if (zalo_id) {
-        window.location.href = `/payment?zalo_id=${zalo_id}`;
-    } else {
-        console.error("Không tìm thấy zalo_id");
-    }
-}
-

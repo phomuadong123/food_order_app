@@ -53,9 +53,32 @@ def start_vote(session = None):
             f"&state={session}"
         )
 
+        frappe.local.response["type"] = "redirect"
+        frappe.local.response["location"] = oauth_url
+        return
+
+    except Exception as err:
         frappe.log_error(
-            title="start_vote_debug",
-            message=f"FORCING NGROK CALLBACK: {oauth_url}"
+            message=frappe.get_traceback(),
+            title=f"start_vote failed: {str(err)}"
+        )
+        return {"error": "start_vote_failed", "detail": str(err)}
+    
+@frappe.whitelist(allow_guest=True)
+def payment_request(session = None):
+    try:
+        base = BASE_URL or frappe.utils.get_url()
+        redirect_uri = f"{base}{REDIRECT_URI}"
+
+        from urllib.parse import quote_plus
+        encoded_redirect_uri = quote_plus(redirect_uri)
+
+        oauth_url = (
+            f"https://oauth.zaloapp.com/v4/permission?"
+            f"app_id={ZALO_APP_ID}"
+            f"&redirect_uri={encoded_redirect_uri}"
+            f"&state={session}"
+            f"&type=payment_request"
         )
 
         frappe.local.response["type"] = "redirect"
@@ -68,6 +91,7 @@ def start_vote(session = None):
             title=f"start_vote failed: {str(err)}"
         )
         return {"error": "start_vote_failed", "detail": str(err)}
+    
 
 
 # =========================
@@ -75,7 +99,7 @@ def start_vote(session = None):
 # =========================
 
 @frappe.whitelist(allow_guest=True)
-def zalo_callback(code=None, state=None):
+def zalo_callback(code=None, state=None, type=None):
 
     trace_id = frappe.generate_hash(length=8)
 
@@ -216,7 +240,10 @@ def zalo_callback(code=None, state=None):
         # STEP 6: REDIRECT
 
         PRODUCTION_DOMAIN = BASE_URL
-        final_url = f"{PRODUCTION_DOMAIN}/vote?session={state or ''}&zalo_id={zalo_id}"
+        if type == "payment_request":
+            final_url = f"{PRODUCTION_DOMAIN}/payment?zalo_id={zalo_id}"
+        else:
+            final_url = f"{PRODUCTION_DOMAIN}/vote?session={state or ''}&zalo_id={zalo_id}"
 
         frappe.local.response["type"] = "redirect"
         frappe.local.response["location"] = final_url

@@ -3,6 +3,7 @@ let params = new URLSearchParams(window.location.search);
 let zalo_id = params.get('zalo_id');
 let isAdmin = false;
 let currentApprovalData = {};
+let approvalDialog = null;
 
 frappe.ready(function() {
     
@@ -62,7 +63,7 @@ function generateQR() {
                 const generateBtn = document.getElementById('generate-qr-btn');
                 const confirmBtn = document.getElementById('confirm-payment-btn');
                 
-                qrImg.src = "/image/qr.jpg";
+                qrImg.src = r.message.qr_code;
                 bankInfo.innerHTML = r.message.bank_info.replace(/\n/g, '<br>');
                 qrContainer.style.display = 'block';
                 generateBtn.style.display = 'none';
@@ -145,7 +146,7 @@ function renderTable(requests, userInfo) {
                     <th>Trạng thái</th>
                     <th>Ghi chú</th>
                     <th>Thời gian</th>
-                    ${!isAdmin ? '<th>Hành động</th>' : ''} 
+                    ${isAdmin ? '<th>Hành động</th>' : ''} 
                 </tr>
             </thead>
             <tbody>
@@ -201,28 +202,46 @@ function openApprovalModal(requestId, amount, user) {
         amount: amount,
         user: user
     };
-    const modal = document.getElementById('approval-modal');
-    document.getElementById('approval-request-id').textContent = requestId;
-    document.getElementById('approval-amount').textContent = amount + ' - ' + user;
-    document.getElementById('approval-notes').value = '';
-    modal.setAttribute('aria-hidden', 'false');
-    modal.style.display = 'block';
+
+    if (!approvalDialog) {
+        approvalDialog = new frappe.ui.Dialog({
+            title: 'Duyệt Yêu Cầu Nạp Tiền',
+            fields: [
+                { fieldtype: 'Data', fieldname: 'request_id', label: 'Yêu cầu ID', read_only: 1 },
+                { fieldtype: 'Data', fieldname: 'amount', label: 'Số tiền', read_only: 1 },
+                { fieldtype: 'Small Text', fieldname: 'notes', label: 'Ghi chú', placeholder: 'Ghi chú thêm (không bắt buộc)' }
+            ],
+            primary_action_label: 'Phê Duyệt',
+            primary_action: function(values) {
+                submitApproval('Approved', values.notes);
+            },
+            secondary_action_label: 'Từ Chối',
+            secondary_action: function(values) {
+                submitApproval('Rejected', values.notes);
+            }
+        });
+    }
+
+    approvalDialog.set_value('request_id', requestId);
+    approvalDialog.set_value('amount', amount + ' - ' + user);
+    approvalDialog.set_value('notes', '');
+    approvalDialog.show();
 }
 
 function closeApprovalModal() {
-    document.getElementById('approval-modal').setAttribute('aria-hidden', 'true');
-    const modal = document.getElementById('approval-modal');
-    modal.style.display = 'none';
+    if (approvalDialog) {
+        approvalDialog.hide();
+    }
     currentApprovalData = {};
 }
 
-function submitApproval(action) {
+function submitApproval(action, notes) {
     if (!currentApprovalData.requestId) {
         frappe.msgprint('Có lỗi xảy ra');
         return;
     }
 
-    const notes = document.getElementById('approval-notes').value;
+    notes = notes || '';
 
     frappe.call({
         method: 'food_order_app.payment.approve_payment_request',
