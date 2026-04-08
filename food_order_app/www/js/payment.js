@@ -1,54 +1,97 @@
 // Get URL parameters
-const urlParams = new URLSearchParams(window.location.search);
-const mode = urlParams.get('mode');
-const zaloId = urlParams.get('zalo_id');
+let params = new URLSearchParams(window.location.search);
+let zalo_id = params.get('zalo_id');
 let isAdmin = false;
 let currentApprovalData = {};
 
 frappe.ready(function() {
-    // Check if admin mode
-    if (mode === 'admin' && zaloId) {
-        isAdmin = true;
-        document.getElementById('admin-header').style.display = 'block';
-        document.getElementById('qr-section').style.display = 'none';
-        document.getElementById('payment-request-section').style.display = 'block';
-        loadPaymentRequests();
-    } else {
-        loadTransactions();
-        loadQRCode();
-    }
-});
+    
 
-function loadQRCode() {
-    // Load QR Code from bank/payment config
+    if (!zalo_id) {
+        console.error("Không tìm thấy Zalo ID");
+        return;
+    }
+
     frappe.call({
-        method: 'frappe.client.get_list',
+        method: "food_order_app.payment.check_zalo_admin",
         args: {
-            doctype: 'Zalo Config',
-            fields: ['bank_info', 'qr_code'],
-            limit_page_length: 1
+            "zalo_id": zalo_id
         },
         callback: function(r) {
-            if (r.message && r.message.length > 0) {
-                const config = r.message[0];
-                let qrHtml = '<p style="color: #dc3545; font-size: 16px; margin-bottom: 20px;">Vui lòng chuyển khoản theo thông tin bên dưới:</p>';
-                
-                if (config.qr_code) {
-                    qrHtml += `<img src="${config.qr_code}" alt="QR Code" style="max-width: 300px; border-radius: 8px;">`;
-                }
-                
-                if (config.bank_info) {
-                    qrHtml += `<div class="bank-info">${config.bank_info}</div>`;
-                }
-                
-                document.getElementById('qr-code-container').innerHTML = qrHtml;
+            if (r.message && r.message.is_admin) {
+                document.getElementById('admin-header').style.display = 'block';
+                document.querySelector('.lock-modal-card').style.display = 'none';
+                document.querySelector('.payment-section').style.display = 'none';
+                loadPaymentRequests();
+            } else {
+                // LOGIC CHO USER THƯỜNG
+                document.getElementById('admin-header').style.display = 'none';
+                document.getElementById("lock-modal-title").textContent = "Thêm tiền vào ví của bạn: " + (r.message.full_name) +".";
+                loadTransactions();
             }
         }
     });
-}
+});
+
+function confirmPayment() {
+    frappe.confirm('Bạn đã chuyển khoản thành công?', () => {
+        frappe.msgprint({
+            title: 'Thành công',
+            message: 'Yêu cầu nạp tiền đã được gửi đến quản trị viên. Vui lòng chờ xác nhận (thường trong vòng 1-2 giờ).',
+            indicator: 'green'
+        });
+        window.closeDepositModal();
+    });
+};
+
+function generateQR() {
+    const amountInput = document.getElementById('deposit-amount');
+    const amount = amountInput.value;
+    
+    if (!amount || parseFloat(amount) < 10000) {
+        frappe.msgprint('Vui lòng nhập số tiền tối thiểu 10,000 VNĐ');
+        return;
+    }
+    
+    frappe.call({
+        method: 'food_order_app.payment.create_payment_request',
+        args: { amount: amount, zalo_id: zalo_id },
+        callback: function(r) {
+            if (r.message && r.message.success) {
+                const qrImg = document.getElementById('qr-code');
+                const bankInfo = document.getElementById('bank-info');
+                const qrContainer = document.getElementById('qr-container');
+                const generateBtn = document.getElementById('generate-qr-btn');
+                const confirmBtn = document.getElementById('confirm-payment-btn');
+                
+                qrImg.src = r.message.qr_code;
+                bankInfo.innerHTML = r.message.bank_info.replace(/\n/g, '<br>');
+                qrContainer.style.display = 'block';
+                generateBtn.style.display = 'none';
+                confirmBtn.style.display = 'inline-block';
+                
+                frappe.msgprint('Mã QR đã được tạo. Vui lòng quét mã và chuyển khoản.');
+            } else {
+                frappe.msgprint({
+                    title: 'Lỗi',
+                    message: 'Không tạo được mã QR. Vui lòng thử lại.',
+                    indicator: 'red'
+                });
+            }
+        },
+        error: function(err) {
+            console.error('generateQR error:', err);
+            frappe.msgprint({
+                title: 'Lỗi',
+                message: 'Có lỗi xảy ra khi tạo mã QR.',
+                indicator: 'red'
+            });
+        }
+    });
+};
 
 function loadTransactions() {
-    if (!zaloId) {
+    if (!zalo_id) {
         // Show error message
         document.getElementById('transaction-list').innerHTML = '<p style="color: #dc3545; text-align: center;">Không tìm thấy zalo_id</p>';
         return;
@@ -60,7 +103,7 @@ function loadTransactions() {
     frappe.call({
         method: 'food_order_app.api.get_user_transactions',
         args: {
-            zalo_id: zaloId,
+            zalo_id: zalo_id,
             from_date: fromDate,
             to_date: toDate,
             limit: 100
@@ -92,9 +135,9 @@ function loadTransactions() {
 
 function loadPaymentRequests() {
     frappe.call({
-        method: 'food_order_app.api.get_pending_payment_requests',
+        method: 'food_order_app.payment.get_payment_requests',
         args: {
-            zalo_id: zaloId,
+            zalo_id: zalo_id,
             limit: 50
         },
         callback: function(r) {
@@ -154,10 +197,10 @@ function submitApproval(action) {
     const notes = document.getElementById('approval-notes').value;
 
     frappe.call({
-        method: 'food_order_app.api.approve_payment_request',
+        method: 'food_order_app.payment.approve_payment_request',
         args: {
             payment_request_id: currentApprovalData.requestId,
-            zalo_id: zaloId,
+            zalo_id: zalo_id,
             action: action,
             notes: notes
         },
@@ -192,3 +235,4 @@ function getTransactionTypeLabel(type) {
 function goBack() {
     window.history.back();
 }
+

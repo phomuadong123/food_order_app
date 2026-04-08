@@ -2,7 +2,7 @@ import frappe
 import os
 import requests
 import traceback
-from frappe.utils import now, now_datetime, add_days, getdate
+from frappe.utils import now, nowdate, add_days, getdate
 from datetime import date, datetime, timedelta
 import calendar
 
@@ -38,24 +38,28 @@ def _get_transaction_maps(start_date, end_date):
             t.zalo_user,
             SUM(t.amount) AS sum_amount
         FROM `tabTransaction` t
-        WHERE t.date BETWEEN %s AND %s
-        GROUP BY t.zalo_user
+        WHERE 
+            t.date <= LAST_DAY(%s - INTERVAL 1 MONTH) 
+            AND t.type = 'Pay'
+        GROUP BY 
+            t.zalo_user;
         """,
-        (start_date, end_date),
+        (start_date),
         as_dict=True,
     )
     sum_in_period_map = {d.zalo_user: float(d.sum_amount or 0) for d in sum_in_period}
 
     sum_after_end = frappe.db.sql(
-        """
-        SELECT
+    """
+       SELECT
             t.zalo_user,
-            SUM(t.amount) AS sum_amount
+            SUM(t.amount)  AS sum_amount
         FROM `tabTransaction` t
-        WHERE t.date > %s
-        GROUP BY t.zalo_user
+            where t.date >= (%s - INTERVAL 1 MONTH)
+    	    AND t.date <= LAST_DAY(%s - INTERVAL 1 MONTH) and t.type = 'Pay'
+        GROUP BY t.zalo_user;
         """,
-        (end_date,),
+        (start_date, end_date),
         as_dict=True,
     )
     sum_after_end_map = {d.zalo_user: float(d.sum_amount or 0) for d in sum_after_end}
@@ -89,10 +93,8 @@ def _create_report_sheet(wb, start_date, end_date, date_headers, period_query, s
         (start_date, end_date),
         as_dict=True,
     )
-    frappe.log_error(
-        title="Zalo SQL Error", # Viết tay tiêu đề ngắn gọn ở đây
-        message=str(orders)  # Toàn bộ nội dung lỗi dài nằm ở đây
-    )
+
+    is_future = getdate(start_date) > getdate(nowdate())
 
     user_orders = {}
     for o in orders:
@@ -108,14 +110,19 @@ def _create_report_sheet(wb, start_date, end_date, date_headers, period_query, s
         user_orders[o.zalo_user]['days'].add(period_index)
         user_orders[o.zalo_user]['total_amount'] += (o.price or 0)
 
-    frappe.log_error(
-        title="Zalo SQL Error", # Viết tay tiêu đề ngắn gọn ở đây
-        message=str(user_orders)  # Toàn bộ nội dung lỗi dài nằm ở đây
-    )
+   
     wallets = frappe.get_all("Lunch Wallet", fields=["zalo_user", "balance"])
     wallet_map = {w.zalo_user: float(w.balance or 0) for w in wallets}
 
     deposit_map, sum_in_period_map, sum_after_end_map = _get_transaction_maps(start_date, end_date)
+    frappe.log_error(
+        title="Important Debug Info", 
+        message=str(sum_in_period_map)
+    )
+    frappe.log_error(
+        title="Important Debug Info", 
+        message=str(sum_after_end_map)
+    )
 
     if len(wb.sheetnames) == 1 and wb.active.title == 'Sheet' and wb.active.max_row == 1 and wb.active['A1'].value is None:
         ws = wb.active
@@ -174,9 +181,14 @@ def _create_report_sheet(wb, start_date, end_date, date_headers, period_query, s
         current_balance = wallet_map.get(u.name, 0)
         sum_in_period = sum_in_period_map.get(u.name, 0)
         sum_after_end = sum_after_end_map.get(u.name, 0)
-        end_balance = current_balance - sum_after_end
-        beginning_balance = end_balance - sum_in_period
         deposit_amount = deposit_map.get(u.name, 0)
+
+        if is_future:
+            beginning_balance = 0
+            end_balance = 0
+        else:
+            beginning_balance = sum_in_period
+            end_balance = beginning_balance - total_price + deposit_amount
 
         row_data = [stt, u.real_name or u.full_name]
         for idx in range(1, len(date_headers) + 1):
