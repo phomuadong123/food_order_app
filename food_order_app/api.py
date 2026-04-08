@@ -728,7 +728,7 @@ def get_my_session_transactions(zalo_id, session=None, from_date=None, to_date=N
 
         # 1. Lấy tổng số bản ghi
         total = frappe.db.sql(
-            f"SELECT COUNT(*) FROM `tabTransaction` t LEFT JOIN `tabLunch Order` lo ON t.reference = lo.name AND lo.is_active = 1 WHERE {where_clause}",
+            f"SELECT COUNT(*) FROM `tabTransaction` t LEFT JOIN `tabLunch Order` lo ON (t.reference = lo.name OR (t.reference IS NULL AND t.session = lo.session AND t.zalo_user = lo.zalo_user)) AND lo.is_active = 1 WHERE {where_clause}",
             tuple(args),
         )[0][0] or 0
 
@@ -764,7 +764,7 @@ def get_my_session_transactions(zalo_id, session=None, from_date=None, to_date=N
                 SUM(t.amount) OVER (PARTITION BY t.zalo_user ORDER BY t.date ASC, t.name ASC) AS running_balance
             FROM `tabTransaction` t
             LEFT JOIN `tabZalo User Map` zu ON t.zalo_user = zu.name
-            LEFT JOIN `tabLunch Order` lo ON t.reference = lo.name AND lo.is_active = 1
+            LEFT JOIN `tabLunch Order` lo ON (t.reference = lo.name OR (t.reference IS NULL AND t.session = lo.session AND t.zalo_user = lo.zalo_user)) AND lo.is_active = 1
             LEFT JOIN `tabLunch Menu Item` lmi ON lo.menu_item = lmi.name
             WHERE {where_clause}
             ORDER BY t.date DESC, t.name DESC
