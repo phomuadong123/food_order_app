@@ -604,10 +604,12 @@ def get_session_votes(session):
         if not session:
             return {"success": False, "message": "Missing session"}
 
-        now_dt = datetime.now()
-        start_of_month = now_dt.replace(day=1, hour=0, minute=0, second=0, microsecond=0)
+        # Get session date to determine the month
+        session_doc = frappe.get_doc("Lunch Session", session)
+        session_date = session_doc.date
+        start_of_month = session_date.replace(day=1, hour=0, minute=0, second=0, microsecond=0)
+        end_of_month = (start_of_month + timedelta(days=32)).replace(day=1) - timedelta(seconds=1)
         end_of_previous_month = start_of_month - timedelta(seconds=1)
-        current_time = now_dt
 
         rows = frappe.db.sql("""
             SELECT
@@ -672,9 +674,9 @@ def get_session_votes(session):
         """, (
             end_of_previous_month,
             start_of_month,
-            current_time,
+            end_of_month,
             start_of_month,
-            current_time,
+            end_of_month,
             session,
         ), as_dict=True)
 

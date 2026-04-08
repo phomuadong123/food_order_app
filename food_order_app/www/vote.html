@@ -493,12 +493,12 @@
                                     <th>Tên Zalo</th>
                                     <th>Đã đăng ký</th>
                                     <th>Ngày đăng ký</th>
-                                    <th>Ghi chú</th>
                                     <th>Tiền đầu kỳ</th>
-                                    <th>Số xuất ăn đăng ký trong tháng</th>
-                                    <th>Tiền đã ăn trong tháng</th>
+                                    <th>Xuất ăn trong tháng</th>
+                                    <th>Tiền ăn trong tháng</th>
                                     <th>Tiền nộp trong tháng</th>
-                                    <th>Tổng còn lại</th>
+                                    <th>Tiền còn lại</th>
+                                    <th>Ghi chú</th>
                                 </tr>
                             </thead>
                         <tbody>
@@ -524,12 +524,12 @@
                             <td>${zaloName}</td>
                             <td>${itemName}</td>
                             <td>${createdAt}</td>
-                            <td>${note}</td>
                             <td class="currency">${beginningBalance}</td>
                             <td>${monthlyOrderCount}</td>
                             <td class="currency">${monthlyFoodCost}</td>
                             <td class="currency">${monthlyDepositAmount}</td>
                             <td class="currency">${walletBalance}</td>
+                            <td>${note}</td>
                         </tr>
                     `;
                 });
