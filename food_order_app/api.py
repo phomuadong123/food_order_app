@@ -648,8 +648,8 @@ def get_session_votes(session):
                     AND NOT (
                         t.type = 'Pay'
                         AND lo2.name IS NOT NULL
-                        AND DATE(DATE_ADD(lo2.created_at, INTERVAL (TIME(lo2.created_at) > '12:00:00') DAY)) >= %s
-                        AND DATE(DATE_ADD(lo2.created_at, INTERVAL (TIME(lo2.created_at) > '12:00:00') DAY)) <= %s
+                        AND DATE(DATE_ADD(lo2.created_at, INTERVAL CASE WHEN TIME(lo2.created_at) > '12:00:00' THEN 1 ELSE 0 END DAY)) >= %s
+                        AND DATE(DATE_ADD(lo2.created_at, INTERVAL CASE WHEN TIME(lo2.created_at) > '12:00:00' THEN 1 ELSE 0 END DAY)) <= %s
                     )
                 GROUP BY t.zalo_user
             ) prev_balance ON prev_balance.zalo_user = lo.zalo_user
@@ -661,8 +661,8 @@ def get_session_votes(session):
                 FROM `tabLunch Order` lo2
                 LEFT JOIN `tabLunch Menu Item` lmi2 ON lo2.menu_item = lmi2.name
                 WHERE lo2.is_active = 1
-                    AND DATE(DATE_ADD(lo2.created_at, INTERVAL (TIME(lo2.created_at) > '12:00:00') DAY)) >= %s
-                    AND DATE(DATE_ADD(lo2.created_at, INTERVAL (TIME(lo2.created_at) > '12:00:00') DAY)) <= %s
+                    AND DATE(DATE_ADD(lo2.created_at, INTERVAL CASE WHEN TIME(lo2.created_at) > '12:00:00' THEN 1 ELSE 0 END DAY)) >= %s
+                    AND DATE(DATE_ADD(lo2.created_at, INTERVAL CASE WHEN TIME(lo2.created_at) > '12:00:00' THEN 1 ELSE 0 END DAY)) <= %s
                 GROUP BY lo2.zalo_user
             ) order_summary ON order_summary.zalo_user = lo.zalo_user
             LEFT JOIN (
