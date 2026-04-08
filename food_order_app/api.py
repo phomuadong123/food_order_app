@@ -654,8 +654,8 @@ def get_session_votes(session):
                 FROM `tabLunch Order` lo2
                 LEFT JOIN `tabLunch Menu Item` lmi2 ON lo2.menu_item = lmi2.name
                 WHERE lo2.is_active = 1
-                    AND lo2.created_at >= %s
-                    AND lo2.created_at <= %s
+                    AND DATE(DATE_ADD(lo2.created_at, INTERVAL IF(TIME(lo2.created_at) > '12:00:00', 1, 0) DAY)) >= %s
+                    AND DATE(DATE_ADD(lo2.created_at, INTERVAL IF(TIME(lo2.created_at) > '12:00:00', 1, 0) DAY)) <= %s
                 GROUP BY lo2.zalo_user
             ) order_summary ON order_summary.zalo_user = lo.zalo_user
             LEFT JOIN (
