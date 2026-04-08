@@ -62,7 +62,7 @@ function generateQR() {
                 const generateBtn = document.getElementById('generate-qr-btn');
                 const confirmBtn = document.getElementById('confirm-payment-btn');
                 
-                qrImg.src = r.message.qr_code;
+                qrImg.src = "/image/qr.jpg";
                 bankInfo.innerHTML = r.message.bank_info.replace(/\n/g, '<br>');
                 qrContainer.style.display = 'block';
                 generateBtn.style.display = 'none';
@@ -163,7 +163,7 @@ function renderTable(requests, userInfo) {
                 <td style="color: #994d59; font-weight:600">${req.status}</td>
                 <td>${req.notes || '-'}</td>
                 <td>${createDate}</td>
-                ${!isAdmin ? `
+                ${isAdmin ? `
                     <td>
                         <button class="btn-approve" onclick="openApprovalModal('${req.name}', '${amount}', '${req.user}')">
                             Duyệt

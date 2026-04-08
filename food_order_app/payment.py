@@ -96,7 +96,7 @@ def get_payment_requests(zalo_id=None, from_date=None, to_date=None, limit=20, o
 
         # Truy vấn dữ liệu
         query = f"""
-            SELECT name, user, amount, status, qr_code, bank_info, transaction_id, notes, creation
+            SELECT name, user,full_name, amount, status, qr_code, bank_info, transaction_id, notes, creation
             FROM `tabPayment Request`
             {where_clause}
             ORDER BY creation DESC
@@ -145,12 +145,14 @@ def approve_payment_request(payment_request_id, zalo_id, action, notes=""):
             frappe.throw("You do not have permission to approve payments", frappe.PermissionError)
         
         # Get current user info
-        current_user = frappe.session.user
+        current_user = get_zalo_user_data(zalo_id)
+        if not current_user:
+            frappe.throw("You do not have permission to approve payments", frappe.PermissionError)
         
         # Update payment request
         payment_req = frappe.get_doc("Payment Request", payment_request_id)
         payment_req.status = action
-        payment_req.approved_by = current_user
+        payment_req.approved_by = current_user.full_name
         payment_req.approved_at = now_datetime()
         payment_req.notes = notes
         
@@ -170,7 +172,7 @@ def approve_payment_request(payment_request_id, zalo_id, action, notes=""):
                     "zalo_user": user_name,
                     "type": "Deposit",
                     "amount": amount,
-                    "description": f"Nạp tiền được duyệt bởi {current_user} - Payment Request: {payment_request_id}",
+                    "description": f"Nạp tiền được duyệt bởi {current_user.full_name} - Payment Request: {payment_request_id}",
                     "date": now_datetime()
                 })
                 transaction.insert(ignore_permissions=True)

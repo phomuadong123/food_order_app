@@ -68,7 +68,7 @@
    "fieldname": "approved_by",
    "fieldtype": "Link",
    "label": "Approved By",
-   "options": "User"
+   "options": "Zalo User Map"
   },
   {
    "fieldname": "approved_at",
