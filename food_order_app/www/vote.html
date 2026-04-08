@@ -504,7 +504,6 @@
                                     <th class="text-center">Tiền ăn trong tháng</th>
                                     <th class="text-center">Tiền nộp trong tháng</th>
                                     <th class="text-center">Tiền còn lại</th>
-                                    <th class="text-start">Ghi chú</th>
                                 </tr>
                             </thead>
                         <tbody>
@@ -537,7 +536,6 @@
                             <td class="text-center text-small">${monthlyFoodCost}</td>
                             <td class="text-center text-small">${monthlyDepositAmount}</td>
                             <td class="text-center text-small">${walletBalance}</td>
-                            <td class="text-start note-cell">${note}</td>
                         </tr>
                     `;
                 });
@@ -637,8 +635,8 @@
                     tableHtml += `
                         <tr>
                             <td>${stt}</td>
-                            <td>${row.user_real_name}</td>
                             <td>${row.user_zalo_name}</td>
+                            <td>${row.user_real_name}</td>
                             <td>${row.transaction_type_vn}</td>
                             <td>${formatDateTime(row.registration_time)}</td>
                             <td>${row.menu_item_name}</td>
