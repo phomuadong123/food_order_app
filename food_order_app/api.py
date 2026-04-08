@@ -710,7 +710,7 @@ def get_my_session_transactions(zalo_id, session=None, from_date=None, to_date=N
         args = [user]
 
         if session:
-            filters.append("t.session = %s")
+            filters.append("(t.session = %s OR t.type = 'Deposit')")
             args.append(session)
         if from_date:
             filters.append("t.date >= %s")
