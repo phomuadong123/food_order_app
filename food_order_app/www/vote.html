@@ -439,8 +439,9 @@
 
         function formatDateTime(dateStr) {
             if (!dateStr) return "Chưa xác định";
-            const d = new Date(dateStr);
-            
+
+            const normalized = String(dateStr).replace(' ', 'T');
+            const d = new Date(normalized);
             if (isNaN(d.getTime())) return dateStr;
 
             const hours = d.getHours().toString().padStart(2, '0');
@@ -451,6 +452,11 @@
 
             return `${hours}:${minutes} ${day}/${month}/${year}`;
         };
+
+        function formatCurrency(amount) {
+            const value = Number(amount || 0);
+            return value.toLocaleString('vi-VN');
+        }
 
         function escapeHtml(value) {
             if (value === null || value === undefined) return "";
@@ -593,7 +599,7 @@
                 const page = Number(payload.page || myHistoryPage);
                 const pageSize = Number(payload.page_size || myHistoryPageSize);
                 const wallet_balance = Number(payload.wallet_balance || 0);
-                document.getElementById("so-du-lich-su").innerHTML = `Số tiền hiện tại trong ví của bạn: ${wallet_balance.toLocaleString()} VND`;
+                document.getElementById("so-du-lich-su").innerHTML = `Số tiền hiện tại trong ví của bạn: ${formatCurrency(wallet_balance)} VND`;
                 myHistoryPage = page;
 
                 if (!rows.length) {
@@ -631,7 +637,7 @@
                             <td>${formatDateTime(row.registration_time)}</td>
                             <td>${row.menu_item_name}</td>
                             <td>${row.display_description}</td>
-                            <td>${row.amount} VND</td>
+                            <td>${formatCurrency(row.amount)} VND</td>
                         </tr>
                     `;
                 });
