@@ -733,14 +733,12 @@ def get_my_session_transactions(zalo_id, session=None, from_date=None, to_date=N
 
         wallet_balance = frappe.db.get_value("Lunch Wallet", {"zalo_user": user}, "balance") or 0
 
-        filters = ["t.zalo_user = %s"]
+        filters = [
+            "t.zalo_user = %s",
+            "NOT (t.type = 'Refund' AND t.description LIKE N'Hoàn tiền cho %% đơn hàng đã hủy')"
+        ]
         args = [user]
 
-        if session:
-            filters.append("(t.session = %s OR t.type = 'Deposit')")
-            args.append(session)
-            filters.append("NOT (t.type = 'Refund' AND t.session = %s AND t.description LIKE N'Hoàn tiền cho %% đơn hàng đã hủy')")
-            args.append(session)
         if from_date:
             filters.append("DATE(t.date) >= %s")
             args.append(from_date)
