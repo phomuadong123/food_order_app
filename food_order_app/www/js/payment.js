@@ -61,7 +61,7 @@ function generateQR() {
                 const generateBtn = document.getElementById('generate-qr-btn');
                 const confirmBtn = document.getElementById('confirm-payment-btn');
                 
-                qrImg.src = r.message.qr_code;
+                qrImg.src = "/image/qr.jpg";
                 bankInfo.innerHTML = r.message.bank_info.replace(/\n/g, '<br>');
                 qrContainer.style.display = 'block';
                 generateBtn.style.display = 'none';

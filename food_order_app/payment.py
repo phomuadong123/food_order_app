@@ -28,9 +28,9 @@ def create_payment_request(amount,zalo_id):
     full_name = user_data.full_name
 
     bank_info = {
-        "bank": "MBBank",
-        "account_number": "6636332003",  
-        "account_name": "DO ANH TUAN",
+        "bank": "BIDV",
+        "account_number": "3453098888",  
+        "account_name": "BUI THI TUYET",
         "content": f"Nap tien cho user {full_name} vào thoi gian: {now()}"
     }
 
@@ -174,7 +174,7 @@ def get_payment_requests(zalo_id=None, from_date=None, to_date=None, limit=20, o
             conditions.append("creation <= %s")
             params.append(to_date + " 23:59:59")
 
-        where_clause = " WHERE user = '"+ user_data.name +"' AND " + " AND ".join(conditions)
+        where_clause = " WHERE user = '"+ user_data.name +"' " + " AND ".join(conditions)
 
         # Truy vấn dữ liệu
         query = f"""
