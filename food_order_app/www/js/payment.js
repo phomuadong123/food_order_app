@@ -249,7 +249,7 @@ function submitApproval(action, notes) {
         callback: function(r) {
             if (r.message && r.message.success) {
                 frappe.msgprint(r.message.message);
-                closeMyModal();();
+                closeMyModal();
                 loadPaymentRequests();
             } else {
                 frappe.msgprint('Có lỗi xảy ra: ' + (r.message ? r.message.message : 'Unknown error'));
