@@ -631,30 +631,81 @@ def get_session_votes(session):
         if not session:
             return {"success": False, "message": "Missing session"}
 
+        # Get session date to determine the month
+        session_doc = frappe.get_doc("Lunch Session", session)
+        session_date = getdate(session_doc.date)
+        start_of_month = datetime.combine(session_date.replace(day=1), datetime.min.time())
+        end_of_month = datetime.combine((session_date.replace(day=1) + timedelta(days=32)).replace(day=1) - timedelta(days=1), datetime.max.time())
+        end_of_previous_month = datetime.combine(start_of_month - timedelta(days=1), datetime.max.time())
+
         rows = frappe.db.sql("""
-            SELECT 
+            SELECT
                 lo.name AS order_id,
                 zum.real_name AS voter_name,
                 zum.full_name AS zalo_name,
                 lmi.item_name AS menu_item_name,
                 lmi.price,
                 lo.created_at,
-                CASE 
+                CASE
                     WHEN ROW_NUMBER() OVER (
-                        PARTITION BY lo.zalo_user 
+                        PARTITION BY lo.zalo_user
                         ORDER BY lo.created_at ASC, lo.creation ASC
                     ) > 1 THEN 'Đăng ký thêm'
-                    ELSE '' 
-                END AS note
+                    ELSE ''
+                END AS note,
+                COALESCE(wallet.balance, 0) AS wallet_balance,
+                COALESCE(prev_balance.beginning_balance, 0) AS beginning_balance,
+                COALESCE(order_summary.monthly_order_count, 0) AS monthly_order_count,
+                COALESCE(order_summary.monthly_food_cost, 0) AS monthly_food_cost,
+                COALESCE(deposit_summary.monthly_deposit_amount, 0) AS monthly_deposit_amount
             FROM `tabLunch Order` lo
             LEFT JOIN `tabZalo User Map` zum
                 ON lo.zalo_user = zum.name
             LEFT JOIN `tabLunch Menu Item` lmi
                 ON lo.menu_item = lmi.name
+            LEFT JOIN `tabLunch Wallet` wallet
+                ON wallet.zalo_user = lo.zalo_user
+            LEFT JOIN (
+                SELECT
+                    t.zalo_user,
+                    SUM(t.amount) AS beginning_balance
+                FROM `tabTransaction` t
+                WHERE t.date <= %s
+                GROUP BY t.zalo_user
+            ) prev_balance ON prev_balance.zalo_user = lo.zalo_user
+            LEFT JOIN (
+                SELECT
+                    lo2.zalo_user,
+                    COUNT(*) AS monthly_order_count,
+                    SUM(IFNULL(lmi2.price, 0)) AS monthly_food_cost
+                FROM `tabLunch Order` lo2
+                LEFT JOIN `tabLunch Menu Item` lmi2 ON lo2.menu_item = lmi2.name
+                WHERE lo2.is_active = 1
+                    AND lo2.created_at >= %s
+                    AND lo2.created_at <= %s
+                GROUP BY lo2.zalo_user
+            ) order_summary ON order_summary.zalo_user = lo.zalo_user
+            LEFT JOIN (
+                SELECT
+                    t3.zalo_user,
+                    SUM(t3.amount) AS monthly_deposit_amount
+                FROM `tabTransaction` t3
+                WHERE t3.type = 'Deposit'
+                    AND t3.date >= %s
+                    AND t3.date <= %s
+                GROUP BY t3.zalo_user
+            ) deposit_summary ON deposit_summary.zalo_user = lo.zalo_user
             WHERE lo.session = %s
                 AND lo.is_active = 1
             ORDER BY lo.created_at DESC, lo.creation DESC
-        """, (session,), as_dict=True)
+        """, (
+            end_of_previous_month,
+            start_of_month,
+            end_of_month,
+            start_of_month,
+            end_of_month,
+            session,
+        ), as_dict=True)
 
         return {"success": True, "data": rows}
     except Exception:
@@ -664,7 +715,7 @@ def get_session_votes(session):
 
 
 @frappe.whitelist(allow_guest=True)
-def get_my_session_transactions(zalo_id, from_date=None, to_date=None, page=1, page_size=10):
+def get_my_session_transactions(zalo_id, session=None, from_date=None, to_date=None, page=1, page_size=10):
     try:
         if not zalo_id:
             return {"success": False, "message": "Thiếu thông tin tham số"}
@@ -685,11 +736,16 @@ def get_my_session_transactions(zalo_id, from_date=None, to_date=None, page=1, p
         filters = ["t.zalo_user = %s"]
         args = [user]
 
+        if session:
+            filters.append("(t.session = %s OR t.type = 'Deposit')")
+            args.append(session)
+            filters.append("NOT (t.type = 'Refund' AND t.session = %s AND t.description LIKE N'Hoàn tiền cho %% đơn hàng đã hủy')")
+            args.append(session)
         if from_date:
-            filters.append("t.date >= %s")
+            filters.append("DATE(t.date) >= %s")
             args.append(from_date)
         if to_date:
-            filters.append("t.date <= %s")
+            filters.append("DATE(t.date) <= %s")
             args.append(to_date)
 
         where_clause = " AND ".join(filters)
@@ -701,7 +757,7 @@ def get_my_session_transactions(zalo_id, from_date=None, to_date=None, page=1, p
 
         # 1. Lấy tổng số bản ghi
         total = frappe.db.sql(
-            f"SELECT COUNT(*) FROM `tabTransaction` t WHERE {where_clause}",
+            f"SELECT COUNT(*) FROM `tabTransaction` t LEFT JOIN `tabLunch Order` lo ON t.reference = lo.name AND lo.is_active = 1 WHERE {where_clause} AND (t.type != 'pay' OR lo.name IS NOT NULL)",
             tuple(args),
         )[0][0] or 0
 
@@ -737,9 +793,9 @@ def get_my_session_transactions(zalo_id, from_date=None, to_date=None, page=1, p
                 SUM(t.amount) OVER (PARTITION BY t.zalo_user ORDER BY t.date ASC, t.name ASC) AS running_balance
             FROM `tabTransaction` t
             LEFT JOIN `tabZalo User Map` zu ON t.zalo_user = zu.name
-            LEFT JOIN `tabLunch Order` lo ON t.reference = lo.name
+            LEFT JOIN `tabLunch Order` lo ON t.reference = lo.name AND lo.is_active = 1
             LEFT JOIN `tabLunch Menu Item` lmi ON lo.menu_item = lmi.name
-            WHERE {where_clause}
+            WHERE {where_clause} AND (t.type != 'pay' OR lo.name IS NOT NULL)
             ORDER BY t.date DESC, t.name DESC
             LIMIT %s OFFSET %s
         """
@@ -1016,7 +1072,7 @@ def check_and_renew_sessions():
 
         frappe.db.commit()
 
-        message = f"🔔 Đã có lịch đăng ký ăn trưa ngày {today_date}!\nKính mời anh/chị đăng ký tại:\n{link}"
+        message = f"🔔 Đã có lịch đăng ký ăn trưa ngày {today_date.strftime('%d/%m/%Y')}!\nKính mời anh/chị đăng ký tại:\n{link}"
 
         send_zalo_vote_link_group(message)
 
@@ -1066,7 +1122,7 @@ def remind_vote_today():
         """, session_name)[0][0]
 
         message = (
-            f"⏰ Nhắc hẹn đăng ký bữa trưa ngày {today_date}!\n"
+            f"⏰ Nhắc hẹn đăng ký bữa trưa ngày {today_date.strftime('%d/%m/%Y')}!\n"
             f"Hiện tại đã có {vote_count} người đăng ký bữa rồi.\n"
             f"Đừng quên đăng ký tại đây nhé!\n"
             f"{vote_link}"
@@ -1107,7 +1163,7 @@ def remind_close_session():
         """, session_name)[0][0]
 
         message = (
-            f"⏰ Thông báo kết thúc phiên đặt bữa trưa ngày {today_date}!\n"
+            f"⏰ Thông báo kết thúc phiên đặt bữa trưa ngày {today_date.strftime('%d/%m/%Y')}!\n"
             f"Hiện tại đã có {vote_count} lượt đăng ký ăn trưa.\n"
             f"Chúc anh chị có bữa trưa ngon miệng!\n"
             f"Anh chị có thể xem lịch sử đăng ký tại đây:\n"

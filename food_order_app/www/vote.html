@@ -448,8 +448,9 @@
 
         function formatDateTime(dateStr) {
             if (!dateStr) return "Chưa xác định";
-            const d = new Date(dateStr);
-            
+
+            const normalized = String(dateStr).replace(' ', 'T');
+            const d = new Date(normalized);
             if (isNaN(d.getTime())) return dateStr;
 
             const hours = d.getHours().toString().padStart(2, '0');
@@ -460,6 +461,11 @@
 
             return `${hours}:${minutes} ${day}/${month}/${year}`;
         };
+
+        function formatCurrency(amount) {
+            const value = Number(amount || 0);
+            return value.toLocaleString('vi-VN');
+        }
 
         function escapeHtml(value) {
             if (value === null || value === undefined) return "";
@@ -502,10 +508,15 @@
                                     <th>Tên Zalo</th>
                                     <th>Đã đăng ký</th>
                                     <th>Ngày đăng ký</th>
+                                    <th>Tiền đầu kỳ</th>
+                                    <th>Xuất ăn trong tháng</th>
+                                    <th>Tiền ăn trong tháng</th>
+                                    <th>Tiền nộp trong tháng</th>
+                                    <th>Tiền còn lại</th>
                                     <th>Ghi chú</th>
                                 </tr>
                             </thead>
-                            <tbody>
+                        <tbody>
                 `;
 
                 rows.forEach((row, index) => {
@@ -515,6 +526,11 @@
                     const price = Number(row.price || 0).toLocaleString("vi-VN");
                     const createdAt = escapeHtml(formatDateTime(row.created_at));
                     const note = escapeHtml(row.note || "");
+                    const beginningBalance = Number(row.beginning_balance || 0).toLocaleString("vi-VN");
+                    const monthlyOrderCount = Number(row.monthly_order_count || 0).toLocaleString("vi-VN");
+                    const monthlyFoodCost = Number(row.monthly_food_cost || 0).toLocaleString("vi-VN");
+                    const monthlyDepositAmount = Number(row.monthly_deposit_amount || 0).toLocaleString("vi-VN");
+                    const walletBalance = Number(row.wallet_balance || 0).toLocaleString("vi-VN");
 
                     tableHtml += `
                         <tr>
@@ -523,6 +539,11 @@
                             <td>${zaloName}</td>
                             <td>${itemName}</td>
                             <td>${createdAt}</td>
+                            <td class="currency">${beginningBalance}</td>
+                            <td>${monthlyOrderCount}</td>
+                            <td class="currency">${monthlyFoodCost}</td>
+                            <td class="currency">${monthlyDepositAmount}</td>
+                            <td class="currency">${walletBalance}</td>
                             <td>${note}</td>
                         </tr>
                     `;
@@ -561,6 +582,7 @@
             try {
                 const args = {
                     zalo_id: zalo_id,
+                    session: session,
                     page: myHistoryPage,
                     page_size: myHistoryPageSize
                 };
@@ -586,7 +608,11 @@
                 const page = Number(payload.page || myHistoryPage);
                 const pageSize = Number(payload.page_size || myHistoryPageSize);
                 const wallet_balance = Number(payload.wallet_balance || 0);
-                document.getElementById("so-du-lich-su").innerHTML = `Số tiền hiện tại trong ví của bạn: ${wallet_balance.toLocaleString()} VND`;
+                const isPositive = wallet_balance >= 0;
+                const bgColor = isPositive ? '#e8f5e8' : '#ffebee';
+                const textColor = isPositive ? '#2e7d32' : '#c62828';
+                const borderColor = isPositive ? '#4caf50' : '#e53935';
+                document.getElementById("so-du-lich-su").innerHTML = `$ Số dư: <span style="background-color: ${bgColor}; color: ${textColor}; padding: 8px 12px; border-radius: 6px; font-weight: bold; border: 1px solid ${borderColor}; display: inline-block; margin-left: 10px;">${formatCurrency(wallet_balance)} VND</span>`;
                 myHistoryPage = page;
 
                 if (!rows.length) {
@@ -624,7 +650,7 @@
                             <td>${formatDateTime(row.registration_time)}</td>
                             <td>${row.menu_item_name}</td>
                             <td>${row.display_description}</td>
-                            <td>${row.amount} VND</td>
+                            <td>${formatCurrency(row.amount)} VND</td>
                         </tr>
                     `;
                 });
