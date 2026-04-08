@@ -710,7 +710,8 @@ def get_my_session_transactions(zalo_id, session=None, from_date=None, to_date=N
         args = [user]
 
         if session:
-            filters.append("(t.session = %s OR t.type = 'Deposit')")
+            filters.append("(t.session = %s OR t.type = 'Deposit' OR (t.type = 'Pay' AND lo.session = %s))")
+            args.append(session)
             args.append(session)
             filters.append("NOT (t.type = 'Refund' AND t.session = %s AND t.description LIKE N'Hoàn tiền cho %% đơn hàng đã hủy')")
             args.append(session)
