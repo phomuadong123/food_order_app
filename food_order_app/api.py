@@ -421,7 +421,6 @@ def vote(session, menu_item, zalo_id, quantity=1):
         # 7. INSERT ORDER
         try:
             quantity = int(quantity or 1)
-            order_names = []
             for i in range(quantity):
                 order_doc = frappe.get_doc({
                     "doctype": "Lunch Order",
@@ -432,21 +431,18 @@ def vote(session, menu_item, zalo_id, quantity=1):
                     "created_at": now()
                 })
                 order_doc.insert(ignore_permissions=True)
-                order_names.append(order_doc.name)
 
-            # Create single transaction for all orders
-            total_amount = -price * quantity
-            transaction = frappe.get_doc({
-                "doctype": "Transaction",
-                "zalo_user": user,
-                "type": "Pay",
-                "amount": total_amount,
-                "reference": order_names[0] if order_names else None,  # Reference to first order
-                "session": session,
-                "description": f"Trừ tiền cho {quantity} suất đăng ký ăn" if quantity > 1 else "Trừ tiền cho suất đăng ký ăn",
-                "date": now()
-            })
-            transaction.insert(ignore_permissions=True)
+                transaction = frappe.get_doc({
+                    "doctype": "Transaction",
+                    "zalo_user": user,
+                    "type": "Pay",
+                    "amount": -price, 
+                    "reference": order_doc.name,
+                    "session": session,
+                    "description": f"Trừ tiền cho suất đăng ký ăn{f' thứ {i+1} (Tổng số suất ăn: {quantity})' if quantity > 1 else ''}",
+                    "date": now()
+                })
+                transaction.insert(ignore_permissions=True)
 
             frappe.db.commit()
         except Exception:
