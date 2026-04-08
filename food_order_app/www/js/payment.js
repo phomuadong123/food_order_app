@@ -154,6 +154,7 @@ function renderTable(requests, userInfo) {
     requests.forEach(req => {
         const amount = new Intl.NumberFormat('vi-VN', { style: 'currency', currency: 'VND' }).format(req.amount);
         const createDate = frappe.datetime.str_to_user(req.creation);
+        const statusInfo = formatStatus(req.status);
         
         html += `
             <tr>
@@ -161,7 +162,7 @@ function renderTable(requests, userInfo) {
                 <td>${req.user}</td>
                 <td>${req.full_name}</td>
                 <td style="color: #28a745; font-weight:600">${amount}</td>
-                <td style="color: #994d59; font-weight:600">${req.status}</td>
+                <td style="color: ${statusInfo.color}; font-weight:600">${statusInfo.text}</td>
                 <td>${req.notes || '-'}</td>
                 <td>${createDate}</td>
                 ${isAdmin ? `
@@ -177,6 +178,25 @@ function renderTable(requests, userInfo) {
 
     html += '</tbody></table><div id="pagination-controls" class="pagination"></div>';
     container.innerHTML = html;
+}
+
+function formatStatus(status) {
+    const s = status ? status.toLowerCase() : "";
+    
+    let config = {
+        text: status,
+        color: "#994d59"   
+    };
+
+    if (s === "pending") {
+        config = { text: "Chờ duyệt", color: "#ffc107" }; // Vàng
+    } else if (s === "approved") {
+        config = { text: "Đã duyệt", color: "#02c076" };  // Xanh lá
+    } else if (s === "rejected") {
+        config = { text: "Từ chối", color: "#cf304a" };   // Đỏ
+    }
+
+    return config;
 }
 
 function renderPagination(totalCount) {

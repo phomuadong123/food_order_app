@@ -234,7 +234,7 @@ def approve_payment_request(payment_request_id, zalo_id, action, notes=""):
         # Update payment request
         payment_req = frappe.get_doc("Payment Request", payment_request_id)
         payment_req.status = action
-        payment_req.approved_by = current_user.full_name
+        payment_req.approved_by = current_user.name
         payment_req.approved_at = now_datetime()
         payment_req.notes = notes
         
