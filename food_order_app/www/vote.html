@@ -599,7 +599,11 @@
                 const page = Number(payload.page || myHistoryPage);
                 const pageSize = Number(payload.page_size || myHistoryPageSize);
                 const wallet_balance = Number(payload.wallet_balance || 0);
-                document.getElementById("so-du-lich-su").innerHTML = `Số tiền hiện tại trong ví của bạn: <span style="background-color: #e8f5e8; color: #2e7d32; padding: 8px 12px; border-radius: 6px; font-weight: bold; border: 1px solid #4caf50; display: inline-block; margin-left: 10px;">${formatCurrency(wallet_balance)} VND</span>`;
+                const isPositive = wallet_balance >= 0;
+                const bgColor = isPositive ? '#e8f5e8' : '#ffebee';
+                const textColor = isPositive ? '#2e7d32' : '#c62828';
+                const borderColor = isPositive ? '#4caf50' : '#e53935';
+                document.getElementById("so-du-lich-su").innerHTML = `$ Số dư: <span style="background-color: ${bgColor}; color: ${textColor}; padding: 8px 12px; border-radius: 6px; font-weight: bold; border: 1px solid ${borderColor}; display: inline-block; margin-left: 10px;">${formatCurrency(wallet_balance)} VND</span>`;
                 myHistoryPage = page;
 
                 if (!rows.length) {
