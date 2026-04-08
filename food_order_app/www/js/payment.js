@@ -196,11 +196,10 @@ function renderPagination(totalCount) {
     document.getElementById('pagination-controls').innerHTML = html;
 }
 
-let currentData = { id: '', amount: '', user: '' };
 
 function openApprovalModal(requestId, amount, user) {
     // Lưu thông tin
-    currentData = { id: requestId, amount: amount, user: user };
+    currentApprovalData = { id: requestId, amount: amount, user: user };
 
     // Đổ dữ liệu vào HTML bằng JS thuần
     document.getElementById('m-id').innerText = requestId;
