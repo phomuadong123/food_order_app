@@ -1045,7 +1045,7 @@ def check_and_renew_sessions():
 
         frappe.db.commit()
 
-        message = f"🔔 Đã có lịch đăng ký ăn trưa ngày {today_date}!\nKính mời anh/chị đăng ký tại:\n{link}"
+        message = f"🔔 Đã có lịch đăng ký ăn trưa ngày {today_date.strftime('%d/%m/%Y')}!\nKính mời anh/chị đăng ký tại:\n{link}"
 
         send_zalo_vote_link_group(message)
 
@@ -1095,7 +1095,7 @@ def remind_vote_today():
         """, session_name)[0][0]
 
         message = (
-            f"⏰ Nhắc hẹn đăng ký bữa trưa ngày {today_date}!\n"
+            f"⏰ Nhắc hẹn đăng ký bữa trưa ngày {today_date.strftime('%d/%m/%Y')}!\n"
             f"Hiện tại đã có {vote_count} người đăng ký bữa rồi.\n"
             f"Đừng quên đăng ký tại đây nhé!\n"
             f"{vote_link}"
@@ -1136,7 +1136,7 @@ def remind_close_session():
         """, session_name)[0][0]
 
         message = (
-            f"⏰ Thông báo kết thúc phiên đặt bữa trưa ngày {today_date}!\n"
+            f"⏰ Thông báo kết thúc phiên đặt bữa trưa ngày {today_date.strftime('%d/%m/%Y')}!\n"
             f"Hiện tại đã có {vote_count} lượt đăng ký ăn trưa.\n"
             f"Chúc anh chị có bữa trưa ngon miệng!\n"
             f"Anh chị có thể xem lịch sử đăng ký tại đây:\n"
