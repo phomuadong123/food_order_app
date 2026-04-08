@@ -644,15 +644,6 @@ def get_session_votes(session):
                     SUM(t.amount) AS beginning_balance
                 FROM `tabTransaction` t
                 WHERE t.date <= %s
-                    AND NOT (
-                        t.type = 'Pay' 
-                        AND EXISTS (
-                            SELECT 1 FROM `tabLunch Order` lo 
-                            WHERE lo.name = t.reference 
-                            AND lo.is_active = 1
-                    AND DATE(DATE_ADD(lo.created_at, INTERVAL (CASE WHEN TIME(lo.created_at) > '12:00:00' THEN 1 ELSE 0 END) DAY)) >= %s
-                        )
-                    )
                 GROUP BY t.zalo_user
             ) prev_balance ON prev_balance.zalo_user = lo.zalo_user
             LEFT JOIN (
