@@ -688,7 +688,7 @@ def get_session_votes(session):
 
 
 @frappe.whitelist(allow_guest=True)
-def get_my_session_transactions(zalo_id, from_date=None, to_date=None, page=1, page_size=10):
+def get_my_session_transactions(zalo_id, session=None, from_date=None, to_date=None, page=1, page_size=10):
     try:
         if not zalo_id:
             return {"success": False, "message": "Thiếu thông tin tham số"}
@@ -709,6 +709,9 @@ def get_my_session_transactions(zalo_id, from_date=None, to_date=None, page=1, p
         filters = ["t.zalo_user = %s"]
         args = [user]
 
+        if session:
+            filters.append("t.session = %s")
+            args.append(session)
         if from_date:
             filters.append("t.date >= %s")
             args.append(from_date)
