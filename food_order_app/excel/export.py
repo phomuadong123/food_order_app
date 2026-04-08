@@ -51,17 +51,17 @@ def _get_transaction_maps(start_date, end_date):
     sum_in_period_map = {d.zalo_user: float(d.sum_amount or 0) for d in sum_in_period}
 
     sum_after_end = frappe.db.sql(
-    """
-       SELECT
-            t.zalo_user,
-            SUM(t.amount) AS sum_amount
-        FROM `tabTransaction` t
-        WHERE t.type = 'Deposit'
-            AND (t.reference IS NULL OR t.reference = '')
-            AND t.date < %s 
-        GROUP BY t.zalo_user;
+        """
+        SELECT
+                t.zalo_user,
+                SUM(t.amount) AS sum_amount
+            FROM `tabTransaction` t
+            WHERE t.type = 'Deposit'
+                AND (t.reference IS NULL OR t.reference = '')
+                AND t.date < %s 
+            GROUP BY t.zalo_user;
         """,
-        (start_date),
+        (start_date,),  # 
         as_dict=True,
     )
     sum_after_end_map = {d.zalo_user: float(d.sum_amount or 0) for d in sum_after_end}
