@@ -629,6 +629,7 @@ h1 {
     cursor: pointer;
     font-size: 14px;
     margin-bottom: 20px;
+    margin-right: 10px;
 }
 
 .back-button:hover {

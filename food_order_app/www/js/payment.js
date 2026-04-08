@@ -18,17 +18,19 @@ frappe.ready(function() {
             "zalo_id": zalo_id
         },
         callback: function(r) {
+            console.log(r.message);
             if (r.message && r.message.is_admin) {
                 document.getElementById('admin-header').style.display = 'block';
                 document.querySelector('.lock-modal-card').style.display = 'none';
                 document.querySelector('.payment-section').style.display = 'none';
-                loadPaymentRequests();
+                document.getElementById("lock-modal-title").textContent = "Duyệt các yêu cầu nạp tiền, admin(" + (r.message.full_name) +")";
+
             } else {
                 // LOGIC CHO USER THƯỜNG
                 document.getElementById('admin-header').style.display = 'none';
-                document.getElementById("lock-modal-title").textContent = "Thêm tiền vào ví của bạn: " + (r.message.full_name) +".";
-                loadTransactions();
+                document.getElementById("lock-modal-title").textContent = "Thực hiện giao dịch thêm tiền vào ví của bạn: " + (r.message.full_name) +".";
             }
+            loadPaymentRequests();
         }
     });
 });
@@ -100,15 +102,28 @@ function loadTransactions() {
     const fromDate = document.getElementById('trans-from-date').value;
     const toDate = document.getElementById('trans-to-date').value;
 
+    if (!toDate) {
+        toDate = new Date().toISOString().split('T')[0]; 
+    }
+
+    if (!fromDate) {
+        const date = new Date(toDate);
+        date.setDate(date.getDate() - 30);
+        fromDate = date.toISOString().split('T')[0];
+    }
+
     frappe.call({
-        method: 'food_order_app.api.get_user_transactions',
+        method: 'food_order_app.payment.get_user_transactions',
         args: {
             zalo_id: zalo_id,
             from_date: fromDate,
             to_date: toDate,
-            limit: 100
+            limit: 100,
+            offset: 0
         },
         callback: function(r) {
+            console.log("data transaction" , r.message);
+            
             if (r.message && r.message.success) {
                 const transactions = r.message.data;
                 if (transactions.length === 0) {
@@ -141,12 +156,15 @@ function loadPaymentRequests() {
             limit: 50
         },
         callback: function(r) {
+            console.log("data payment request" , r.message);
+
             if (r.message && r.message.success) {
                 const requests = r.message.data;
                 if (requests.length === 0) {
                     document.getElementById('payment-request-list').innerHTML = '<div class="empty-message">Không có yêu cầu nạp tiền nào chờ duyệt</div>';
                 } else {
                     let table = '<table class="payment-request-table"><thead><tr><th>ID</th><th>Người dùng</th><th>Số tiền</th><th>Ghi chú</th><th>Thời gian</th><th>Hành động</th></tr></thead><tbody>';
+
                     requests.forEach(req => {
                         const amount = new Intl.NumberFormat('vi-VN', { style: 'currency', currency: 'VND' }).format(req.amount);
                         const createDate = frappe.datetime.str_to_user(req.creation);

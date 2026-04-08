@@ -86,10 +86,7 @@ def get_payment_requests(zalo_id=None, limit=20, offset=0):
 
         if not user_data:
             frappe.throw("Người dùng chưa đăng ký.", frappe.PermissionError)
-            
-        if user_data.roles != "Admin":
-            frappe.throw(f"Chào {user_data.full_name}, bạn không có quyền Admin.", frappe.PermissionError)
-
+      
         # 3. Truy vấn danh sách bằng SQL thuần
         # Lưu ý: Dùng %s để tránh SQL Injection
         query = """
@@ -114,7 +111,8 @@ def get_payment_requests(zalo_id=None, limit=20, offset=0):
         return {
             "success": True,
             "data": requests,
-            "total_count": total_count
+            "total_count": total_count,
+            "user_info": user_data
         }
 
     except frappe.PermissionError as e:
@@ -230,5 +228,81 @@ def check_zalo_admin(zalo_id):
         "status": "success",
         "message": "Người dùng là Admin." if is_admin else "Người dùng không có quyền Admin."
     }
+
+
+@frappe.whitelist()
+def get_user_transactions(zalo_id, from_date=None, to_date=None, limit=10, offset=0):
+    """
+    Get transaction history for a user
+    """
+    try:
+        if not zalo_id:
+            return {"success": False, "message": "Zalo ID is required"}
+        
+        # Get user from Zalo User Map
+        user_data = get_zalo_user_data(zalo_id)
+        if not user_data:
+            return {"success": False, "message": "User not found"}
+        
+        user_name = user_data.name
+        
+        # Build filters
+        filters = {"zalo_user": user_name}
+        
+        if from_date:
+            filters["date"] = [">=", from_date]
+        if to_date:
+            filters["date"] = ["<=", to_date]
+        
+        # Get transactions
+        transactions = frappe.get_all(
+            "Transaction",
+            filters=filters,
+            fields=[
+                "name",
+                "type", 
+                "amount",
+                "description",
+                "date",
+                "reference",
+                "session"
+            ],
+            order_by="date desc, creation desc",
+            limit=limit,
+            start=offset
+        )
+        
+        # Get wallet balance
+        wallet_balance = frappe.db.get_value("Lunch Wallet", {"zalo_user": user_name}, "balance") or 0
+        
+        # Format transaction types
+        for tx in transactions:
+            if tx.type == "Pay":
+                tx.transaction_type_vn = "Trả tiền"
+            elif tx.type == "Deposit":
+                tx.transaction_type_vn = "Nạp tiền"
+            elif tx.type == "Refund":
+                tx.transaction_type_vn = "Hoàn tiền"
+            else:
+                tx.transaction_type_vn = tx.type
+            
+            # Format amount with currency
+            tx.amount_formatted = f"{tx.amount:,.0f} VNĐ"
+            
+            # Format date
+            tx.date_formatted = frappe.utils.format_datetime(tx.date, "dd/MM/yyyy HH:mm")
+        
+        return {
+            "success": True,
+            "data": transactions,
+            "wallet_balance": float(wallet_balance),
+            "user_info": {
+                "full_name": user_data.full_name
+            }
+        }
+        
+    except Exception as e:
+        frappe.log_error(f"Error in get_user_transactions: {str(e)}", "Payment API")
+        return {"success": False, "message": "Error retrieving transaction history"}
 
 

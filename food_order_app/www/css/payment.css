@@ -45,6 +45,10 @@
     padding: 24px;
 }
 
+.history-card {
+    margin-bottom: 150px;
+}
+
 /* Custom Select & Input */
 .form-group {
     margin-bottom: 20px;
@@ -189,6 +193,7 @@
     align-items: center;
     gap: 10px;
     margin-bottom: 20px;
+    margin-top: -60px;
 }
 
 .history-header i {
