@@ -201,14 +201,18 @@ function openApprovalModal(requestId, amount, user) {
         amount: amount,
         user: user
     };
+    const modal = document.getElementById('approval-modal');
     document.getElementById('approval-request-id').textContent = requestId;
     document.getElementById('approval-amount').textContent = amount + ' - ' + user;
     document.getElementById('approval-notes').value = '';
-    document.getElementById('approval-modal').setAttribute('aria-hidden', 'false');
+    modal.setAttribute('aria-hidden', 'false');
+    modal.style.display = 'block';
 }
 
 function closeApprovalModal() {
     document.getElementById('approval-modal').setAttribute('aria-hidden', 'true');
+    const modal = document.getElementById('approval-modal');
+    modal.style.display = 'none';
     currentApprovalData = {};
 }
 
