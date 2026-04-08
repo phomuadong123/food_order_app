@@ -604,30 +604,79 @@ def get_session_votes(session):
         if not session:
             return {"success": False, "message": "Missing session"}
 
+        now_dt = datetime.now()
+        start_of_month = now_dt.replace(day=1, hour=0, minute=0, second=0, microsecond=0)
+        end_of_previous_month = start_of_month - timedelta(seconds=1)
+        current_time = now_dt
+
         rows = frappe.db.sql("""
-            SELECT 
+            SELECT
                 lo.name AS order_id,
                 zum.real_name AS voter_name,
                 zum.full_name AS zalo_name,
                 lmi.item_name AS menu_item_name,
                 lmi.price,
                 lo.created_at,
-                CASE 
+                CASE
                     WHEN ROW_NUMBER() OVER (
-                        PARTITION BY lo.zalo_user 
+                        PARTITION BY lo.zalo_user
                         ORDER BY lo.created_at ASC, lo.creation ASC
                     ) > 1 THEN 'Đăng ký thêm'
-                    ELSE '' 
-                END AS note
+                    ELSE ''
+                END AS note,
+                COALESCE(wallet.balance, 0) AS wallet_balance,
+                COALESCE(prev_balance.beginning_balance, 0) AS beginning_balance,
+                COALESCE(order_summary.monthly_order_count, 0) AS monthly_order_count,
+                COALESCE(order_summary.monthly_food_cost, 0) AS monthly_food_cost,
+                COALESCE(deposit_summary.monthly_deposit_amount, 0) AS monthly_deposit_amount
             FROM `tabLunch Order` lo
             LEFT JOIN `tabZalo User Map` zum
                 ON lo.zalo_user = zum.name
             LEFT JOIN `tabLunch Menu Item` lmi
                 ON lo.menu_item = lmi.name
+            LEFT JOIN `tabLunch Wallet` wallet
+                ON wallet.zalo_user = lo.zalo_user
+            LEFT JOIN (
+                SELECT
+                    t.zalo_user,
+                    SUM(t.amount) AS beginning_balance
+                FROM `tabTransaction` t
+                WHERE t.date <= %s
+                GROUP BY t.zalo_user
+            ) prev_balance ON prev_balance.zalo_user = lo.zalo_user
+            LEFT JOIN (
+                SELECT
+                    lo2.zalo_user,
+                    COUNT(*) AS monthly_order_count,
+                    SUM(IFNULL(lmi2.price, 0)) AS monthly_food_cost
+                FROM `tabLunch Order` lo2
+                LEFT JOIN `tabLunch Menu Item` lmi2 ON lo2.menu_item = lmi2.name
+                WHERE lo2.is_active = 1
+                    AND lo2.created_at >= %s
+                    AND lo2.created_at <= %s
+                GROUP BY lo2.zalo_user
+            ) order_summary ON order_summary.zalo_user = lo.zalo_user
+            LEFT JOIN (
+                SELECT
+                    t3.zalo_user,
+                    SUM(t3.amount) AS monthly_deposit_amount
+                FROM `tabTransaction` t3
+                WHERE t3.type = 'Deposit'
+                    AND t3.date >= %s
+                    AND t3.date <= %s
+                GROUP BY t3.zalo_user
+            ) deposit_summary ON deposit_summary.zalo_user = lo.zalo_user
             WHERE lo.session = %s
                 AND lo.is_active = 1
             ORDER BY lo.created_at DESC, lo.creation DESC
-        """, (session,), as_dict=True)
+        """, (
+            end_of_previous_month,
+            start_of_month,
+            current_time,
+            start_of_month,
+            current_time,
+            session,
+        ), as_dict=True)
 
         return {"success": True, "data": rows}
     except Exception:

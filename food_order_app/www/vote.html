@@ -11,7 +11,40 @@
             </div>
         </div>
 </header>
+<<<<<<< HEAD
 <link rel="stylesheet" href="/css/vote.css?v={{ frappe.utils.generate_hash(8) }}">
+=======
+<link rel="stylesheet" href="/assets/food_order_app/css/vote.css?v={{ frappe.utils.generate_hash(8) }}">
+<style>
+    .table-wrap {
+        width: 100%;
+        overflow-x: auto;
+    }
+    .vote-table {
+        width: 100%;
+        border-collapse: collapse;
+        min-width: 1200px;
+    }
+    .vote-table th,
+    .vote-table td {
+        border: 1px solid #ddd;
+        padding: 10px 12px;
+        text-align: left;
+        vertical-align: middle;
+        white-space: nowrap;
+    }
+    .vote-table th {
+        background: #f6f9fb;
+        font-weight: 600;
+    }
+    .vote-table tbody tr:hover {
+        background: #f3f8ff;
+    }
+    .vote-table td.currency {
+        text-align: right;
+    }
+</style>
+>>>>>>> 7cad3bf (cap nhat bang dang ky)
 {% endblock %}
 
 {% block page_content %}
@@ -494,9 +527,14 @@
                                     <th>Đã đăng ký</th>
                                     <th>Ngày đăng ký</th>
                                     <th>Ghi chú</th>
-                                </tr>
-                            </thead>
-                            <tbody>
+                                <th>Tiền đầu kỳ</th>
+                                <th>Số xuất ăn đăng ký trong tháng</th>
+                                <th>Tiền đã ăn trong tháng</th>
+                                <th>Tiền nộp trong tháng</th>
+                                <th>Tổng còn lại</th>
+                            </tr>
+                        </thead>
+                        <tbody>
                 `;
 
                 rows.forEach((row, index) => {
@@ -506,6 +544,11 @@
                     const price = Number(row.price || 0).toLocaleString("vi-VN");
                     const createdAt = escapeHtml(formatDateTime(row.created_at));
                     const note = escapeHtml(row.note || "");
+                    const beginningBalance = Number(row.beginning_balance || 0).toLocaleString("vi-VN");
+                    const monthlyOrderCount = Number(row.monthly_order_count || 0).toLocaleString("vi-VN");
+                    const monthlyFoodCost = Number(row.monthly_food_cost || 0).toLocaleString("vi-VN");
+                    const monthlyDepositAmount = Number(row.monthly_deposit_amount || 0).toLocaleString("vi-VN");
+                    const walletBalance = Number(row.wallet_balance || 0).toLocaleString("vi-VN");
 
                     tableHtml += `
                         <tr>
@@ -515,6 +558,11 @@
                             <td>${itemName}</td>
                             <td>${createdAt}</td>
                             <td>${note}</td>
+                            <td class="currency">${beginningBalance}</td>
+                            <td>${monthlyOrderCount}</td>
+                            <td class="currency">${monthlyFoodCost}</td>
+                            <td class="currency">${monthlyDepositAmount}</td>
+                            <td class="currency">${walletBalance}</td>
                         </tr>
                     `;
                 });
