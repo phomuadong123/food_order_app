@@ -139,7 +139,8 @@ function renderTable(requests, userInfo) {
             <thead>
                 <tr>
                     <th>ID</th>
-                    <th>Người dùng</th>
+                    <th>ID Người dùng</th>
+                    <th>Tên Người dùng</th>
                     <th>Số tiền</th>
                     <th>Trạng thái</th>
                     <th>Ghi chú</th>
@@ -158,6 +159,7 @@ function renderTable(requests, userInfo) {
             <tr>
                 <td><strong>${req.name}</strong></td>
                 <td>${req.user}</td>
+                <td>${req.full_name}</td>
                 <td style="color: #28a745; font-weight:600">${amount}</td>
                 <td style="color: #994d59; font-weight:600">${req.status}</td>
                 <td>${req.notes || '-'}</td>
@@ -204,26 +206,33 @@ function openApprovalModal(requestId, amount, user) {
     if (!approvalDialog) {
         approvalDialog = new frappe.ui.Dialog({
             title: 'Duyệt Yêu Cầu Nạp Tiền',
-            fields: [
-                { fieldtype: 'Data', fieldname: 'request_id', label: 'Yêu cầu ID', read_only: 1 },
-                { fieldtype: 'Data', fieldname: 'amount', label: 'Số tiền', read_only: 1 },
-                { fieldtype: 'Small Text', fieldname: 'notes', label: 'Ghi chú', placeholder: 'Ghi chú thêm (không bắt buộc)' }
-            ],
+            body: `
+                <div style="padding: 15px;">
+                    <p><strong>Yêu cầu ID:</strong> <span id="dialog-request-id"></span></p>
+                    <p><strong>Số tiền:</strong> <span id="dialog-amount"></span></p>
+                    <div style="margin-top: 15px;">
+                        <label for="dialog-notes" style="display: block; margin-bottom: 5px;"><strong>Ghi chú:</strong></label>
+                        <textarea id="dialog-notes" placeholder="Ghi chú thêm (không bắt buộc)" style="width: 100%; min-height: 60px; padding: 8px; border: 1px solid #ccc; border-radius: 4px;"></textarea>
+                    </div>
+                </div>
+            `,
             primary_action_label: 'Phê Duyệt',
-            primary_action: function(values) {
-                submitApproval('Approved', values.notes);
+            primary_action: function() {
+                const notes = document.getElementById('dialog-notes').value;
+                submitApproval('Approved', notes);
             },
             secondary_action_label: 'Từ Chối',
-            secondary_action: function(values) {
-                submitApproval('Rejected', values.notes);
+            secondary_action: function() {
+                const notes = document.getElementById('dialog-notes').value;
+                submitApproval('Rejected', notes);
             }
         });
     }
 
-    approvalDialog.set_value('request_id', requestId);
-    approvalDialog.set_value('amount', amount + ' - ' + user);
-    approvalDialog.set_value('notes', '');
     approvalDialog.show();
+    document.getElementById('dialog-request-id').textContent = requestId;
+    document.getElementById('dialog-amount').textContent = amount + ' - ' + user;
+    document.getElementById('dialog-notes').value = '';
 }
 
 function closeApprovalModal() {

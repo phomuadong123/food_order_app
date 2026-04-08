@@ -72,23 +72,49 @@ def get_zalo_oa_access_token():
     return access_token
 
 
-def send_zalo_oa_message(zalo_user_id, message):
-    """Gửi tin nhắn Zalo OA đến một user cá nhân."""
-    if not zalo_user_id:
-        return False
+import requests
+import json
 
-    # Access token sẽ được lấy từ Zalo Config qua call_zalo_api
+def send_zalo_message(user_id, message_text):
+    """
+    Gửi tin nhắn văn bản từ Zalo OA tới một user_id.
+    user_id: ID người dùng (User ID theo OA, không phải số điện thoại).
+    message_text: Nội dung tin nhắn.
+    """
+    access_token = get_zalo_oa_access_token()
+    if not access_token:
+        frappe.log_error("Không tìm thấy Access Token Zalo OA", "Zalo Message Error")
+        return {"success": False, "message": "Missing Access Token"}
+
+    url = "https://openapi.zalo.me/v3.0/oa/message/transaction" # Dùng cho tin nhắn giao dịch/thông báo
+    
+    headers = {
+        "Content-Type": "application/json",
+        "access_token": access_token
+    }
+    
     payload = {
         "recipient": {
-            "user_id": zalo_user_id
+            "user_id": user_id
         },
         "message": {
-            "text": message
+            "text": message_text
         }
     }
 
-    response = call_zalo_api("https://openapi.zalo.me/v3.0/oa/message/cs", method="POST", data=payload)
-    return response.get("error") == 0
+    try:
+        response = requests.post(url, headers=headers, data=json.dumps(payload))
+        res_data = response.json()
+        
+        if res_data.get("error") != 0:
+            frappe.log_error(f"Zalo API Error: {res_data.get('message')}", "Zalo Send Message Failed")
+            return {"success": False, "data": res_data}
+            
+        return {"success": True, "data": res_data}
+        
+    except Exception as e:
+        frappe.log_error(frappe.get_traceback(), "Zalo Send Message Exception")
+        return {"success": False, "message": str(e)}
 
 
 @frappe.whitelist()
@@ -107,7 +133,7 @@ def notify_admins_by_zalo(message):
         sent = 0
         for admin in admins:
             if admin.zalo_id:
-                if send_zalo_oa_message(admin.zalo_id, message):
+                if send_zalo_message(admin.zalo_id, message):
                     sent += 1
 
         return {
@@ -138,7 +164,7 @@ def get_payment_requests(zalo_id=None, from_date=None, to_date=None, limit=20, o
             frappe.throw("Người dùng chưa đăng ký.", frappe.PermissionError)
 
         # Xử lý điều kiện lọc SQL
-        conditions = ["status = 'Pending'"]
+        conditions = [""]
         params = []
 
         if from_date:
@@ -148,7 +174,7 @@ def get_payment_requests(zalo_id=None, from_date=None, to_date=None, limit=20, o
             conditions.append("creation <= %s")
             params.append(to_date + " 23:59:59")
 
-        where_clause = " WHERE " + " AND ".join(conditions)
+        where_clause = " WHERE user = '"+ user_data.name +"' AND " + " AND ".join(conditions)
 
         # Truy vấn dữ liệu
         query = f"""
@@ -258,7 +284,7 @@ def get_zalo_user_data(zalo_id):
     return frappe.db.get_value(
         "Zalo User Map", 
         {"zalo_id": zalo_id}, 
-        ["roles", "full_name"], 
+        ["roles", "full_name","name"], 
         as_dict=True
     )
 
