@@ -68,45 +68,46 @@ def create_payment_request(amount,zalo_id):
 # =========================
 
 @frappe.whitelist(allow_guest=True)
-def get_payment_requests(zalo_id=None, limit=20, offset=0):
-    """
-    Lấy danh sách yêu cầu thanh toán bằng SQL thuần.
-    Chỉ dành cho Admin.
-    """
+def get_payment_requests(zalo_id=None, from_date=None, to_date=None, limit=20, offset=0):
     try:
         if not zalo_id:
             return {"success": False, "message": "Zalo ID là bắt buộc"}
         
-        # 1. Ép kiểu dữ liệu để tránh lỗi SQL Injection hoặc sai định dạng
         limit = frappe.utils.cint(limit)
         offset = frappe.utils.cint(offset)
 
-        # 2. Kiểm tra quyền Admin (Dùng lại hàm helper của bạn)
         user_data = get_zalo_user_data(zalo_id)
-
         if not user_data:
             frappe.throw("Người dùng chưa đăng ký.", frappe.PermissionError)
-      
-        # 3. Truy vấn danh sách bằng SQL thuần
-        # Lưu ý: Dùng %s để tránh SQL Injection
-        query = """
-            SELECT 
-                name, user, amount, status, qr_code, 
-                bank_info, transaction_id, notes, creation
-            FROM 
-                `tabPayment Request`
-            WHERE 
-                status = 'Pending'
-            ORDER BY 
-                creation DESC
+
+        # Xử lý điều kiện lọc SQL
+        conditions = ["status = 'Pending'"]
+        params = []
+
+        if from_date:
+            conditions.append("creation >= %s")
+            params.append(from_date + " 00:00:00")
+        if to_date:
+            conditions.append("creation <= %s")
+            params.append(to_date + " 23:59:59")
+
+        where_clause = " WHERE " + " AND ".join(conditions)
+
+        # Truy vấn dữ liệu
+        query = f"""
+            SELECT name, user, amount, status, qr_code, bank_info, transaction_id, notes, creation
+            FROM `tabPayment Request`
+            {where_clause}
+            ORDER BY creation DESC
             LIMIT %s OFFSET %s
         """
-        requests = frappe.db.sql(query, (limit, offset), as_dict=True)
+        # Thêm limit và offset vào params
+        data_params = params + [limit, offset]
+        requests = frappe.db.sql(query, tuple(data_params), as_dict=True)
 
-        # 4. Đếm tổng số bản ghi Pending để phân trang
-        total_count = frappe.db.sql("""
-            SELECT COUNT(*) FROM `tabPayment Request` WHERE status = 'Pending'
-        """)[0][0]
+        # Đếm tổng số để phân trang
+        count_query = f"SELECT COUNT(*) FROM `tabPayment Request` {where_clause}"
+        total_count = frappe.db.sql(count_query, tuple(params))[0][0]
 
         return {
             "success": True,
@@ -114,12 +115,9 @@ def get_payment_requests(zalo_id=None, limit=20, offset=0):
             "total_count": total_count,
             "user_info": user_data
         }
-
-    except frappe.PermissionError as e:
+    except Exception as e:
+        frappe.log_error(frappe.get_traceback(), "get_payment_requests_error")
         return {"success": False, "message": str(e)}
-    except Exception:
-        frappe.log_error(frappe.get_traceback(), "get_payment_requests_sql_error")
-        return {"success": False, "message": "Lỗi hệ thống khi lấy dữ liệu."}
 
 
 # =========================

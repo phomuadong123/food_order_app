@@ -19,7 +19,7 @@
 <div class="container">
         <header class="header">
             <button class="back-button" onclick="goBack()">← Quay lại</button>
-            <div class="user-badge"><span id="lock-modal-title">Thêm tiền vào số dư ví của bạn</span></div>
+            <div class="admin-badge"><span id="lock-modal-title">Thêm tiền vào số dư ví của bạn</span></div>
         </header>
 
         <div class="main-content">
@@ -70,29 +70,20 @@
             </aside>
         </div>
 
-        <section class="history-card">
+        <section class="history-card" style="margin-bottom: 30px;">
             <div class="history-header">
                 <i class="fas fa-university"></i>
                 <h2>Lịch sử nạp tiền</h2>
             </div>
-
-            <div id="transaction-filters" style="margin-bottom: 15px; display: flex; gap: 10px; flex-wrap: wrap;">
-                <input type="date" id="trans-from-date" style="padding: 8px; border: 1px solid #ddd; border-radius: 4px;">
-                <input type="date" id="trans-to-date" style="padding: 8px; border: 1px solid #ddd; border-radius: 4px;">
-                <button class="vote-btn vote-btn-secondary" onclick="loadTransactions()">Tìm kiếm</button>
-            </div>
-            <div id="transaction-list">
-                <p style="color: #666; text-align: center;">Đang tải giao dịch...</p>
-            </div>
         </section>
         <section class="history-card payment-section">
-           <div id="payment-request-section" style="display: none;">
-            <h2>Duyệt Các Yêu Cầu Nạp Tiền</h2>
-            <div id="payment-request-list">
-                <p style="color: #666; text-align: center;">Đang tải yêu cầu thanh toán...</p>
-            </div>
-            </div>
+            <div id="payment-request-section">
+                <div id="payment-request-list">
+                    <p style="color: #666; text-align: center;">Đang tải yêu cầu thanh toán...</p>
+                </div>
+                </div>
         </section>
+        
          
     </div>
 

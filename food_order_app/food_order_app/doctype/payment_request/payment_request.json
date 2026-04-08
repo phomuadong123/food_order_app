@@ -21,7 +21,7 @@
    "fieldname": "user",
    "fieldtype": "Link",
    "label": "User",
-   "options": "User",
+   "options": "Zalo User Map",
    "reqd": 1
   },
   {

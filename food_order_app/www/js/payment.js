@@ -20,14 +20,10 @@ frappe.ready(function() {
         callback: function(r) {
             console.log(r.message);
             if (r.message && r.message.is_admin) {
-                document.getElementById('admin-header').style.display = 'block';
                 document.querySelector('.lock-modal-card').style.display = 'none';
-                document.querySelector('.payment-section').style.display = 'none';
                 document.getElementById("lock-modal-title").textContent = "Duyệt các yêu cầu nạp tiền, admin(" + (r.message.full_name) +")";
 
             } else {
-                // LOGIC CHO USER THƯỜNG
-                document.getElementById('admin-header').style.display = 'none';
                 document.getElementById("lock-modal-title").textContent = "Thực hiện giao dịch thêm tiền vào ví của bạn: " + (r.message.full_name) +".";
             }
             loadPaymentRequests();
@@ -91,102 +87,112 @@ function generateQR() {
         }
     });
 };
+let currentPage = 0;
+const pageSize = 10;
 
-function loadTransactions() {
-    if (!zalo_id) {
-        // Show error message
-        document.getElementById('transaction-list').innerHTML = '<p style="color: #dc3545; text-align: center;">Không tìm thấy zalo_id</p>';
-        return;
-    }
+function loadPaymentRequests(page = 0) {
+    currentPage = page;
+    let fromDate = document.getElementById('trans-from-date').value;
+    let toDate = document.getElementById('trans-to-date').value;
 
-    const fromDate = document.getElementById('trans-from-date').value;
-    const toDate = document.getElementById('trans-to-date').value;
-
+    // Logic xử lý ngày mặc định (giữ nguyên của bạn)
     if (!toDate) {
-        toDate = new Date().toISOString().split('T')[0]; 
+        toDate = new Date().toISOString().split('T')[0];
+    }
+    if (!fromDate) {
+        const d = new Date(toDate);
+        d.setDate(d.getDate() - 30);
+        fromDate = d.toISOString().split('T')[0];
     }
 
-    if (!fromDate) {
-        const date = new Date(toDate);
-        date.setDate(date.getDate() - 30);
-        fromDate = date.toISOString().split('T')[0];
-    }
+    const offset = currentPage * pageSize;
 
     frappe.call({
-        method: 'food_order_app.payment.get_user_transactions',
+        method: 'food_order_app.payment.get_payment_requests',
         args: {
             zalo_id: zalo_id,
             from_date: fromDate,
             to_date: toDate,
-            limit: 100,
-            offset: 0
+            limit: pageSize,
+            offset: offset
         },
         callback: function(r) {
-            console.log("data transaction" , r.message);
-            
             if (r.message && r.message.success) {
-                const transactions = r.message.data;
-                if (transactions.length === 0) {
-                    document.getElementById('transaction-list').innerHTML = '<div class="empty-message">Không có giao dịch nào</div>';
-                } else {
-                    let table = '<table class="transaction-table"><thead><tr><th>Ngày</th><th>Loại</th><th>Số tiền</th><th>Mô tả</th></tr></thead><tbody>';
-                    transactions.forEach(tx => {
-                        const badgeClass = `badge badge-${tx.type.toLowerCase()}`;
-                        const amount = new Intl.NumberFormat('vi-VN', { style: 'currency', currency: 'VND' }).format(tx.amount);
-                        table += `<tr>
-                            <td>${frappe.datetime.str_to_user(tx.date)}</td>
-                            <td><span class="${badgeClass}">${getTransactionTypeLabel(tx.type)}</span></td>
-                            <td style="font-weight: 600; color: ${tx.type === 'Pay' ? '#dc3545' : '#28a745'}">${amount}</td>
-                            <td>${tx.description}</td>
-                        </tr>`;
-                    });
-                    table += '</tbody></table>';
-                    document.getElementById('transaction-list').innerHTML = table;
-                }
+                renderTable(r.message.data, r.message.user_info);
+                renderPagination(r.message.total_count);
             }
         }
     });
 }
 
-function loadPaymentRequests() {
-    frappe.call({
-        method: 'food_order_app.payment.get_payment_requests',
-        args: {
-            zalo_id: zalo_id,
-            limit: 50
-        },
-        callback: function(r) {
-            console.log("data payment request" , r.message);
+function renderTable(requests, userInfo) {
+    const container = document.getElementById('payment-request-list');
+    if (!requests || requests.length === 0) {
+        container.innerHTML = '<div class="empty-message">Không có dữ liệu</div>';
+        return;
+    }
 
-            if (r.message && r.message.success) {
-                const requests = r.message.data;
-                if (requests.length === 0) {
-                    document.getElementById('payment-request-list').innerHTML = '<div class="empty-message">Không có yêu cầu nạp tiền nào chờ duyệt</div>';
-                } else {
-                    let table = '<table class="payment-request-table"><thead><tr><th>ID</th><th>Người dùng</th><th>Số tiền</th><th>Ghi chú</th><th>Thời gian</th><th>Hành động</th></tr></thead><tbody>';
+    const isAdmin = userInfo && userInfo.roles && userInfo.roles.includes("Admin");
+    console.log(userInfo);
 
-                    requests.forEach(req => {
-                        const amount = new Intl.NumberFormat('vi-VN', { style: 'currency', currency: 'VND' }).format(req.amount);
-                        const createDate = frappe.datetime.str_to_user(req.creation);
-                        table += `<tr>
-                            <td><strong>${req.name}</strong></td>
-                            <td>${req.user}</td>
-                            <td style="font-weight: 600; color: #28a745;">${amount}</td>
-                            <td>${req.notes || '-'}</td>
-                            <td>${createDate}</td>
-                            <td>
-                                <div class="action-buttons">
-                                    <button class="btn-approve" onclick="openApprovalModal('${req.name}', '${amount}', '${req.user}')">Duyệt</button>
-                                </div>
-                            </td>
-                        </tr>`;
-                    });
-                    table += '</tbody></table>';
-                    document.getElementById('payment-request-list').innerHTML = table;
-                }
-            }
-        }
+    let html = `
+        <table class="payment-request-table">
+            <thead>
+                <tr>
+                    <th>ID</th>
+                    <th>Người dùng</th>
+                    <th>Số tiền</th>
+                    <th>Trạng thái</th>
+                    <th>Ghi chú</th>
+                    <th>Thời gian</th>
+                    ${!isAdmin ? '<th>Hành động</th>' : ''} 
+                </tr>
+            </thead>
+            <tbody>
+    `;
+
+    requests.forEach(req => {
+        const amount = new Intl.NumberFormat('vi-VN', { style: 'currency', currency: 'VND' }).format(req.amount);
+        const createDate = frappe.datetime.str_to_user(req.creation);
+        
+        html += `
+            <tr>
+                <td><strong>${req.name}</strong></td>
+                <td>${req.user}</td>
+                <td style="color: #28a745; font-weight:600">${amount}</td>
+                <td style="color: #994d59; font-weight:600">${req.status}</td>
+                <td>${req.notes || '-'}</td>
+                <td>${createDate}</td>
+                ${!isAdmin ? `
+                    <td>
+                        <button class="btn-approve" onclick="openApprovalModal('${req.name}', '${amount}', '${req.user}')">
+                            Duyệt
+                        </button>
+                    </td>
+                ` : ''}
+            </tr>
+        `;
     });
+
+    html += '</tbody></table><div id="pagination-controls" class="pagination"></div>';
+    container.innerHTML = html;
+}
+
+function renderPagination(totalCount) {
+    const totalPages = Math.ceil(totalCount / pageSize);
+    let html = `<div class="pagination-info">Tổng: ${totalCount} bản ghi</div><div class="page-buttons">`;
+
+    // Nút Previous
+    html += `<button ${currentPage === 0 ? 'disabled' : ''} onclick="loadPaymentRequests(${currentPage - 1})">Trước</button>`;
+
+    // Hiển thị số trang (VD: Trang 1 / 5)
+    html += `<span> Trang ${currentPage + 1} / ${totalPages || 1} </span>`;
+
+    // Nút Next
+    html += `<button ${currentPage >= totalPages - 1 ? 'disabled' : ''} onclick="loadPaymentRequests(${currentPage + 1})">Sau</button>`;
+
+    html += `</div>`;
+    document.getElementById('pagination-controls').innerHTML = html;
 }
 
 function openApprovalModal(requestId, amount, user) {
