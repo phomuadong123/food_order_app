@@ -61,7 +61,7 @@ def _get_transaction_maps(start_date, end_date):
             AND t.date < %s 
         GROUP BY t.zalo_user;
         """,
-        (start_date, start_date),
+        (start_date),
         as_dict=True,
     )
     sum_after_end_map = {d.zalo_user: float(d.sum_amount or 0) for d in sum_after_end}
