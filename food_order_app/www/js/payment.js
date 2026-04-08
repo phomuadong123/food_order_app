@@ -196,73 +196,38 @@ function renderPagination(totalCount) {
     document.getElementById('pagination-controls').innerHTML = html;
 }
 
+let currentData = { id: '', amount: '', user: '' };
+
 function openApprovalModal(requestId, amount, user) {
-    // 1. Lưu dữ liệu tạm thời
-    currentApprovalData = {
-        requestId: requestId,
-        amount: amount,
-        user: user
-    };
+    // Lưu thông tin
+    currentData = { id: requestId, amount: amount, user: user };
 
-    // 2. Khởi tạo Dialog nếu chưa có
-    if (!approvalDialog) {
-        approvalDialog = new frappe.ui.Dialog({
-            title: 'Duyệt Yêu Cầu Nạp Tiền',
-            body: `
-                <div style="padding: 15px; font-family: sans-serif; background-color: #181a20; color: white;">
-                    <div style="margin-bottom: 12px; line-height: 1.6;">
-                        <p style="margin: 0;"><strong>Yêu cầu:</strong> <span id="pure-js-id" style="color: #00d2ff;"></span></p>
-                        <p style="margin: 0;"><strong>Số tiền:</strong> <span id="pure-js-amount" style="font-weight: bold; color: #02c076;"></span></p>
-                        <p style="margin: 0;"><strong>Người dùng:</strong> <span id="pure-js-user"></span></p>
-                    </div>
-                    <div style="margin-top: 15px;">
-                        <label style="display: block; margin-bottom: 8px; font-size: 13px; color: #848e9c;">Ghi chú:</label>
-                        <textarea id="pure-js-notes" 
-                            placeholder="Nhập ghi chú..." 
-                            style="width: 100%; min-height: 80px; padding: 10px; border: 1px solid #474d57; 
-                                   background: #0b0e11; color: white; border-radius: 6px; outline: none;"></textarea>
-                    </div>
-                </div>
-            `,
-            primary_action_label: 'Phê Duyệt',
-            primary_action: function() {
-                // TRUY XUẤT JS THUẦN: Tìm element ngay trong DOM của Dialog
-                const notesArea = approvalDialog.display_area.querySelector('#pure-js-notes');
-                const notesValue = notesArea ? notesArea.value : '';
-                
-                if (typeof submitApproval === "function") {
-                    submitApproval('Approved', notesValue);
-                }
-                approvalDialog.hide();
-            },
-            secondary_action_label: 'Từ Chối',
-            secondary_action: function() {
-                const notesArea = approvalDialog.display_area.querySelector('#pure-js-notes');
-                const notesValue = notesArea ? notesArea.value : '';
+    // Đổ dữ liệu vào HTML bằng JS thuần
+    document.getElementById('m-id').innerText = requestId;
+    document.getElementById('m-amount').innerText = amount;
+    document.getElementById('m-user').innerText = user;
+    document.getElementById('pure-notes').value = '';
 
-                if (typeof submitApproval === "function") {
-                    submitApproval('Rejected', notesValue);
-                }
-                approvalDialog.hide();
-            }
-        });
-    }
-
-    approvalDialog.show();
-
-    const container = approvalDialog.display_area;
-    
-    container.querySelector('#pure-js-id').innerText = requestId;
-    container.querySelector('#pure-js-amount').innerText = amount;
-    container.querySelector('#pure-js-user').innerText = user;
-    container.querySelector('#pure-js-notes').value = ''; 
+    // Hiển thị modal (dùng flex để căn giữa)
+    document.getElementById('myCustomModal').style.display = 'flex';
 }
 
-function closeApprovalModal() {
-    if (approvalDialog) {
-        approvalDialog.hide();
+function closeMyModal() {
+    document.getElementById('myCustomModal').style.display = 'none';
+}
+
+function handleAction(status) {
+    const notes = document.getElementById('pure-notes').value;
+    
+    // Gọi hàm submitApproval của bạn
+    if (typeof submitApproval === "function") {
+        submitApproval(status, notes);
+    } else {
+        console.log("Status:", status, "Notes:", notes, "Data:", currentData);
     }
-    currentApprovalData = {};
+
+    // Đóng modal sau khi thực hiện
+    closeMyModal();
 }
 
 function submitApproval(action, notes) {
@@ -284,7 +249,7 @@ function submitApproval(action, notes) {
         callback: function(r) {
             if (r.message && r.message.success) {
                 frappe.msgprint(r.message.message);
-                closeApprovalModal();
+                closeMyModal();();
                 loadPaymentRequests();
             } else {
                 frappe.msgprint('Có lỗi xảy ra: ' + (r.message ? r.message.message : 'Unknown error'));

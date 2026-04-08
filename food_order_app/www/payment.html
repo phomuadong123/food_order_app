@@ -89,9 +89,23 @@
                 </div>
             </div>
         </section>
-        
-        
-         
+    </div>
+
+    <div id="myCustomModal" class="custom-modal-overlay">
+        <div class="custom-modal-content">
+            <div class="modal-header">Duyệt Yêu Cầu Nạp Tiền</div>
+            <div class="modal-body">
+                <p>ID: <span id="m-id" style="color: #00d2ff;"></span></p>
+                <p>Số tiền: <span id="m-amount" style="color: #02c076; font-weight: bold;"></span></p>
+                <p>User: <span id="m-user"></span></p>
+                <textarea id="pure-notes" rows="3" placeholder="Nhập ghi chú..."></textarea>
+            </div>
+            <div class="modal-footer">
+                <button class="btn-close" onclick="closeMyModal()">Đóng</button>
+                <button class="btn-reject" onclick="handleAction('Rejected')">Từ Chối</button>
+                <button class="btn-approve" onclick="handleAction('Approved')">Phê Duyệt</button>
+            </div>
+        </div>
     </div>
 
 <script src="/js/payment.js"></script>
