@@ -243,22 +243,56 @@ h1 {
 .vote-table {
     width: 100%;
     border-collapse: collapse;
-    min-width: 560px;
+    min-width: 760px;
+    background: #fff;
+    border-radius: 16px;
+    overflow: hidden;
+    box-shadow: 0 10px 30px rgba(15, 23, 42, 0.05);
 }
 
 .vote-table th,
 .vote-table td {
     border-bottom: 1px solid #edf2f7;
-    padding: 10px 8px;
-    text-align: left;
+    padding: 14px 14px;
     font-size: 14px;
-    color: #2d3748;
+    color: #334155;
+    vertical-align: middle;
 }
 
 .vote-table th {
+    background: #0f766e;
+    color: #fff;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+    font-size: 13px;
+}
+
+.vote-table tbody tr:nth-child(even) {
     background: #f8fafc;
-    color: #334155;
-    font-weight: 600;
+}
+
+.vote-table tbody tr:hover {
+    background: #eef9f8;
+}
+
+.text-start {
+    text-align: left;
+}
+
+.text-center {
+    text-align: center;
+}
+
+.text-small {
+    font-size: 13px;
+    color: #475569;
+}
+
+.note-cell {
+    max-width: 220px;
+    white-space: normal;
+    word-break: break-word;
 }
 
 .empty-text {
