@@ -607,9 +607,19 @@ def get_session_votes(session):
         # Get session date to determine the month
         session_doc = frappe.get_doc("Lunch Session", session)
         session_date = getdate(session_doc.date)
-        start_of_month = datetime.combine(session_date.replace(day=1), datetime.min.time())
-        end_of_month = datetime.combine((session_date.replace(day=1) + timedelta(days=32)).replace(day=1) - timedelta(days=1), datetime.max.time())
-        end_of_previous_month = datetime.combine(start_of_month - timedelta(days=1), datetime.max.time())
+
+        start_of_month = datetime.combine(
+            session_date.replace(day=1),
+            datetime.min.time()
+        )
+        end_of_month = datetime.combine(
+            (session_date.replace(day=1) + timedelta(days=32)).replace(day=1) - timedelta(days=1),
+            datetime.max.time()
+        )
+        end_of_previous_month = datetime.combine(
+            start_of_month - timedelta(days=1),
+            datetime.max.time()
+        )
 
         rows = frappe.db.sql("""
             SELECT
@@ -643,13 +653,30 @@ def get_session_votes(session):
                     t.zalo_user,
                     SUM(t.amount) AS beginning_balance
                 FROM `tabTransaction` t
-                LEFT JOIN `tabLunch Order` lo2 ON lo2.name = t.reference AND lo2.is_active = 1
+                LEFT JOIN `tabLunch Order` lo2
+                    ON lo2.name = t.reference AND lo2.is_active = 1
                 WHERE t.date <= %s
                     AND NOT (
                         t.type = 'Pay'
                         AND lo2.name IS NOT NULL
-                        AND DATE(DATE_ADD(lo2.created_at, INTERVAL CASE WHEN TIME(lo2.created_at) > '12:00:00' THEN 1 ELSE 0 END DAY)) >= %s
-                        AND DATE(DATE_ADD(lo2.created_at, INTERVAL CASE WHEN TIME(lo2.created_at) > '12:00:00' THEN 1 ELSE 0 END DAY)) <= %s
+                        AND DATE(
+                            DATE_ADD(
+                                lo2.created_at,
+                                INTERVAL CASE
+                                    WHEN TIME(lo2.created_at) > '12:00:00' THEN 1
+                                    ELSE 0
+                                END DAY
+                            )
+                        ) >= %s
+                        AND DATE(
+                            DATE_ADD(
+                                lo2.created_at,
+                                INTERVAL CASE
+                                    WHEN TIME(lo2.created_at) > '12:00:00' THEN 1
+                                    ELSE 0
+                                END DAY
+                            )
+                        ) <= %s
                     )
                 GROUP BY t.zalo_user
             ) prev_balance ON prev_balance.zalo_user = lo.zalo_user
@@ -659,10 +686,27 @@ def get_session_votes(session):
                     COUNT(*) AS monthly_order_count,
                     SUM(IFNULL(lmi2.price, 0)) AS monthly_food_cost
                 FROM `tabLunch Order` lo2
-                LEFT JOIN `tabLunch Menu Item` lmi2 ON lo2.menu_item = lmi2.name
+                LEFT JOIN `tabLunch Menu Item` lmi2
+                    ON lo2.menu_item = lmi2.name
                 WHERE lo2.is_active = 1
-                    AND DATE(DATE_ADD(lo2.created_at, INTERVAL CASE WHEN TIME(lo2.created_at) > '12:00:00' THEN 1 ELSE 0 END DAY)) >= %s
-                    AND DATE(DATE_ADD(lo2.created_at, INTERVAL CASE WHEN TIME(lo2.created_at) > '12:00:00' THEN 1 ELSE 0 END DAY)) <= %s
+                    AND DATE(
+                        DATE_ADD(
+                            lo2.created_at,
+                            INTERVAL CASE
+                                WHEN TIME(lo2.created_at) > '12:00:00' THEN 1
+                                ELSE 0
+                            END DAY
+                        )
+                    ) >= %s
+                    AND DATE(
+                        DATE_ADD(
+                            lo2.created_at,
+                            INTERVAL CASE
+                                WHEN TIME(lo2.created_at) > '12:00:00' THEN 1
+                                ELSE 0
+                            END DAY
+                        )
+                    ) <= %s
                 GROUP BY lo2.zalo_user
             ) order_summary ON order_summary.zalo_user = lo.zalo_user
             LEFT JOIN (
@@ -679,12 +723,14 @@ def get_session_votes(session):
                 AND lo.is_active = 1
             ORDER BY lo.created_at DESC, lo.creation DESC
         """, (
-            end_of_previous_month,
-            start_of_month,
-            end_of_month,
-            start_of_month,
-            end_of_month,
-            session,
+            end_of_previous_month,  # prev_balance
+            start_of_month,         # prev_balance
+            end_of_month,           # prev_balance
+            start_of_month,         # order_summary
+            end_of_month,           # order_summary
+            start_of_month,         # deposit_summary
+            end_of_month,           # deposit_summary
+            session,                # lo.session
         ), as_dict=True)
 
         return {"success": True, "data": rows}
@@ -692,7 +738,6 @@ def get_session_votes(session):
         error = traceback.format_exc()
         logger.error(f"[GET_SESSION_VOTES] ERROR {error}")
         return {"success": False, "message": "Internal error"}
-
 
 @frappe.whitelist(allow_guest=True)
 def get_my_session_transactions(zalo_id, session=None, from_date=None, to_date=None, page=1, page_size=10):
