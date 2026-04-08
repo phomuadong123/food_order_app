@@ -12,58 +12,92 @@
         </div>
 </header>
 <link rel="stylesheet" href="/css/vote.css?v={{ frappe.utils.generate_hash(8) }}">
+<link rel="stylesheet" href="/css/payment.css?v={{ frappe.utils.generate_hash(8) }}">
 {% endblock %}
 
 {% block page_content %}
-<div class="payment-container">
-    <!-- Back Button -->
-    <button class="back-button" onclick="goBack()">← Quay lại</button>
+<div class="container">
+        <header class="header">
+            <button class="back-button" onclick="goBack()">← Quay lại</button>
+            <div class="header-text">
+                <h1>Nạp tiền</h1>
+                <p id="lock-modal-title">Thêm tiền vào số dư ví của bạn</p>
+            </div>
+        </header>
 
-    <!-- Admin Header -->
-    <div id="admin-header" style="display: none;">
-        <div class="admin-badge">CHUYÊN VIÊN DUYỆT THANH TOÁN</div>
+        <div class="main-content">
+            <div class="payment-card">
+                <div class="form-group">
+                    <label>Phương thức thanh toán</label>
+                    <div class="custom-select">
+                        <div class="select-left">
+                            <div class="icon-box"><i class="fas fa-th-large"></i></div>
+                            <div>
+                                <div class="font-bold">Thanh toán bằng mã QR</div>
+                                <div class="sub-text">thanh toán tự động</div>
+                            </div>
+                        </div>
+                        <i class="fas fa-chevron-down"></i>
+                    </div>
+                    <div id="qr-container" style="display: none; text-align: center;">
+                        <p>Quét mã QR để chuyển khoản:</p>
+                        <img id="qr-code" src="" alt="QR Code" style="max-width: 200px;">
+                        <p id="bank-info" style="margin-top: 10px; font-size: 12px;"></p>
+                    </div>
+                </div>
+
+                <div class="alert-box">
+                    Lưu ý: Vui lòng nhập số tiền bạn muốn chuyển khoản <strong>(lớn hơn 10,000 VNĐ)</strong>. <br>
+                    Hệ thống sẽ duyệt tự động trong khoảng 5-10 phút.
+                </div>
+
+                <div class="form-group">
+                    <label>Số lượng tiền (VND)</label>
+                    <input type="number" class="amount-input" id="deposit-amount" min="10000" placeholder="0.00">
+
+                </div>
+
+                <div class="button-group">
+                    <button id="generate-qr-btn" class="btn btn-primary" onclick="generateQR()">Tạo mã QR</button>
+                    <button id="confirm-payment-btn" class="btn btn-secondary" style="display: none;" onclick="confirmPayment()">Đã thanh toán</button>
+                </div>
+            </div>
+
+            <aside class="note-card">
+                <h3>Lưu ý quan trọng</h3>
+                <ul>
+                    <li>Sau khi đã thanh toán và bấm Hoàn tất, tiền sẽ được hệ thống xử lý và cộng trong khoảng 5-10 phút.</li>
+                    <li>Nếu sau 1 tiếng chưa thấy tiền vào, hãy liên hệ hỗ trợ.</li>
+                    <li>Chỉ được tạo tối đa 5 đơn nạp ở trạng thái chờ thanh toán hoặc đang xử lý.</li>
+                </ul>
+            </aside>
+        </div>
+
+        <section class="history-card">
+            <div class="history-header">
+                <i class="fas fa-university"></i>
+                <h2>Lịch sử nạp tiền</h2>
+            </div>
+
+            <div id="transaction-filters" style="margin-bottom: 15px; display: flex; gap: 10px; flex-wrap: wrap;">
+                <input type="date" id="trans-from-date" style="padding: 8px; border: 1px solid #ddd; border-radius: 4px;">
+                <input type="date" id="trans-to-date" style="padding: 8px; border: 1px solid #ddd; border-radius: 4px;">
+                <button class="vote-btn vote-btn-secondary" onclick="loadTransactions()">Tìm kiếm</button>
+            </div>
+            <div id="transaction-list">
+                <p style="color: #666; text-align: center;">Đang tải giao dịch...</p>
+            </div>
+        </section>
+        <section class="history-card">
+           <div id="payment-request-section" class="payment-section" style="display: none;">
+            <h2>Duyệt Các Yêu Cầu Nạp Tiền</h2>
+            <div id="payment-request-list">
+                <p style="color: #666; text-align: center;">Đang tải yêu cầu thanh toán...</p>
+            </div>
+        </div>
+        </section>
+         
     </div>
-
-    <div class="lock-modal-card" style="max-width: 500px;">
-        <h3 class="lock-modal-title" id="lock-modal-title">Nạp tiền vào ví</h3>
-        <div style="margin-bottom: 20px;">
-            <label for="deposit-amount">Số tiền (VNĐ):</label>
-            <input type="number" id="deposit-amount" min="10000" step="10000" style="width: 100%; padding: 8px; margin-top: 5px;">
-        </div>
-        <div id="qr-container" style="display: none; text-align: center; margin-bottom: 20px;">
-            <p>Quét mã QR để chuyển khoản:</p>
-            <img id="qr-code" src="" alt="QR Code" style="max-width: 200px;">
-            <p id="bank-info" style="margin-top: 10px; font-size: 12px;"></p>
-        </div>
-        <div class="modal-actions" style="display: flex; gap: 10px; justify-content: flex-end;">
-            <button id="generate-qr-btn" class="vote-btn vote-btn-primary" onclick="generateQR()">Tạo mã QR</button>
-            <button id="confirm-payment-btn" class="vote-btn vote-btn-secondary" style="display: none;" onclick="confirmPayment()">Đã thanh toán</button>
-        </div>
-    </div>
-
-
-
-    <!-- Transaction History Section -->
-    <div class="payment-section">
-        <h2>Lịch Sử Giao Dịch</h2>
-        <div id="transaction-filters" style="margin-bottom: 15px; display: flex; gap: 10px; flex-wrap: wrap;">
-            <input type="date" id="trans-from-date" style="padding: 8px; border: 1px solid #ddd; border-radius: 4px;">
-            <input type="date" id="trans-to-date" style="padding: 8px; border: 1px solid #ddd; border-radius: 4px;">
-            <button class="vote-btn vote-btn-secondary" onclick="loadTransactions()">Tìm kiếm</button>
-        </div>
-        <div id="transaction-list">
-            <p style="color: #666; text-align: center;">Đang tải giao dịch...</p>
-        </div>
-    </div>
-
-    <!-- Payment Request Section (Admin Only) -->
-    <div id="payment-request-section" class="payment-section" style="display: none;">
-        <h2>Duyệt Các Yêu Cầu Nạp Tiền</h2>
-        <div id="payment-request-list">
-            <p style="color: #666; text-align: center;">Đang tải yêu cầu thanh toán...</p>
-        </div>
-    </div>
-</div>
 
 <!-- Approval Modal -->
 <div id="approval-modal" class="lock-modal" aria-hidden="true">

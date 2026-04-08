@@ -173,7 +173,7 @@ def approve_payment_request(payment_request_id, zalo_id, action, notes=""):
                     "zalo_user": user_name,
                     "type": "Deposit",
                     "amount": amount,
-                    "description": f"Nạp tiền được duyệt - Payment Request: {payment_request_id}",
+                    "description": f"Nạp tiền được duyệt bởi {current_user} - Payment Request: {payment_request_id}",
                     "date": now_datetime()
                 })
                 transaction.insert(ignore_permissions=True)

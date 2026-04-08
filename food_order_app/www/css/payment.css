@@ -1,0 +1,278 @@
+
+
+.container {
+    max-width: 1000px;
+    margin: 0 auto;
+}
+
+/* Header */
+.header {
+    display: flex;
+    align-items: center;
+    margin-bottom: 30px;
+}
+
+.back-btn {
+    margin-right: 20px;
+    font-size: 1.2rem;
+    cursor: pointer;
+    color: #848e9c;
+}
+
+.header-text h1 {
+    font-size: 28px;
+    margin-bottom: 4px;
+}
+
+.header-text p {
+    color: #848e9c;
+    font-size: 14px;
+}
+
+/* Layout chính */
+.main-content {
+    display: grid;
+    grid-template-columns: 2fr 1fr;
+    gap: 24px;
+    margin-bottom: 24px;
+}
+
+/* Card Style chung */
+.payment-card, .note-card, .history-card {
+    background-color: #181a20;
+    border: 1px solid #2b2f36;
+    border-radius: 12px;
+    padding: 24px;
+}
+
+/* Custom Select & Input */
+.form-group {
+    margin-bottom: 20px;
+}
+
+.form-group label {
+    display: block;
+    color: #848e9c;
+    font-size: 14px;
+    margin-bottom: 8px;
+}
+
+.custom-select {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    background-color: #0b0e11;
+    border: 1px solid #474d57;
+    padding: 12px;
+    border-radius: 8px;
+    cursor: pointer;
+}
+
+.select-left {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+}
+
+.icon-box {
+    background-color: #2b2f36;
+    width: 40px;
+    height: 40px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 6px;
+    color: #00d2ff;
+}
+
+.sub-text {
+    font-size: 12px;
+    color: #848e9c;
+}
+
+/* Thông báo tỷ giá */
+.alert-box {
+    background-color: rgba(2, 192, 118, 0.1);
+    border: 1px solid rgba(2, 192, 118, 0.3);
+    color: #02c076;
+    padding: 15px;
+    border-radius: 8px;
+    font-size: 14px;
+    line-height: 1.5;
+    margin-bottom: 20px;
+}
+
+.amount-input {
+    width: 100%;
+    background-color: #0b0e11;
+    border: 1px solid #474d57;
+    color: white;
+    padding: 16px;
+    font-size: 20px;
+    border-radius: 8px;
+    outline: none;
+}
+
+.amount-input:focus {
+    border-color: #00d2ff;
+}
+
+/* Buttons */
+.button-group {
+    display: flex;
+    gap: 15px;
+}
+
+.btn {
+    flex: 1;
+    padding: 14px;
+    border-radius: 8px;
+    font-weight: bold;
+    cursor: pointer;
+    font-size: 16px;
+    transition: 0.2s;
+}
+
+.btn-outline {
+    background: transparent;
+    border: 1px solid #474d57;
+    color: white;
+}
+
+.btn-outline:hover {
+    background: #2b2f36;
+}
+
+.btn-primary {
+    background-color: #00d2ff;
+    border: none;
+    color: #000;
+}
+
+.btn-primary:hover {
+    opacity: 0.9;
+}
+
+/* Cột lưu ý */
+.note-card {
+    border-left: 4px solid #00d2ff;
+    height: fit-content;
+}
+
+.note-card h3 {
+    font-size: 18px;
+    margin-bottom: 15px;
+}
+
+.note-card ul {
+    list-style: none;
+}
+
+.note-card li {
+    font-size: 13px;
+    color: #848e9c;
+    margin-bottom: 12px;
+    position: relative;
+    padding-left: 15px;
+}
+
+.note-card li::before {
+    content: "•";
+    position: absolute;
+    left: 0;
+    color: #848e9c;
+}
+
+/* Lịch sử nạp tiền (Table) */
+.history-header {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin-bottom: 20px;
+}
+
+.history-header i {
+    color: #00d2ff;
+    font-size: 20px;
+}
+
+.table-container {
+    overflow-x: auto;
+}
+
+table {
+    width: 100%;
+    border-collapse: collapse;
+}
+
+th {
+    text-align: left;
+    color: #848e9c;
+    font-size: 13px;
+    font-weight: 400;
+    padding-bottom: 15px;
+    border-bottom: 1px solid #2b2f36;
+}
+
+td {
+    padding: 15px 0;
+    border-bottom: 1px solid #2b2f36;
+    font-size: 14px;
+}
+
+.id-cell { color: #5e6673; }
+.amount-cell { color: #02c076; font-weight: bold; }
+.text-right { text-align: right; }
+.font-bold { font-weight: bold; }
+
+/* Status Badges */
+.status {
+    padding: 4px 8px;
+    border-radius: 4px;
+    font-size: 11px;
+    font-weight: bold;
+}
+
+.status.cancelled { background: rgba(246, 70, 93, 0.15); color: #f6465d; }
+.status.completed { background: rgba(2, 192, 118, 0.15); color: #02c076; }
+
+/* Pagination */
+.pagination {
+    margin-top: 20px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    color: #848e9c;
+    font-size: 13px;
+}
+
+.pagination select {
+    background: transparent;
+    color: white;
+    border: 1px solid #474d57;
+    border-radius: 4px;
+    padding: 2px 5px;
+}
+
+.page-nav button {
+    background: #2b2f36;
+    border: none;
+    color: white;
+    width: 30px;
+    height: 30px;
+    border-radius: 4px;
+    cursor: pointer;
+    margin-left: 5px;
+}
+
+.page-nav button:disabled {
+    opacity: 0.3;
+    cursor: not-allowed;
+}
+
+/* Mobile Responsive */
+@media (max-width: 768px) {
+    .main-content {
+        grid-template-columns: 1fr;
+    }
+}

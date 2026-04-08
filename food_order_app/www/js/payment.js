@@ -26,7 +26,7 @@ frappe.ready(function() {
             } else {
                 // LOGIC CHO USER THƯỜNG
                 document.getElementById('admin-header').style.display = 'none';
-                document.getElementById("lock-modal-title").textContent = "Nạp tiền vào ví cho tài khoản " + (r.message.full_name) +".";
+                document.getElementById("lock-modal-title").textContent = "Thêm tiền vào ví của bạn: " + (r.message.full_name) +".";
                 loadTransactions();
             }
         }
@@ -91,7 +91,7 @@ function generateQR() {
 };
 
 function loadTransactions() {
-    if (!zaloId) {
+    if (!zalo_id) {
         // Show error message
         document.getElementById('transaction-list').innerHTML = '<p style="color: #dc3545; text-align: center;">Không tìm thấy zalo_id</p>';
         return;
@@ -103,7 +103,7 @@ function loadTransactions() {
     frappe.call({
         method: 'food_order_app.api.get_user_transactions',
         args: {
-            zalo_id: zaloId,
+            zalo_id: zalo_id,
             from_date: fromDate,
             to_date: toDate,
             limit: 100
@@ -197,10 +197,10 @@ function submitApproval(action) {
     const notes = document.getElementById('approval-notes').value;
 
     frappe.call({
-        method: 'food_order_app.api.approve_payment_request',
+        method: 'food_order_app.payment.approve_payment_request',
         args: {
             payment_request_id: currentApprovalData.requestId,
-            zalo_id: zaloId,
+            zalo_id: zalo_id,
             action: action,
             notes: notes
         },

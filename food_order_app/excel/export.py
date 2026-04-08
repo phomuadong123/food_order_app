@@ -38,10 +38,13 @@ def _get_transaction_maps(start_date, end_date):
             t.zalo_user,
             SUM(t.amount) AS sum_amount
         FROM `tabTransaction` t
-        WHERE t.date BETWEEN %s AND %s and t.type = 'Pay'
-        GROUP BY t.zalo_user
+        WHERE 
+            t.date <= LAST_DAY(%s - INTERVAL 1 MONTH) 
+            AND t.type = 'Pay'
+        GROUP BY 
+            t.zalo_user;
         """,
-        (start_date, end_date),
+        (start_date),
         as_dict=True,
     )
     sum_in_period_map = {d.zalo_user: float(d.sum_amount or 0) for d in sum_in_period}
@@ -184,7 +187,7 @@ def _create_report_sheet(wb, start_date, end_date, date_headers, period_query, s
             beginning_balance = 0
             end_balance = 0
         else:
-            beginning_balance = sum_in_period + sum_after_end + total_price
+            beginning_balance = sum_in_period
             end_balance = beginning_balance - total_price + deposit_amount
 
         row_data = [stt, u.real_name or u.full_name]
