@@ -23,10 +23,11 @@
             <h1 id="order-status" style="margin: 10px 0 0 0;"></h1><h1 id="deadline" style="margin: 0;"></h1>
         </div>
         <div class="vote-header-side">
-            <div id="wallet-summary-main" class="wallet-summary-card wallet-summary-card-inline" aria-live="polite">
-                <div class="wallet-summary-single-line">
-                    <span class="wallet-summary-label inline-label">Số dư ví</span>
-                    <strong id="main-wallet-balance" class="wallet-summary-value inline-value">0 VNĐ</strong>
+            <div id="wallet-summary-main" class="wallet-summary-card" aria-live="polite">
+                <span class="wallet-summary-label">Số dư ví</span>
+                <div class="wallet-summary-row">
+                    <strong id="main-wallet-balance" class="wallet-summary-value">0 VNĐ</strong>
+                    <button type="button" class="wallet-summary-action" onclick="openDepositModal()">Nạp tiền</button>
                 </div>
             </div>
             <div class="vote-header-actions">
@@ -97,11 +98,9 @@
                 <button id="my-history-search-btn" class="vote-btn vote-btn-secondary" type="button" style="height:38px;margin-top: 10px;">Tìm</button>
             </div>
             <div id="so-du-lich-su" class="wallet-summary-inline">
-                <div class="wallet-summary-card compact wallet-summary-card-inline" aria-live="polite">
-                    <div class="wallet-summary-single-line">
-                        <span class="wallet-summary-label inline-label">Số dư ví</span>
-                        <strong id="history-wallet-balance" class="wallet-summary-value inline-value">0 VNĐ</strong>
-                    </div>
+                <div class="wallet-summary-card compact" aria-live="polite">
+                    <span class="wallet-summary-label">Số dư ví</span>
+                    <strong id="history-wallet-balance" class="wallet-summary-value">0 VNĐ</strong>
                 </div>
                 <button type="button" class="vote-btn vote-btn-primary history-deposit-btn" onclick="openDepositModal()">Nạp tiền</button>
             </div>
