@@ -170,7 +170,7 @@ function renderTable(requests, userInfo) {
                 <td>${createDate}</td>
                 ${isAdmin ? `
                     <td>
-                        <button class="btn-approve" onclick="openApprovalModal('${req.name}', '${amount}', '${req.user}')">
+                        <button class="btn-approve" ${statusInfo.disabled ? 'disabled' : ''} onclick="openApprovalModal('${req.name}', '${amount}', '${req.user}')">
                             Duyệt
                         </button>
                     </td>
@@ -192,11 +192,11 @@ function formatStatus(status) {
     };
 
     if (s === "pending") {
-        config = { text: "Chờ duyệt", color: "#ffc107" }; // Vàng
+        config = { text: "Chờ duyệt", color: "#ffc107"}; // Vàng
     } else if (s === "approved") {
-        config = { text: "Đã duyệt", color: "#02c076" };  // Xanh lá
+        config = { text: "Đã duyệt", color: "#02c076" , disabled: true};  // Xanh lá
     } else if (s === "rejected") {
-        config = { text: "Từ chối", color: "#cf304a" };   // Đỏ
+        config = { text: "Từ chối", color: "#cf304a", disabled: true };   // Đỏ
     }
 
     return config;
