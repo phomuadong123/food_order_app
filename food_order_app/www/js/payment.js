@@ -92,7 +92,7 @@ function generateQR() {
 let currentPage = 0;
 const pageSize = 10;
 
-function loadPaymentRequests(page = 0, isAdmin = false) {
+function loadPaymentRequests(page = 0, is_admin = false) {
     currentPage = page;
     let fromDate = document.getElementById('trans-from-date').value;
     let toDate = document.getElementById('trans-to-date').value;
@@ -117,7 +117,7 @@ function loadPaymentRequests(page = 0, isAdmin = false) {
             to_date: toDate,
             limit: pageSize,
             offset: offset,
-            isAdmin: isAdmin
+            isAdmin:  is_admin ? is_admin : isAdmin
         },
         callback: function(r) {
             console.log('Payment requests response:', r);
