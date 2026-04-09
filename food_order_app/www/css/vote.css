@@ -139,7 +139,7 @@ h1 {
 
 .price-text {
     font-weight: bold;
-    color: #e74c3c; 
+    color: #e74c3c;
     margin: 0;
     font-size: 16px;
 }
@@ -243,7 +243,7 @@ h1 {
     max-height: 560px;
     overflow: auto;
     border-radius: 16px;
-    border: 1px solid #d9e6ec;
+    border: 1px solid #dbe7f5;
 }
 
 .vote-table {
@@ -254,12 +254,12 @@ h1 {
     background: #fff;
     border-radius: 16px;
     overflow: hidden;
-    box-shadow: 0 8px 24px rgba(15, 23, 42, 0.04);
+    box-shadow: 0 8px 24px rgba(37, 99, 235, 0.06);
 }
 
 .vote-table th,
 .vote-table td {
-    border-bottom: 1px solid #e7eef3;
+    border-bottom: 1px solid #e8eef8;
     padding: 14px 14px;
     font-size: 14px;
     color: #334155;
@@ -267,7 +267,7 @@ h1 {
 }
 
 .vote-table th {
-    background: #2b8f8a;
+    background: #3b82f6;
     color: #fff;
     font-weight: 700;
     text-transform: uppercase;
@@ -289,7 +289,7 @@ h1 {
 }
 
 .vote-table tbody tr:nth-child(even) {
-    background: #f8fbfc;
+    background: #f8fbff;
 }
 
 .vote-table tbody tr:nth-child(odd) {
@@ -297,7 +297,7 @@ h1 {
 }
 
 .vote-table tbody tr:hover {
-    background: #eef7f8 !important;
+    background: #eef5ff !important;
 }
 
 .text-start {
@@ -509,7 +509,7 @@ h1 {
 }
 
 .group-header {
-    background: linear-gradient(135deg, #2b8f8a, #35a79c) !important;
+    background: linear-gradient(135deg, #3b82f6, #60a5fa) !important;
     color: #fff;
     font-weight: 700;
     text-align: center;
@@ -533,17 +533,17 @@ h1 {
     margin-top: 4px;
     text-transform: none;
     letter-spacing: 0;
-    color: rgba(255, 255, 255, 0.9);
+    color: rgba(255, 255, 255, 0.92);
 }
 
 .formula {
     font-style: italic;
-    color: #fff3b0;
+    color: #fef3c7;
     font-weight: 600;
 }
 
 .split-col {
-    border-right: 2px solid #3da19b !important;
+    border-right: 2px solid #60a5fa !important;
 }
 
 .amount-cell {
@@ -582,13 +582,15 @@ h1 {
     background: #fffbea !important;
 }
 
-.transaction-table, .payment-request-table {
+.transaction-table,
+.payment-request-table {
     width: 100%;
     border-collapse: collapse;
     margin-top: 15px;
 }
 
-.transaction-table th, .payment-request-table th {
+.transaction-table th,
+.payment-request-table th {
     background-color: #007bff;
     color: white;
     padding: 12px;
@@ -596,7 +598,8 @@ h1 {
     font-weight: 600;
 }
 
-.transaction-table td, .payment-request-table td {
+.transaction-table td,
+.payment-request-table td {
     padding: 12px;
     border-bottom: 1px solid #ddd;
 }
@@ -654,7 +657,8 @@ h1 {
     gap: 5px;
 }
 
-.btn-approve, .btn-reject {
+.btn-approve,
+.btn-reject {
     padding: 6px 12px;
     border: none;
     border-radius: 4px;
