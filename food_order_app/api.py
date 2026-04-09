@@ -72,13 +72,11 @@ def payment_request(session = None):
 
         from urllib.parse import quote_plus
         encoded_redirect_uri = quote_plus(redirect_uri)
-
         oauth_url = (
             f"https://oauth.zaloapp.com/v4/permission?"
             f"app_id={ZALO_APP_ID}"
             f"&redirect_uri={encoded_redirect_uri}"
-            f"&state={session}"
-            f"&type=payment_request"
+            f"&state=payment_request"
         )
 
         frappe.local.response["type"] = "redirect"
@@ -99,7 +97,7 @@ def payment_request(session = None):
 # =========================
 
 @frappe.whitelist(allow_guest=True)
-def zalo_callback(code=None, state=None, type=None):
+def zalo_callback(code=None, state=None):
 
     trace_id = frappe.generate_hash(length=8)
 
@@ -240,7 +238,7 @@ def zalo_callback(code=None, state=None, type=None):
         # STEP 6: REDIRECT
 
         PRODUCTION_DOMAIN = BASE_URL
-        if type == "payment_request":
+        if state == "payment_request":
             final_url = f"{PRODUCTION_DOMAIN}/payment?zalo_id={zalo_id}"
         else:
             final_url = f"{PRODUCTION_DOMAIN}/vote?session={state or ''}&zalo_id={zalo_id}"
