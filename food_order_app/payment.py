@@ -166,6 +166,8 @@ def get_payment_requests(zalo_id=None, from_date=None, to_date=None, limit=20, o
         # Xử lý điều kiện lọc SQL
         conditions = []
         params = []
+        clauses = []
+
         isAdmin = str(isAdmin).lower() in ["1", "true"]
         if not isAdmin:
             clauses.append("user = %s")
@@ -178,11 +180,9 @@ def get_payment_requests(zalo_id=None, from_date=None, to_date=None, limit=20, o
             conditions.append("creation <= %s")
             params.append(to_date + " 23:59:59")
 
-        clauses = []
-
         clauses.extend(conditions)
         where_clause = " WHERE " + " AND ".join(clauses) if clauses else ""
-        
+
         # Truy vấn dữ liệu
         query = f"""
             SELECT name, user,full_name, amount, status, qr_code, bank_info, transaction_id, notes, creation
