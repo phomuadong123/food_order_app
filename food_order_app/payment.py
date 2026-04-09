@@ -151,7 +151,7 @@ def notify_admins_by_zalo(message):
 # =========================
 
 @frappe.whitelist(allow_guest=True)
-def get_payment_requests(zalo_id=None, from_date=None, to_date=None, limit=20, offset=0):
+def get_payment_requests(zalo_id=None, from_date=None, to_date=None, limit=20, offset=0, isAdmin=False):
     try:
         if not zalo_id:
             return {"success": False, "message": "Zalo ID là bắt buộc"}
@@ -174,7 +174,11 @@ def get_payment_requests(zalo_id=None, from_date=None, to_date=None, limit=20, o
             conditions.append("creation <= %s")
             params.append(to_date + " 23:59:59")
 
-        where_clause = " WHERE user = '"+ user_data.name +"' " + " AND ".join(conditions)
+        clauses = []
+        if not isAdmin:
+            clauses.append(f"user = '{user_data.name}'")
+        clauses.extend(conditions)
+        where_clause = " WHERE " + " AND ".join(clauses) if clauses else ""
 
         # Truy vấn dữ liệu
         query = f"""

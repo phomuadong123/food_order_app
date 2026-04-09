@@ -618,6 +618,7 @@ h1 {
     display: inline-block;
     margin-bottom: 20px;
     font-weight: 600;
+    font-size: larger;
 }
 
 .back-button {

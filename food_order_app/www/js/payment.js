@@ -21,7 +21,8 @@ frappe.ready(function() {
         callback: function(r) {
             console.log(r.message);
             if (r.message && r.message.is_admin) {
-                document.getElementById("lock-modal-title").textContent = "Duyệt các yêu cầu nạp tiền, admin(" + (r.message.full_name) +")";
+                isAdmin = true;
+                document.getElementById("lock-modal-title").textContent = "Duyệt các yêu cầu nạp tiền, Quản trị viên: (" + (r.message.full_name) +")";
             } else {
                 document.getElementById("lock-modal-title").textContent = "Thực hiện giao dịch thêm tiền vào ví của bạn: " + (r.message.full_name) +".";
             }
@@ -113,7 +114,8 @@ function loadPaymentRequests(page = 0) {
             from_date: fromDate,
             to_date: toDate,
             limit: pageSize,
-            offset: offset
+            offset: offset,
+            isAdmin: isAdmin
         },
         callback: function(r) {
             if (r.message && r.message.success) {
@@ -138,7 +140,6 @@ function renderTable(requests, userInfo) {
         <table class="payment-request-table">
             <thead>
                 <tr>
-                    <th>ID</th>
                     <th>ID Người dùng</th>
                     <th>Tên Người dùng</th>
                     <th>Số tiền</th>
@@ -158,11 +159,10 @@ function renderTable(requests, userInfo) {
         
         html += `
             <tr>
-                <td><strong>${req.name}</strong></td>
                 <td>${req.user}</td>
                 <td>${req.full_name}</td>
                 <td style="color: #28a745; font-weight:600">${amount}</td>
-                <td style="color: ${statusInfo.color}; font-weight:600">${statusInfo.text}</td>
+                <td><button style="background-color: ${statusInfo.color}; color: white; border: none; padding: 5px 10px; border-radius: 3px;">${statusInfo.text}</button></td>
                 <td>${req.notes || '-'}</td>
                 <td>${createDate}</td>
                 ${isAdmin ? `
@@ -211,7 +211,6 @@ function renderPagination(totalCount) {
 
     // Nút Next
     html += `<button ${currentPage >= totalPages - 1 ? 'disabled' : ''} onclick="loadPaymentRequests(${currentPage + 1})">Sau</button>`;
-
     html += `</div>`;
     document.getElementById('pagination-controls').innerHTML = html;
 }
