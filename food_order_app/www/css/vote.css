@@ -506,6 +506,7 @@ h1 {
 }
 
 .payment-section {
+    overflow-x: auto;
     background: white;
     border-radius: 8px;
     padding: 20px;

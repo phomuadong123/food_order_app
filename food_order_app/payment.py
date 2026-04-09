@@ -7,7 +7,7 @@ import requests
 from food_order_app.api import call_zalo_api
 
 
-@frappe.whitelist()
+@frappe.whitelist(allow_guest=True)
 def create_payment_request(amount,zalo_id):
     """Tạo yêu cầu thanh toán"""
     if not amount or float(amount) <= 0:
@@ -16,8 +16,8 @@ def create_payment_request(amount,zalo_id):
     user_data = frappe.db.get_value(
         "Zalo User Map", 
         {"zalo_id": zalo_id}, 
-        ["name", "full_name"], # Danh sách các cột cần lấy
-        as_dict=True           # Trả về dạng {key: value} để dễ truy cập
+        ["name", "full_name"], 
+        as_dict=True           
     )
 
     if not user_data:
@@ -117,7 +117,7 @@ def send_zalo_message(user_id, message_text):
         return {"success": False, "message": str(e)}
 
 
-@frappe.whitelist()
+@frappe.whitelist(allow_guest=True)
 def notify_admins_by_zalo(message):
     """Gửi tin nhắn Zalo OA cho tất cả admin trong Zalo User Map."""
     try:
@@ -181,6 +181,7 @@ def get_payment_requests(zalo_id=None, from_date=None, to_date=None, limit=20, o
 
         clauses.extend(conditions)
         where_clause = " WHERE " + " AND ".join(clauses) if clauses else ""
+        frappe.log_error(f"Generated SQL WHERE clause: {where_clause} with params: {params}", "get_payment_requests_debug")
 
         # Truy vấn dữ liệu
         query = f"""
@@ -213,7 +214,7 @@ def get_payment_requests(zalo_id=None, from_date=None, to_date=None, limit=20, o
 # APPROVE/REJECT PAYMENT REQUEST (for admin)
 # =========================
 
-@frappe.whitelist()
+@frappe.whitelist(allow_guest=True)
 def approve_payment_request(payment_request_id, zalo_id, action, notes=""):
     """
     Approve or reject a payment request (admin only)
