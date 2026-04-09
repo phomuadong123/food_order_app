@@ -245,8 +245,8 @@ def approve_payment_request(payment_request_id, zalo_id, action, notes="", price
         payment_req.approved_by = current_user.name
         payment_req.approved_at = now_datetime()
         payment_req.notes = notes
-        if price:
-            payment_req.amount = price
+        if price is not None:
+            payment_req.amount = float(price)
 
         payment_req.save(ignore_permissions=True)
         frappe.db.commit()
