@@ -170,7 +170,7 @@ function renderTable(requests, userInfo) {
                 <td>${createDate}</td>
                 ${isAdmin ? `
                     <td>
-                        <button class="btn-approve" ${statusInfo.disabled ? 'disabled' : ''} onclick="openApprovalModal('${req.name}', '${amount}', '${req.user}')">
+                        <button class="btn-approve ${statusInfo.disabled ? 'disabled' : ''}" ${statusInfo.disabled ? 'disabled' : ''} onclick="openApprovalModal('${req.name}', '${amount}', '${req.user}')">
                             Duyệt
                         </button>
                     </td>
@@ -229,6 +229,7 @@ function openApprovalModal(requestId, amount, user) {
     document.getElementById('m-amount').innerText = amount;
     document.getElementById('m-user').innerText = user;
     document.getElementById('pure-notes').value = '';
+    document.getElementById('pure-price').value = amount.replace(/[^0-9]/g, ''); 
 
     // Hiển thị modal (dùng flex để căn giữa)
     document.getElementById('myCustomModal').style.display = 'flex';
@@ -259,6 +260,7 @@ function submitApproval(action, notes) {
     }
 
     notes = notes || '';
+    let price = document.getElementById('pure-price').value;
 
     frappe.call({
         method: 'food_order_app.payment.approve_payment_request',
@@ -266,7 +268,8 @@ function submitApproval(action, notes) {
             payment_request_id: currentApprovalData.requestId,
             zalo_id: zalo_id,
             action: action,
-            notes: notes
+            notes: notes,
+            price: price
         },
         callback: function(r) {
             if (r.message && r.message.success) {
