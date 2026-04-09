@@ -26,7 +26,9 @@ frappe.ready(function() {
             } else {
                 document.getElementById("lock-modal-title").textContent = "Thực hiện giao dịch thêm tiền vào ví của bạn: " + (r.message.full_name) +".";
             }
-            loadPaymentRequests();
+            console.log("isAdmin",isAdmin);
+            
+            loadPaymentRequests(0, r.message.is_admin);
         }
     });
 });
@@ -90,7 +92,7 @@ function generateQR() {
 let currentPage = 0;
 const pageSize = 10;
 
-function loadPaymentRequests(page = 0) {
+function loadPaymentRequests(page = 0, is_admin = false) {
     currentPage = page;
     let fromDate = document.getElementById('trans-from-date').value;
     let toDate = document.getElementById('trans-to-date').value;
@@ -115,7 +117,7 @@ function loadPaymentRequests(page = 0) {
             to_date: toDate,
             limit: pageSize,
             offset: offset,
-            isAdmin: isAdmin
+            isAdmin:  is_admin ? is_admin : isAdmin
         },
         callback: function(r) {
             console.log('Payment requests response:', r);
@@ -205,13 +207,13 @@ function renderPagination(totalCount) {
     let html = `<div class="pagination-info">Tổng: ${totalCount} bản ghi</div><div class="page-buttons">`;
 
     // Nút Previous
-    html += `<button ${currentPage === 0 ? 'disabled' : ''} onclick="loadPaymentRequests(${currentPage - 1})">Trước</button>`;
+    html += `<button ${currentPage === 0 ? 'disabled' : ''} onclick="loadPaymentRequests(${currentPage - 1}, ${isAdmin})">Trước</button>`;
 
     // Hiển thị số trang (VD: Trang 1 / 5)
     html += `<span> Trang ${currentPage + 1} / ${totalPages || 1} </span>`;
 
     // Nút Next
-    html += `<button ${currentPage >= totalPages - 1 ? 'disabled' : ''} onclick="loadPaymentRequests(${currentPage + 1})">Sau</button>`;
+    html += `<button ${currentPage >= totalPages - 1 ? 'disabled' : ''} onclick="loadPaymentRequests(${currentPage + 1}, ${isAdmin})">Sau</button>`;
     html += `</div>`;
     document.getElementById('pagination-controls').innerHTML = html;
 }
@@ -270,7 +272,7 @@ function submitApproval(action, notes) {
             if (r.message && r.message.success) {
                 frappe.msgprint(r.message.message);
                 closeMyModal();
-                loadPaymentRequests();
+                loadPaymentRequests(); // Tải lại trang sau khi duyệt
             } else {
                 frappe.msgprint('Có lỗi xảy ra: ' + (r.message ? r.message.message : 'Unknown error'));
             }
