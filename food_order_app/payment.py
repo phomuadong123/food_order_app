@@ -73,8 +73,17 @@ def create_payment_request(amount,zalo_id):
 
 def send_zalo_message(user_id, message_text):
     try:
-        access_token = frappe.db.get_value("Zalo Config", None, "access_token") 
-        frappe.log_error("TOKEN:", access_token)
+        config = frappe.get_all(
+            "Zalo Config",
+            fields=["name", "app_id", "secret_key", "refresh_token", "access_token"],
+            limit=1
+        )
+       
+        if not config:
+            frappe.throw("Missing Zalo Config")
+
+        config = config[0]
+        access_token = (config.get("access_token") or "").strip()
         url = "https://openapi.zalo.me/v2.0/oa/message"
 
         headers = {
