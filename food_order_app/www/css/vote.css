@@ -522,6 +522,8 @@ h1 {
 
 .group-header-right {
     border-left: 1px solid rgba(255, 255, 255, 0.12);
+}
+
 .payment-section {
     overflow-x: auto;
     background: white;

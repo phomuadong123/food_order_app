@@ -216,7 +216,7 @@ def get_payment_requests(zalo_id=None, from_date=None, to_date=None, limit=20, o
 # =========================
 
 @frappe.whitelist(allow_guest=True)
-def approve_payment_request(payment_request_id, zalo_id, action, notes=""):
+def approve_payment_request(payment_request_id, zalo_id, action, notes="", price=None):
     """
     Approve or reject a payment request (admin only)
     action: 'Approved' or 'Rejected'
@@ -245,7 +245,9 @@ def approve_payment_request(payment_request_id, zalo_id, action, notes=""):
         payment_req.approved_by = current_user.name
         payment_req.approved_at = now_datetime()
         payment_req.notes = notes
-        
+        if price:
+            payment_req.amount = price
+
         payment_req.save(ignore_permissions=True)
         frappe.db.commit()
         
