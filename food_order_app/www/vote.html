@@ -499,21 +499,20 @@
                 }
 
                 let tableHtml = `
-                    <div class="table-wrap">
+                    <div class="table-wrap" style="overflow-x: auto; margin: 20px 0;">
                         <table class="vote-table">
                             <thead>
                                 <tr>
-                                    <th>STT</th>
-                                    <th>Người đăng ký</th>
-                                    <th>Tên Zalo</th>
-                                    <th>Đã đăng ký</th>
-                                    <th>Ngày đăng ký</th>
-                                    <th>Tiền đầu kỳ</th>
-                                    <th>Xuất ăn trong tháng</th>
-                                    <th>Tiền ăn trong tháng</th>
-                                    <th>Tiền nộp trong tháng</th>
-                                    <th>Tiền còn lại</th>
-                                    <th>Ghi chú</th>
+                                    <th class="text-center">STT</th>
+                                    <th class="text-start">Họ tên</th>
+                                    <th class="text-start">Tên Zalo</th>
+                                    <th class="text-start">Đã đăng ký</th>
+                                    <th class="text-center">Thời gian</th>
+                                    <th class="text-center">Tiền đầu kỳ</th>
+                                    <th class="text-center">Số lượt trong tháng</th>
+                                    <th class="text-center">Tiền ăn trong tháng</th>
+                                    <th class="text-center">Tiền nộp trong tháng</th>
+                                    <th class="text-center">Tiền còn lại</th>
                                 </tr>
                             </thead>
                         <tbody>
@@ -532,19 +531,20 @@
                     const monthlyDepositAmount = Number(row.monthly_deposit_amount || 0).toLocaleString("vi-VN");
                     const walletBalance = Number(row.wallet_balance || 0).toLocaleString("vi-VN");
 
+                    const rowStyle = index % 2 === 0 ? 'background-color: #f9f9f9;' : 'background-color: #ffffff;';
+
                     tableHtml += `
-                        <tr>
-                            <td>${index + 1}</td>
-                            <td>${voterName}</td>
-                            <td>${zaloName}</td>
-                            <td>${itemName}</td>
-                            <td>${createdAt}</td>
-                            <td class="currency">${beginningBalance}</td>
-                            <td>${monthlyOrderCount}</td>
-                            <td class="currency">${monthlyFoodCost}</td>
-                            <td class="currency">${monthlyDepositAmount}</td>
-                            <td class="currency">${walletBalance}</td>
-                            <td>${note}</td>
+                        <tr style="${rowStyle}">
+                            <td class="text-center">${index + 1}</td>
+                            <td class="text-start">${voterName}</td>
+                            <td class="text-start">${zaloName}</td>
+                            <td class="text-start">${itemName}</td>
+                            <td class="text-center text-small">${createdAt}</td>
+                            <td class="text-center text-small">${beginningBalance}</td>
+                            <td class="text-center text-small">${monthlyOrderCount}</td>
+                            <td class="text-center text-small">${monthlyFoodCost}</td>
+                            <td class="text-center text-small">${monthlyDepositAmount}</td>
+                            <td class="text-center text-small">${walletBalance}</td>
                         </tr>
                     `;
                 });
@@ -644,8 +644,8 @@
                     tableHtml += `
                         <tr>
                             <td>${stt}</td>
-                            <td>${row.user_real_name}</td>
                             <td>${row.user_zalo_name}</td>
+                            <td>${row.user_real_name}</td>
                             <td>${row.transaction_type_vn}</td>
                             <td>${formatDateTime(row.registration_time)}</td>
                             <td>${row.menu_item_name}</td>
