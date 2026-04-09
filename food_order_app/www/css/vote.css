@@ -397,68 +397,73 @@ h1 {
     font-size: 18px;
 }
 
-.vote-page-header-content {
-    display: flex;
-    flex-direction: column;
-    gap: 12px;
-}
-
-.vote-header-text {
-    margin-bottom: 4px;
-}
-
-.vote-header-tools {
+.vote-header-side {
     display: flex;
     align-items: center;
-    justify-content: flex-start;
-    gap: 14px;
+    justify-content: flex-end;
+    gap: 12px;
     flex-wrap: wrap;
 }
 
 .wallet-summary-card {
-    min-width: 280px;
-    padding: 14px 16px;
-    border-radius: 16px;
+    min-width: 220px;
+    padding: 12px 14px;
+    border-radius: 14px;
     background: #f8fbff;
     border: 1px solid #dbe7f5;
     box-shadow: 0 6px 18px rgba(37, 99, 235, 0.08);
 }
 
 .wallet-summary-card.compact {
-    min-width: 250px;
-}
-
-.wallet-summary-card-inline {
-    display: inline-flex;
-    align-items: center;
-    gap: 12px;
+    min-width: 220px;
 }
 
 .wallet-summary-label {
-    display: inline-block;
+    display: block;
     font-size: 13px;
     font-weight: 700;
     color: #475569;
-    margin-bottom: 0;
+    margin-bottom: 8px;
     text-transform: uppercase;
     letter-spacing: 0.03em;
-    white-space: nowrap;
+}
+
+.wallet-summary-row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 10px;
+    flex-wrap: wrap;
 }
 
 .wallet-summary-value {
-    font-size: 18px;
+    font-size: 20px;
     font-weight: 800;
     color: #0f172a;
     line-height: 1.2;
-    white-space: nowrap;
 }
 
+.wallet-summary-action,
 .history-deposit-btn {
     width: auto;
-    min-width: 136px;
-    max-width: 136px;
-    height: 48px;
-    flex: 0 0 auto;
+    min-width: 120px;
+}
+
+.wallet-summary-action {
+    background: #0584fe;
+    color: #fff;
+    border: none;
+    border-radius: 10px;
+    padding: 9px 14px;
+    font-size: 14px;
+    font-weight: 700;
+    cursor: pointer;
+    transition: all .2s ease;
+}
+
+.wallet-summary-action:hover {
+    background: #006be6;
+    transform: translateY(-2px);
 }
 
 .wallet-summary-card.is-positive {
@@ -491,9 +496,9 @@ h1 {
 .wallet-summary-inline {
     display: flex;
     align-items: center;
-    justify-content: flex-start;
-    gap: 14px;
-    flex-wrap: nowrap;
+    justify-content: space-between;
+    gap: 12px;
+    flex-wrap: wrap;
     margin-bottom: 12px;
 }
 
@@ -502,8 +507,7 @@ h1 {
     flex-wrap: wrap;
     gap: 10px;
     align-items: center;
-    justify-content: flex-start;
-    flex: 1 1 390px;
+    justify-content: flex-end;
 }
 
 .vote-btn-secondary {
@@ -533,9 +537,9 @@ h1 {
 .history-modal-card {
     background: #fff;
     border-radius: 14px;
-    width: min(1280px, calc(100vw - 32px));
-    max-width: min(1280px, calc(100vw - 32px));
-    max-height: calc(100vh - 32px);
+    width: 100%;
+    max-width: 960px;
+    max-height: 85vh;
     display: flex;
     flex-direction: column;
     border: 1px solid #e2e8f0;
@@ -574,14 +578,14 @@ h1 {
 
 .history-modal-body {
     padding: 12px 16px 16px;
-    overflow: visible;
+    overflow-x: auto;
+    overflow-y: auto;
 }
 
 .history-table {
     width: 100%;
     border-collapse: collapse;
-    min-width: 0;
-    table-layout: fixed;
+    min-width: 860px;
     font-size: 13px;
 }
 
@@ -918,9 +922,9 @@ h1 {
         font-size: 10px;
     }
 
-    .vote-header-tools {
+    .vote-header-side {
         width: 100%;
-        align-items: stretch;
+        justify-content: stretch;
     }
 
     .wallet-summary-card,
@@ -929,19 +933,13 @@ h1 {
         min-width: 100%;
     }
 
-    .wallet-summary-card-inline {
-        justify-content: space-between;
-        width: 100%;
-    }
-
     .wallet-summary-inline {
         align-items: stretch;
-        flex-wrap: wrap;
     }
 
-    .history-deposit-btn {
+    .history-deposit-btn,
+    .wallet-summary-action {
         width: 100%;
-        max-width: 100%;
     }
 
     .vote-header-actions {
@@ -1013,17 +1011,148 @@ h1 {
     }
 }
 
-.history-table th,
-.history-table td {
-    overflow-wrap: anywhere;
+.vote-header-top {
+    width: 100%;
 }
 
-@media (min-width: 769px) {
-    .vote-header-tools .wallet-summary-card {
-        flex: 0 0 auto;
+.vote-header-status {
+    margin-bottom: 10px;
+    margin-top: 5px;
+}
+
+.vote-header-bottom {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 18px;
+    flex-wrap: nowrap;
+    margin-top: 8px;
+}
+
+.wallet-summary-card-main {
+    min-width: 280px;
+    display: inline-flex;
+    align-items: center;
+    gap: 14px;
+    padding: 14px 18px;
+    flex-shrink: 0;
+}
+
+.wallet-summary-card-main .wallet-summary-label {
+    margin-bottom: 0;
+    white-space: nowrap;
+}
+
+.wallet-summary-card-main .wallet-summary-value {
+    font-size: 18px;
+    white-space: nowrap;
+}
+
+.vote-header-actions {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px;
+    align-items: center;
+    justify-content: flex-end;
+    margin-left: auto;
+    max-width: 540px;
+}
+
+.vote-header-actions .vote-btn {
+    width: 170px !important;
+    flex: 0 0 170px;
+}
+
+.history-modal-card {
+    width: min(900px, calc(100vw - 36px));
+    max-width: 900px;
+    max-height: calc(100vh - 90px);
+}
+
+.history-modal-body {
+    padding: 12px 16px 14px;
+    overflow-y: auto;
+    overflow-x: hidden;
+}
+
+.wallet-summary-inline {
+    display: flex;
+    align-items: center;
+    justify-content: flex-start;
+    gap: 14px;
+    flex-wrap: nowrap;
+    margin-bottom: 12px;
+}
+
+.wallet-summary-card.compact {
+    min-width: auto;
+    padding: 10px 16px;
+    display: inline-flex;
+    align-items: center;
+    gap: 12px;
+}
+
+.wallet-summary-card.compact .wallet-summary-label {
+    margin-bottom: 0;
+    white-space: nowrap;
+}
+
+.wallet-summary-card.compact .wallet-summary-value {
+    font-size: 16px;
+    white-space: nowrap;
+}
+
+.history-deposit-btn {
+    width: 150px;
+    min-width: 150px;
+    flex: 0 0 150px;
+}
+
+.history-table {
+    min-width: 100%;
+    font-size: 12px;
+}
+
+.history-table th,
+.history-table td {
+    padding: 8px 6px;
+}
+
+#my-history-pagination {
+    margin-top: 10px;
+    padding-bottom: 2px;
+}
+
+@media (max-width: 1100px) {
+    .vote-header-bottom {
+        flex-wrap: wrap;
     }
 
-    .vote-header-actions .vote-btn {
-        width: 181px;
+    .vote-header-actions {
+        margin-left: 0;
+        justify-content: flex-start;
+        max-width: 100%;
+    }
+}
+
+@media (max-width: 768px) {
+    .vote-header-bottom {
+        align-items: stretch;
+    }
+
+    .wallet-summary-card-main {
+        width: 100%;
+        min-width: 100%;
+        justify-content: space-between;
+    }
+
+    .wallet-summary-inline {
+        flex-wrap: wrap;
+    }
+
+    .history-deposit-btn {
+        width: 100%;
+        min-width: 100%;
+        flex-basis: 100%;
     }
 }
