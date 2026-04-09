@@ -302,7 +302,7 @@ td {
 
 .btn-approve { background: #02c076; color: white; border: none; padding: 10px 15px; border-radius: 6px; cursor: pointer; font-weight: bold; }
 .btn-reject { background: #cf304a; color: white; border: none; padding: 10px 15px; border-radius: 6px; cursor: pointer; font-weight: bold; }
-.btn-close { background: #7b8eaf; color: #848e9c; border: none; padding: 10px 15px; border-radius: 6px; cursor: pointer; }
+.btn-close { background: #6a768b; color: #ffffff; border: none; padding: 10px 15px; border-radius: 6px; cursor: pointer; }
 
 #pure-notes {
     width: 100%; margin-top: 10px; background: #0b0e11; border: 1px solid #474d57;
