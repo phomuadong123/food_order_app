@@ -71,16 +71,10 @@ def create_payment_request(amount,zalo_id):
     }
 
 
-def get_zalo_oa_access_token():
-    """Lấy access token Zalo OA từ bảng Zalo Config."""
-    access_token = frappe.db.get_value("Zalo Config", None, "access_token")
-    return access_token
-
-
 def send_zalo_message(user_id, message_text):
     try:
-        access_token = get_zalo_oa_access_token() 
-
+        access_token = frappe.db.get_value("Zalo Config", None, "access_token") 
+        print("TOKEN:", access_token)
         url = "https://openapi.zalo.me/v2.0/oa/message"
 
         headers = {
