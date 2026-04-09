@@ -25,17 +25,19 @@
     </div>
 
     <div class="vote-header-bottom">
-        <div id="wallet-summary-main" class="wallet-summary-card wallet-summary-card-main" aria-live="polite">
-            <span class="wallet-summary-label">Số dư ví</span>
-            <strong id="main-wallet-balance" class="wallet-summary-value">0 VNĐ</strong>
+        <div class="vote-header-wallet-group">
+            <div id="wallet-summary-main" class="wallet-summary-card wallet-summary-card-main" aria-live="polite">
+                <span class="wallet-summary-label">Số dư ví</span>
+                <strong id="main-wallet-balance" class="wallet-summary-value">0 VNĐ</strong>
+            </div>
+            <button type="button" id="deposit-btn" class="vote-btn vote-btn-primary vote-header-deposit-btn" onclick="openDepositModal()">
+                Nạp tiền
+            </button>
         </div>
 
         <div class="vote-header-actions">
             <button style="width: 170px;" type="button" id="my-history-btn" class="vote-btn vote-btn-secondary" onclick="openMyTransactionHistory()">
                 Lịch sử của tôi
-            </button>
-            <button style="width: 170px;" type="button" id="deposit-btn" class="vote-btn vote-btn-primary" onclick="openDepositModal()">
-                Nạp tiền
             </button>
             <button id="cancel-btn" class="vote-btn" style="background:#de0f0f; width: 170px;" onclick="confirmCancel()">
                 Hủy đăng ký
