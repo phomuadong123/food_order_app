@@ -24,10 +24,11 @@ def _get_transaction_maps(start_date, end_date):
         FROM `tabTransaction` t
         WHERE t.type = 'Deposit'
             AND (t.reference IS NULL OR t.reference = '')
-            AND t.date BETWEEN %s AND %s
+            AND t.date >= %s
+            AND t.date < DATE_ADD(%s, INTERVAL 1 MONTH)
         GROUP BY t.zalo_user
         """,
-        (start_date, end_date),
+        (start_date, start_date),
         as_dict=True,
     )
     deposit_map = {d.zalo_user: float(d.deposit_amount or 0) for d in deposits}
@@ -38,9 +39,10 @@ def _get_transaction_maps(start_date, end_date):
             t.zalo_user,
             SUM(t.amount) AS sum_amount
         FROM `tabTransaction` t
+        Left JOIN `tabLunch Order` tlo on t.reference = tlo.name
         WHERE 
-            t.date <= LAST_DAY(%s - INTERVAL 1 MONTH) 
-            AND t.type = 'Pay'
+            t.date < DATE_SUB(%s, INTERVAL 12 HOUR)
+            AND t.type = 'Pay' and tlo.is_active = 1
         GROUP BY 
             t.zalo_user;
         """,
@@ -50,16 +52,17 @@ def _get_transaction_maps(start_date, end_date):
     sum_in_period_map = {d.zalo_user: float(d.sum_amount or 0) for d in sum_in_period}
 
     sum_after_end = frappe.db.sql(
-    """
-       SELECT
-            t.zalo_user,
-            SUM(t.amount)  AS sum_amount
-        FROM `tabTransaction` t
-            where t.date >= (%s - INTERVAL 1 MONTH)
-    	    AND t.date <= LAST_DAY(%s - INTERVAL 1 MONTH) and t.type = 'Pay'
-        GROUP BY t.zalo_user;
+        """
+        SELECT
+                t.zalo_user,
+                SUM(t.amount) AS sum_amount
+            FROM `tabTransaction` t
+            WHERE t.type = 'Deposit'
+                AND (t.reference IS NULL OR t.reference = '')
+                AND t.date < %s 
+            GROUP BY t.zalo_user;
         """,
-        (start_date, end_date),
+        (start_date,),  # 
         as_dict=True,
     )
     sum_after_end_map = {d.zalo_user: float(d.sum_amount or 0) for d in sum_after_end}
@@ -187,7 +190,7 @@ def _create_report_sheet(wb, start_date, end_date, date_headers, period_query, s
             beginning_balance = 0
             end_balance = 0
         else:
-            beginning_balance = sum_in_period
+            beginning_balance = sum_in_period + sum_after_end
             end_balance = beginning_balance - total_price + deposit_amount
 
         row_data = [stt, u.real_name or u.full_name]

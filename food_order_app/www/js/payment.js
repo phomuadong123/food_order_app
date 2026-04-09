@@ -3,6 +3,7 @@ let params = new URLSearchParams(window.location.search);
 let zalo_id = params.get('zalo_id');
 let isAdmin = false;
 let currentApprovalData = {};
+let approvalDialog = null;
 
 frappe.ready(function() {
     
@@ -18,17 +19,14 @@ frappe.ready(function() {
             "zalo_id": zalo_id
         },
         callback: function(r) {
+            console.log(r.message);
             if (r.message && r.message.is_admin) {
-                document.getElementById('admin-header').style.display = 'block';
-                document.querySelector('.lock-modal-card').style.display = 'none';
-                document.querySelector('.payment-section').style.display = 'none';
-                loadPaymentRequests();
+                isAdmin = true;
+                document.getElementById("lock-modal-title").textContent = "Duyệt các yêu cầu nạp tiền, Quản trị viên: (" + (r.message.full_name) +")";
             } else {
-                // LOGIC CHO USER THƯỜNG
-                document.getElementById('admin-header').style.display = 'none';
-                document.getElementById("lock-modal-title").textContent = "Thêm tiền vào ví của bạn: " + (r.message.full_name) +".";
-                loadTransactions();
+                document.getElementById("lock-modal-title").textContent = "Thực hiện giao dịch thêm tiền vào ví của bạn: " + (r.message.full_name) +".";
             }
+            loadPaymentRequests();
         }
     });
 });
@@ -64,7 +62,7 @@ function generateQR() {
                 const generateBtn = document.getElementById('generate-qr-btn');
                 const confirmBtn = document.getElementById('confirm-payment-btn');
                 
-                qrImg.src = r.message.qr_code;
+                qrImg.src = "/image/qr.jpg";
                 bankInfo.innerHTML = r.message.bank_info.replace(/\n/g, '<br>');
                 qrContainer.style.display = 'block';
                 generateBtn.style.display = 'none';
@@ -89,112 +87,176 @@ function generateQR() {
         }
     });
 };
+let currentPage = 0;
+const pageSize = 10;
 
-function loadTransactions() {
-    if (!zalo_id) {
-        // Show error message
-        document.getElementById('transaction-list').innerHTML = '<p style="color: #dc3545; text-align: center;">Không tìm thấy zalo_id</p>';
-        return;
+function loadPaymentRequests(page = 0) {
+    currentPage = page;
+    let fromDate = document.getElementById('trans-from-date').value;
+    let toDate = document.getElementById('trans-to-date').value;
+
+    // Logic xử lý ngày mặc định (giữ nguyên của bạn)
+    if (!toDate) {
+        toDate = new Date().toISOString().split('T')[0];
+    }
+    if (!fromDate) {
+        const d = new Date(toDate);
+        d.setDate(d.getDate() - 30);
+        fromDate = d.toISOString().split('T')[0];
     }
 
-    const fromDate = document.getElementById('trans-from-date').value;
-    const toDate = document.getElementById('trans-to-date').value;
+    const offset = currentPage * pageSize;
 
-    frappe.call({
-        method: 'food_order_app.api.get_user_transactions',
-        args: {
-            zalo_id: zalo_id,
-            from_date: fromDate,
-            to_date: toDate,
-            limit: 100
-        },
-        callback: function(r) {
-            if (r.message && r.message.success) {
-                const transactions = r.message.data;
-                if (transactions.length === 0) {
-                    document.getElementById('transaction-list').innerHTML = '<div class="empty-message">Không có giao dịch nào</div>';
-                } else {
-                    let table = '<table class="transaction-table"><thead><tr><th>Ngày</th><th>Loại</th><th>Số tiền</th><th>Mô tả</th></tr></thead><tbody>';
-                    transactions.forEach(tx => {
-                        const badgeClass = `badge badge-${tx.type.toLowerCase()}`;
-                        const amount = new Intl.NumberFormat('vi-VN', { style: 'currency', currency: 'VND' }).format(tx.amount);
-                        table += `<tr>
-                            <td>${frappe.datetime.str_to_user(tx.date)}</td>
-                            <td><span class="${badgeClass}">${getTransactionTypeLabel(tx.type)}</span></td>
-                            <td style="font-weight: 600; color: ${tx.type === 'Pay' ? '#dc3545' : '#28a745'}">${amount}</td>
-                            <td>${tx.description}</td>
-                        </tr>`;
-                    });
-                    table += '</tbody></table>';
-                    document.getElementById('transaction-list').innerHTML = table;
-                }
-            }
-        }
-    });
-}
-
-function loadPaymentRequests() {
     frappe.call({
         method: 'food_order_app.payment.get_payment_requests',
         args: {
             zalo_id: zalo_id,
-            limit: 50
+            from_date: fromDate,
+            to_date: toDate,
+            limit: pageSize,
+            offset: offset,
+            isAdmin: isAdmin
         },
         callback: function(r) {
+            console.log('Payment requests response:', r);
             if (r.message && r.message.success) {
-                const requests = r.message.data;
-                if (requests.length === 0) {
-                    document.getElementById('payment-request-list').innerHTML = '<div class="empty-message">Không có yêu cầu nạp tiền nào chờ duyệt</div>';
-                } else {
-                    let table = '<table class="payment-request-table"><thead><tr><th>ID</th><th>Người dùng</th><th>Số tiền</th><th>Ghi chú</th><th>Thời gian</th><th>Hành động</th></tr></thead><tbody>';
-                    requests.forEach(req => {
-                        const amount = new Intl.NumberFormat('vi-VN', { style: 'currency', currency: 'VND' }).format(req.amount);
-                        const createDate = frappe.datetime.str_to_user(req.creation);
-                        table += `<tr>
-                            <td><strong>${req.name}</strong></td>
-                            <td>${req.user}</td>
-                            <td style="font-weight: 600; color: #28a745;">${amount}</td>
-                            <td>${req.notes || '-'}</td>
-                            <td>${createDate}</td>
-                            <td>
-                                <div class="action-buttons">
-                                    <button class="btn-approve" onclick="openApprovalModal('${req.name}', '${amount}', '${req.user}')">Duyệt</button>
-                                </div>
-                            </td>
-                        </tr>`;
-                    });
-                    table += '</tbody></table>';
-                    document.getElementById('payment-request-list').innerHTML = table;
-                }
+                renderTable(r.message.data, r.message.user_info);
+                renderPagination(r.message.total_count);
             }
         }
     });
 }
 
-function openApprovalModal(requestId, amount, user) {
-    currentApprovalData = {
-        requestId: requestId,
-        amount: amount,
-        user: user
+function renderTable(requests, userInfo) {
+    const container = document.getElementById('payment-request-list');
+    if (!requests || requests.length === 0) {
+        container.innerHTML = '<div class="empty-message">Không có dữ liệu</div>';
+        return;
+    }
+
+    const isAdmin = userInfo && userInfo.roles && userInfo.roles.includes("Admin");
+    console.log(userInfo);
+
+    let html = `
+        <table class="payment-request-table">
+            <thead>
+                <tr>
+                    <th>ID Người dùng</th>
+                    <th>Tên Người dùng</th>
+                    <th>Số tiền</th>
+                    <th>Trạng thái</th>
+                    <th>Ghi chú</th>
+                    <th>Thời gian</th>
+                    ${isAdmin ? '<th>Hành động</th>' : ''} 
+                </tr>
+            </thead>
+            <tbody>
+    `;
+
+    requests.forEach(req => {
+        const amount = new Intl.NumberFormat('vi-VN', { style: 'currency', currency: 'VND' }).format(req.amount);
+        const createDate = frappe.datetime.str_to_user(req.creation);
+        const statusInfo = formatStatus(req.status);
+        
+        html += `
+            <tr>
+                <td>${req.user}</td>
+                <td>${req.full_name}</td>
+                <td style="color: #28a745; font-weight:600">${amount}</td>
+                <td><button style="background-color: ${statusInfo.color}; color: white; border: none; padding: 5px 10px; border-radius: 3px;">${statusInfo.text}</button></td>
+                <td>${req.notes || '-'}</td>
+                <td>${createDate}</td>
+                ${isAdmin ? `
+                    <td>
+                        <button class="btn-approve" onclick="openApprovalModal('${req.name}', '${amount}', '${req.user}')">
+                            Duyệt
+                        </button>
+                    </td>
+                ` : ''}
+            </tr>
+        `;
+    });
+
+    html += '</tbody></table><div id="pagination-controls" class="pagination"></div>';
+    container.innerHTML = html;
+}
+
+function formatStatus(status) {
+    const s = status ? status.toLowerCase() : "";
+    
+    let config = {
+        text: status,
+        color: "#994d59"   
     };
-    document.getElementById('approval-request-id').textContent = requestId;
-    document.getElementById('approval-amount').textContent = amount + ' - ' + user;
-    document.getElementById('approval-notes').value = '';
-    document.getElementById('approval-modal').setAttribute('aria-hidden', 'false');
+
+    if (s === "pending") {
+        config = { text: "Chờ duyệt", color: "#ffc107" }; // Vàng
+    } else if (s === "approved") {
+        config = { text: "Đã duyệt", color: "#02c076" };  // Xanh lá
+    } else if (s === "rejected") {
+        config = { text: "Từ chối", color: "#cf304a" };   // Đỏ
+    }
+
+    return config;
 }
 
-function closeApprovalModal() {
-    document.getElementById('approval-modal').setAttribute('aria-hidden', 'true');
-    currentApprovalData = {};
+function renderPagination(totalCount) {
+    const totalPages = Math.ceil(totalCount / pageSize);
+    let html = `<div class="pagination-info">Tổng: ${totalCount} bản ghi</div><div class="page-buttons">`;
+
+    // Nút Previous
+    html += `<button ${currentPage === 0 ? 'disabled' : ''} onclick="loadPaymentRequests(${currentPage - 1})">Trước</button>`;
+
+    // Hiển thị số trang (VD: Trang 1 / 5)
+    html += `<span> Trang ${currentPage + 1} / ${totalPages || 1} </span>`;
+
+    // Nút Next
+    html += `<button ${currentPage >= totalPages - 1 ? 'disabled' : ''} onclick="loadPaymentRequests(${currentPage + 1})">Sau</button>`;
+    html += `</div>`;
+    document.getElementById('pagination-controls').innerHTML = html;
 }
 
-function submitApproval(action) {
+
+function openApprovalModal(requestId, amount, user) {
+    // Lưu thông tin
+    currentApprovalData = { requestId: requestId, amount: amount, user: user };
+    console.log(currentApprovalData);
+    
+    // Đổ dữ liệu vào HTML bằng JS thuần
+    document.getElementById('m-id').innerText = requestId;
+    document.getElementById('m-amount').innerText = amount;
+    document.getElementById('m-user').innerText = user;
+    document.getElementById('pure-notes').value = '';
+
+    // Hiển thị modal (dùng flex để căn giữa)
+    document.getElementById('myCustomModal').style.display = 'flex';
+}
+
+function closeMyModal() {
+    document.getElementById('myCustomModal').style.display = 'none';
+}
+
+function handleAction(status) {
+    const notes = document.getElementById('pure-notes').value;
+    
+    // Gọi hàm submitApproval của bạn
+    if (typeof submitApproval === "function") {
+        submitApproval(status, notes);
+    } else {
+        console.log("Status:", status, "Notes:", notes, "Data:", currentData);
+    }
+
+    // Đóng modal sau khi thực hiện
+    closeMyModal();
+}
+
+function submitApproval(action, notes) {
     if (!currentApprovalData.requestId) {
         frappe.msgprint('Có lỗi xảy ra');
         return;
     }
 
-    const notes = document.getElementById('approval-notes').value;
+    notes = notes || '';
 
     frappe.call({
         method: 'food_order_app.payment.approve_payment_request',
@@ -207,7 +269,7 @@ function submitApproval(action) {
         callback: function(r) {
             if (r.message && r.message.success) {
                 frappe.msgprint(r.message.message);
-                closeApprovalModal();
+                closeMyModal();
                 loadPaymentRequests();
             } else {
                 frappe.msgprint('Có lỗi xảy ra: ' + (r.message ? r.message.message : 'Unknown error'));
