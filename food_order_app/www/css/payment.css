@@ -292,17 +292,17 @@ td {
 
 /* Khung nội dung Modal */
 .custom-modal-content {
-    background: #181a20; color: white; width: 90%; max-width: 500px;
+    background: #dde2f0; color: rgb(0, 0, 0); width: 90%; max-width: 500px;
     padding: 20px; border-radius: 12px; border: 1px solid #474d57;
 }
 
-.modal-header { font-size: 20px; font-weight: bold; margin-bottom: 15px; border-bottom: 1px solid #2b2f36; padding-bottom: 10px; }
-.modal-body p { margin: 8px 0; font-size: 8px; }
+.modal-header { font-size: 20px; font-weight: bold; margin-bottom: 15px; border-bottom: 1px solid #a1b2ce; padding-bottom: 10px; }
+.modal-body p { margin: 8px 0; font-size: 18px; }
 .modal-footer { margin-top: 20px; display: flex; gap: 10px; justify-content: flex-end; }
 
 .btn-approve { background: #02c076; color: white; border: none; padding: 10px 15px; border-radius: 6px; cursor: pointer; font-weight: bold; }
 .btn-reject { background: #cf304a; color: white; border: none; padding: 10px 15px; border-radius: 6px; cursor: pointer; font-weight: bold; }
-.btn-close { background: #2b2f36; color: #848e9c; border: none; padding: 10px 15px; border-radius: 6px; cursor: pointer; }
+.btn-close { background: #7b8eaf; color: #848e9c; border: none; padding: 10px 15px; border-radius: 6px; cursor: pointer; }
 
 #pure-notes {
     width: 100%; margin-top: 10px; background: #0b0e11; border: 1px solid #474d57;

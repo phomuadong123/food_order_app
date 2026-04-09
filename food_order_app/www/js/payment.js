@@ -170,7 +170,7 @@ function renderTable(requests, userInfo) {
                 <td>${createDate}</td>
                 ${isAdmin ? `
                     <td>
-                        <button class="btn-approve ${statusInfo.disabled ? 'disabled' : ''}" ${statusInfo.disabled ? 'disabled' : ''} onclick="openApprovalModal('${req.name}', '${amount}', '${req.user}')">
+                        <button class="btn-approve ${statusInfo.disabled ? 'disabled' : ''}" ${statusInfo.disabled ? 'disabled' : ''} onclick="openApprovalModal('${req.name}', '${amount}', '${req.user}', '${req.full_name}')">
                             Duyệt
                         </button>
                     </td>
@@ -219,7 +219,7 @@ function renderPagination(totalCount) {
 }
 
 
-function openApprovalModal(requestId, amount, user) {
+function openApprovalModal(requestId, amount, user, full_name) {
     // Lưu thông tin
     currentApprovalData = { requestId: requestId, amount: amount, user: user };
     console.log(currentApprovalData);
@@ -227,7 +227,7 @@ function openApprovalModal(requestId, amount, user) {
     // Đổ dữ liệu vào HTML bằng JS thuần
     document.getElementById('m-id').innerText = requestId;
     document.getElementById('m-amount').innerText = amount;
-    document.getElementById('m-user').innerText = user;
+    document.getElementById('m-user').innerText = full_name;
     document.getElementById('pure-notes').value = '';
     document.getElementById('pure-price').value = amount.replace(/[^0-9]/g, ''); 
 
