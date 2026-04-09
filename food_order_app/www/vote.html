@@ -22,16 +22,25 @@
         <div style="margin-bottom:10px; margin-top: 5px;">
             <h1 id="order-status" style="margin: 10px 0 0 0;"></h1><h1 id="deadline" style="margin: 0;"></h1>
         </div>
-        <div class="vote-header-actions">
-            <button style="width: 181px;" type="button" id="my-history-btn" class="vote-btn vote-btn-secondary" onclick="openMyTransactionHistory()">
-                Lịch sử của tôi
-            </button>
-            <button style="width: 181px;" type="button" id="deposit-btn" class="vote-btn vote-btn-primary" onclick="openDepositModal()">
-                Nạp tiền
-            </button>
-            <button id="cancel-btn" class="vote-btn" style="background:#de0f0f; max-width: 180px;" onclick="confirmCancel()">
-                Hủy đăng ký
-            </button>
+        <div class="vote-header-side">
+            <div id="wallet-summary-main" class="wallet-summary-card" aria-live="polite">
+                <span class="wallet-summary-label">Số dư ví</span>
+                <div class="wallet-summary-row">
+                    <strong id="main-wallet-balance" class="wallet-summary-value">0 VNĐ</strong>
+                    <button type="button" class="wallet-summary-action" onclick="openDepositModal()">Nạp tiền</button>
+                </div>
+            </div>
+            <div class="vote-header-actions">
+                <button style="width: 181px;" type="button" id="my-history-btn" class="vote-btn vote-btn-secondary" onclick="openMyTransactionHistory()">
+                    Lịch sử của tôi
+                </button>
+                <button style="width: 181px;" type="button" id="deposit-btn" class="vote-btn vote-btn-primary" onclick="openDepositModal()">
+                    Nạp tiền
+                </button>
+                <button id="cancel-btn" class="vote-btn" style="background:#de0f0f; max-width: 180px;" onclick="confirmCancel()">
+                    Hủy đăng ký
+                </button>
+            </div>
         </div>
     </div>
 </div>
@@ -88,7 +97,13 @@
                 </label>
                 <button id="my-history-search-btn" class="vote-btn vote-btn-secondary" type="button" style="height:38px;margin-top: 10px;">Tìm</button>
             </div>
-            <div id="so-du-lich-su"></div>
+            <div id="so-du-lich-su" class="wallet-summary-inline">
+                <div class="wallet-summary-card compact" aria-live="polite">
+                    <span class="wallet-summary-label">Số dư ví</span>
+                    <strong id="history-wallet-balance" class="wallet-summary-value">0 VNĐ</strong>
+                </div>
+                <button type="button" class="vote-btn vote-btn-primary history-deposit-btn" onclick="openDepositModal()">Nạp tiền</button>
+            </div>
             <div id="my-history-content" class="empty-text">Đang tải...</div>
             <div id="my-history-pagination" style="margin-top:12px;display:flex;align-items:center;gap:12px;flex-wrap:wrap;"></div>
         </div>
@@ -348,6 +363,7 @@
                     indicator: "green"
                 });
 
+                await refreshWalletBalance();
                 window.location.reload();
 
             } catch (err) {
@@ -386,6 +402,7 @@
                     indicator: "green"
                 });
 
+                await refreshWalletBalance();
                 await updateOrderStatus();
                 await loadSessionVotes();
 
@@ -463,6 +480,68 @@
         function formatCurrency(amount) {
             const value = Number(amount || 0);
             return value.toLocaleString('vi-VN');
+        }
+
+        function getWalletBalanceClass(amount) {
+            const value = Number(amount || 0);
+            if (value > 0) return "is-positive";
+            if (value < 0) return "is-negative";
+            return "is-zero";
+        }
+
+        function renderWalletBalance(amount) {
+            const value = Number(amount || 0);
+            const formattedValue = `${formatCurrency(value)} VNĐ`;
+            const balanceClass = getWalletBalanceClass(value);
+
+            const mainBalanceEl = document.getElementById("main-wallet-balance");
+            const mainCardEl = document.getElementById("wallet-summary-main");
+            const historyBalanceEl = document.getElementById("history-wallet-balance");
+            const historyWrapEl = document.getElementById("so-du-lich-su");
+
+            if (mainBalanceEl) {
+                mainBalanceEl.textContent = formattedValue;
+            }
+            if (mainCardEl) {
+                mainCardEl.classList.remove("is-positive", "is-negative", "is-zero");
+                mainCardEl.classList.add(balanceClass);
+            }
+            if (historyBalanceEl) {
+                historyBalanceEl.textContent = formattedValue;
+            }
+            if (historyWrapEl) {
+                const historyCard = historyWrapEl.querySelector('.wallet-summary-card');
+                if (historyCard) {
+                    historyCard.classList.remove("is-positive", "is-negative", "is-zero");
+                    historyCard.classList.add(balanceClass);
+                }
+            }
+        }
+
+        async function refreshWalletBalance() {
+            if (!session || !zalo_id) {
+                renderWalletBalance(0);
+                return;
+            }
+
+            try {
+                const res = await frappe.call({
+                    method: "food_order_app.api.get_my_session_transactions",
+                    args: {
+                        zalo_id: zalo_id,
+                        session: session,
+                        page: 1,
+                        page_size: 1
+                    }
+                });
+
+                const payload = res && res.message ? res.message : null;
+                if (payload && payload.success) {
+                    renderWalletBalance(payload.wallet_balance || 0);
+                }
+            } catch (error) {
+                console.error("refreshWalletBalance error:", error);
+            }
         }
 
         function escapeHtml(value) {
@@ -614,11 +693,7 @@
                 const page = Number(payload.page || myHistoryPage);
                 const pageSize = Number(payload.page_size || myHistoryPageSize);
                 const wallet_balance = Number(payload.wallet_balance || 0);
-                const isPositive = wallet_balance >= 0;
-                const bgColor = isPositive ? '#e8f5e8' : '#ffebee';
-                const textColor = isPositive ? '#2e7d32' : '#c62828';
-                const borderColor = isPositive ? '#4caf50' : '#e53935';
-                document.getElementById("so-du-lich-su").innerHTML = `$ Số dư: <span style="background-color: ${bgColor}; color: ${textColor}; padding: 8px 12px; border-radius: 6px; font-weight: bold; border: 1px solid ${borderColor}; display: inline-block; margin-left: 10px;">${formatCurrency(wallet_balance)} VND</span>`;
+                renderWalletBalance(wallet_balance);
                 myHistoryPage = page;
 
                 if (!rows.length) {
@@ -632,14 +707,14 @@
                         <table class="history-table">
                             <thead>
                                 <tr>
-                                    <th>STT</th>
-                                    <th>Họ và Tên</th>
-                                    <th>Tên Zalo</th>
-                                    <th>Loại giao dịch</th>
-                                    <th>Thời gian đăng ký</th>
-                                    <th>Đã đăng ký</th>
-                                    <th>Mô tả</th>
-                                    <th>Số tiền</th>
+                                    <th class="text-center">STT</th>
+                                    <th class="text-center">Họ và Tên</th>
+                                    <th class="text-center">Tên Zalo</th>
+                                    <th class="text-center">Loại giao dịch</th>
+                                    <th class="text-center">Thời gian đăng ký</th>
+                                    <th class="text-center">Đã đăng ký</th>
+                                    <th class="text-center">Mô tả</th>
+                                    <th class="text-center">Số tiền</th>
                                 </tr>
                             </thead>
                             <tbody>
@@ -649,14 +724,14 @@
                     const stt = index + 1;
                     tableHtml += `
                         <tr>
-                            <td>${stt}</td>
-                            <td>${row.user_zalo_name}</td>
-                            <td>${row.user_real_name}</td>
-                            <td>${row.transaction_type_vn}</td>
-                            <td>${formatDateTime(row.registration_time)}</td>
-                            <td>${row.menu_item_name}</td>
-                            <td>${row.display_description}</td>
-                            <td>${formatCurrency(row.amount)} VND</td>
+                            <td class="text-center">${stt}</td>
+                            <td class="text-center history-name-cell">${escapeHtml(row.user_zalo_name || "-")}</td>
+                            <td class="text-center history-name-cell">${escapeHtml(row.user_real_name || "-")}</td>
+                            <td class="text-center">${escapeHtml(row.transaction_type_vn || "-")}</td>
+                            <td class="text-center text-small">${escapeHtml(formatDateTime(row.registration_time))}</td>
+                            <td class="text-center history-menu-cell">${escapeHtml(row.menu_item_name || "-")}</td>
+                            <td class="history-description-cell">${escapeHtml(row.display_description || "-")}</td>
+                            <td class="text-center amount-cell">${formatCurrency(row.amount)} VND</td>
                         </tr>
                     `;
                 });
@@ -732,6 +807,7 @@
         }
 
         await checkUserActivation();
+        await refreshWalletBalance();
         loadMenu()
     });
 
