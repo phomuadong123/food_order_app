@@ -139,7 +139,7 @@ h1 {
 
 .price-text {
     font-weight: bold;
-    color: #e74c3c; 
+    color: #e74c3c;
     margin: 0;
     font-size: 16px;
 }
@@ -202,7 +202,6 @@ h1 {
     transform: none !important;
 }
 
-/* Loading / error message */
 .message-box {
     padding: 10px;
     border-radius: 10px;
@@ -240,19 +239,27 @@ h1 {
     overflow-x: auto;
 }
 
+.vote-table-wrap {
+    max-height: 560px;
+    overflow: auto;
+    border-radius: 16px;
+    border: 1px solid #dbe7f5;
+}
+
 .vote-table {
     width: 100%;
-    border-collapse: collapse;
-    min-width: 760px;
+    border-collapse: separate;
+    border-spacing: 0;
+    min-width: 980px;
     background: #fff;
     border-radius: 16px;
     overflow: hidden;
-    box-shadow: 0 10px 30px rgba(15, 23, 42, 0.05);
+    box-shadow: 0 8px 24px rgba(37, 99, 235, 0.06);
 }
 
 .vote-table th,
 .vote-table td {
-    border-bottom: 1px solid #edf2f7;
+    border-bottom: 1px solid #e8eef8;
     padding: 14px 14px;
     font-size: 14px;
     color: #334155;
@@ -260,20 +267,37 @@ h1 {
 }
 
 .vote-table th {
-    background: #0f766e;
+    background: #3b82f6;
     color: #fff;
     font-weight: 700;
     text-transform: uppercase;
     letter-spacing: 0.04em;
     font-size: 13px;
+    line-height: 1.35;
+    position: sticky;
+    z-index: 5;
+}
+
+.vote-table thead tr:first-child th {
+    top: 0;
+    z-index: 7;
+}
+
+.vote-table thead tr:nth-child(2) th {
+    top: 48px;
+    z-index: 6;
 }
 
 .vote-table tbody tr:nth-child(even) {
-    background: #f8fafc;
+    background: #f8fbff;
+}
+
+.vote-table tbody tr:nth-child(odd) {
+    background: #ffffff;
 }
 
 .vote-table tbody tr:hover {
-    background: #eef9f8;
+    background: #eef5ff !important;
 }
 
 .text-start {
@@ -484,27 +508,20 @@ h1 {
     word-break: break-word;
 }
 
-@media (max-width: 440px) {
-    .text-line2 {
-        font-size: 24px;
-    }
-    .text-line1 {
-        font-size: 18px;
-    }
-    .vote-history {
-        margin-bottom: 180px;
-    }
-    .footer p {
-        font-size: 12px;
-    }
+.group-header {
+    color: #fff;
+    font-weight: 700;
+    text-align: center;
+    font-size: 14px;
+    letter-spacing: 0.4px;
 }
 
-.payment-container {
-    max-width: 1200px;
-    margin: 30px auto;
-    padding: 0 20px;
+.group-header-left {
+    border-right: 2px solid rgba(255, 255, 255, 0.28);
 }
 
+.group-header-right {
+    border-left: 1px solid rgba(255, 255, 255, 0.12);
 .payment-section {
     overflow-x: auto;
     background: white;
@@ -514,39 +531,72 @@ h1 {
     box-shadow: 0 1px 3px rgba(0,0,0,0.1);
 }
 
-.payment-section h2 {
-    color: #333;
-    margin-bottom: 20px;
-    border-bottom: 2px solid #007bff;
-    padding-bottom: 10px;
+.sub {
+    display: block;
+    font-size: 11px;
+    opacity: 0.92;
+    font-weight: 500;
+    margin-top: 4px;
+    text-transform: none;
+    letter-spacing: 0;
+    color: rgba(255, 255, 255, 0.92);
 }
 
-.qr-section {
-    text-align: center;
+.formula {
+    font-style: italic;
+    color: #fef3c7;
+    font-weight: 600;
 }
 
-.qr-section img {
-    max-width: 300px;
-    margin: 20px auto;
+.split-col {
+    border-right: 2px solid #60a5fa !important;
 }
 
-.bank-info {
-    background-color: #f5f5f5;
-    border: 1px solid #ddd;
-    border-radius: 4px;
-    padding: 15px;
-    margin-top: 15px;
-    font-size: 14px;
-    line-height: 1.8;
+.amount-cell {
+    font-variant-numeric: tabular-nums;
+    font-weight: 600;
 }
 
-.transaction-table, .payment-request-table {
+.deposit-cell {
+    color: #2563eb;
+}
+
+.order-count-cell {
+    color: #475569;
+}
+
+.food-cost-cell {
+    color: #c2410c;
+}
+
+.balance-cell {
+    font-weight: 700;
+}
+
+.balance-positive {
+    color: #15803d !important;
+    background: #f3fbf6 !important;
+}
+
+.balance-negative {
+    color: #dc2626 !important;
+    background: #fff4f4 !important;
+}
+
+.balance-zero {
+    color: #a16207 !important;
+    background: #fffbea !important;
+}
+
+.transaction-table,
+.payment-request-table {
     width: 100%;
     border-collapse: collapse;
     margin-top: 15px;
 }
 
-.transaction-table th, .payment-request-table th {
+.transaction-table th,
+.payment-request-table th {
     background-color: #007bff;
     color: white;
     padding: 12px;
@@ -554,7 +604,8 @@ h1 {
     font-weight: 600;
 }
 
-.transaction-table td, .payment-request-table td {
+.transaction-table td,
+.payment-request-table td {
     padding: 12px;
     border-bottom: 1px solid #ddd;
 }
@@ -612,7 +663,8 @@ h1 {
     gap: 5px;
 }
 
-.btn-approve, .btn-reject {
+.btn-approve,
+.btn-reject {
     padding: 6px 12px;
     border: none;
     border-radius: 4px;
@@ -670,4 +722,148 @@ h1 {
 
 .back-button:hover {
     background-color: #5a6268;
+}
+
+.payment-container {
+    max-width: 1200px;
+    margin: 30px auto;
+    padding: 0 20px;
+}
+
+.payment-section {
+    background: white;
+    border-radius: 8px;
+    padding: 20px;
+    margin-bottom: 30px;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+}
+
+.payment-section h2 {
+    color: #333;
+    margin-bottom: 20px;
+    border-bottom: 2px solid #007bff;
+    padding-bottom: 10px;
+}
+
+.qr-section {
+    text-align: center;
+}
+
+.qr-section img {
+    max-width: 300px;
+    margin: 20px auto;
+}
+
+.bank-info {
+    background-color: #f5f5f5;
+    border: 1px solid #ddd;
+    border-radius: 4px;
+    padding: 15px;
+    margin-top: 15px;
+    font-size: 14px;
+    line-height: 1.8;
+}
+
+@media (max-width: 768px) {
+    .vote-page-header,
+    .vote-page-footer,
+    .vote-history {
+        margin-left: 8px;
+        margin-right: 8px;
+        padding: 12px;
+    }
+
+    .vote-table {
+        min-width: 900px;
+    }
+
+    .vote-table th,
+    .vote-table td {
+        padding: 10px 8px;
+        font-size: 12px;
+    }
+
+    .vote-table th {
+        font-size: 11px;
+    }
+
+    .sub {
+        font-size: 10px;
+    }
+
+    .vote-table thead tr:nth-child(2) th {
+        top: 44px;
+    }
+
+    .vote-header-actions {
+        width: 100%;
+        justify-content: stretch;
+    }
+
+    .vote-header-actions .vote-btn {
+        max-width: 100%;
+        width: 100%;
+    }
+
+    .lock-modal-card {
+        max-width: 95%;
+        height: auto;
+        min-height: 240px;
+    }
+
+    .lock-modal-title {
+        font-size: 24px;
+    }
+
+    .lock-modal-text {
+        font-size: 17px;
+    }
+}
+
+@media (max-width: 440px) {
+    .text-line2 {
+        font-size: 24px;
+    }
+
+    .text-line1 {
+        font-size: 18px;
+    }
+
+    .vote-history {
+        margin-bottom: 180px;
+    }
+
+    .footer p {
+        font-size: 12px;
+    }
+
+    .vote-page-header {
+        padding: 14px 12px;
+    }
+
+    #order-status {
+        font-size: 16px;
+    }
+
+    .vote-table-wrap {
+        max-height: 500px;
+    }
+
+    .vote-table {
+        min-width: 860px;
+    }
+
+    .vote-table th,
+    .vote-table td {
+        padding: 9px 7px;
+        font-size: 11px;
+    }
+
+    .sub {
+        font-size: 9px;
+    }
+
+    .vote-table thead tr:nth-child(2) th {
+        top: 42px;
+    }
 }

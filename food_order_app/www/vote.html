@@ -308,7 +308,6 @@
             try {
                 
                 const number = document.getElementById("number-menu-" + menu_item).value;
-                // Loading state (optional)
                 frappe.show_alert({
                     message: "Đang gửi vote...",
                     indicator: "blue"
@@ -499,52 +498,62 @@
                 }
 
                 let tableHtml = `
-                    <div class="table-wrap" style="overflow-x: auto; margin: 20px 0;">
-                        <table class="vote-table">
+                    <div class="table-wrap vote-table-wrap">
+                        <table class="vote-table enhanced-table">
                             <thead>
                                 <tr>
-                                    <th class="text-center">STT</th>
-                                    <th class="text-start">Họ tên</th>
-                                    <th class="text-start">Tên Zalo</th>
-                                    <th class="text-start">Đã đăng ký</th>
-                                    <th class="text-center">Thời gian</th>
-                                    <th class="text-center">Tiền đầu kỳ</th>
-                                    <th class="text-center">Số lượt trong tháng</th>
-                                    <th class="text-center">Tiền ăn trong tháng</th>
-                                    <th class="text-center">Tiền nộp trong tháng</th>
-                                    <th class="text-center">Tiền còn lại</th>
+                                    <th colspan="4" class="group-header group-header-left">Thông tin đăng ký</th>
+                                    <th colspan="5" class="group-header group-header-right">Thông tin giao dịch trong tháng</th>
+                                </tr>
+                                <tr>
+                                    <th class="text-center">STT<br><span class="sub">(1)</span></th>
+                                    <th class="text-start">Họ tên<br><span class="sub">(2)</span></th>
+                                    <th class="text-start">Tên Zalo<br><span class="sub">(3)</span></th>
+                                    <th class="text-center split-col">Thời gian<br><span class="sub">(4)</span></th>
+
+                                    <th class="text-center">Tiền đầu kỳ<br><span class="sub">(5)</span></th>
+                                    <th class="text-center">Tiền nộp trong tháng<br><span class="sub">(6)</span></th>
+                                    <th class="text-center">Số lượt trong tháng<br><span class="sub">(7)</span></th>
+                                    <th class="text-center">Tiền ăn trong tháng<br><span class="sub">(8)</span></th>
+                                    <th class="text-center">Tiền còn lại<br><span class="sub formula">(9 = 5 + 6 - 8)</span></th>
                                 </tr>
                             </thead>
-                        <tbody>
+                            <tbody>
                 `;
 
                 rows.forEach((row, index) => {
                     const voterName = escapeHtml(row.voter_name || "-");
                     const zaloName = escapeHtml(row.zalo_name || "-");
-                    const itemName = escapeHtml(row.menu_item_name || "-");
-                    const price = Number(row.price || 0).toLocaleString("vi-VN");
                     const createdAt = escapeHtml(formatDateTime(row.created_at));
-                    const note = escapeHtml(row.note || "");
-                    const beginningBalance = Number(row.beginning_balance || 0).toLocaleString("vi-VN");
-                    const monthlyOrderCount = Number(row.monthly_order_count || 0).toLocaleString("vi-VN");
-                    const monthlyFoodCost = Number(row.monthly_food_cost || 0).toLocaleString("vi-VN");
-                    const monthlyDepositAmount = Number(row.monthly_deposit_amount || 0).toLocaleString("vi-VN");
-                    const walletBalance = Number(row.wallet_balance || 0).toLocaleString("vi-VN");
 
-                    const rowStyle = index % 2 === 0 ? 'background-color: #f9f9f9;' : 'background-color: #ffffff;';
+                    const beginningBalanceNumber = Number(row.beginning_balance || 0);
+                    const monthlyDepositAmountNumber = Number(row.monthly_deposit_amount || 0);
+                    const monthlyOrderCountNumber = Number(row.monthly_order_count || 0);
+                    const monthlyFoodCostNumber = Number(row.monthly_food_cost || 0);
+                    const walletBalanceNumber = Number(row.wallet_balance || 0);
+
+                    const beginningBalance = beginningBalanceNumber.toLocaleString("vi-VN");
+                    const monthlyDepositAmount = monthlyDepositAmountNumber.toLocaleString("vi-VN");
+                    const monthlyOrderCount = monthlyOrderCountNumber.toLocaleString("vi-VN");
+                    const monthlyFoodCost = monthlyFoodCostNumber.toLocaleString("vi-VN");
+                    const walletBalance = walletBalanceNumber.toLocaleString("vi-VN");
+
+                    let balanceClass = "balance-zero";
+                    if (walletBalanceNumber > 0) balanceClass = "balance-positive";
+                    if (walletBalanceNumber < 0) balanceClass = "balance-negative";
 
                     tableHtml += `
-                        <tr style="${rowStyle}">
+                        <tr>
                             <td class="text-center">${index + 1}</td>
                             <td class="text-start">${voterName}</td>
                             <td class="text-start">${zaloName}</td>
-                            <td class="text-start">${itemName}</td>
-                            <td class="text-center text-small">${createdAt}</td>
-                            <td class="text-center text-small">${beginningBalance}</td>
-                            <td class="text-center text-small">${monthlyOrderCount}</td>
-                            <td class="text-center text-small">${monthlyFoodCost}</td>
-                            <td class="text-center text-small">${monthlyDepositAmount}</td>
-                            <td class="text-center text-small">${walletBalance}</td>
+                            <td class="text-center text-small split-col">${createdAt}</td>
+
+                            <td class="text-center amount-cell">${beginningBalance}</td>
+                            <td class="text-center amount-cell deposit-cell">${monthlyDepositAmount}</td>
+                            <td class="text-center amount-cell order-count-cell">${monthlyOrderCount}</td>
+                            <td class="text-center amount-cell food-cost-cell">${monthlyFoodCost}</td>
+                            <td class="text-center amount-cell balance-cell ${balanceClass}">${walletBalance}</td>
                         </tr>
                     `;
                 });
@@ -600,8 +609,6 @@
                 if (!payload || !payload.success) {
                     throw new Error((payload && payload.message) || "Không tải được lịch sử");
                 }
-
-                
 
                 const rows = Array.isArray(payload.data) ? payload.data : [];
                 const total = Number(payload.total || 0);
