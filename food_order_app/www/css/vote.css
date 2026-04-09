@@ -243,7 +243,7 @@ h1 {
     max-height: 560px;
     overflow: auto;
     border-radius: 16px;
-    border: 1px solid #dbe7f3;
+    border: 1px solid #d9e6ec;
 }
 
 .vote-table {
@@ -254,12 +254,12 @@ h1 {
     background: #fff;
     border-radius: 16px;
     overflow: hidden;
-    box-shadow: 0 10px 30px rgba(15, 23, 42, 0.05);
+    box-shadow: 0 8px 24px rgba(15, 23, 42, 0.04);
 }
 
 .vote-table th,
 .vote-table td {
-    border-bottom: 1px solid #edf2f7;
+    border-bottom: 1px solid #e7eef3;
     padding: 14px 14px;
     font-size: 14px;
     color: #334155;
@@ -267,7 +267,7 @@ h1 {
 }
 
 .vote-table th {
-    background: #0f766e;
+    background: #2b8f8a;
     color: #fff;
     font-weight: 700;
     text-transform: uppercase;
@@ -289,11 +289,15 @@ h1 {
 }
 
 .vote-table tbody tr:nth-child(even) {
-    background: #f8fafc;
+    background: #f8fbfc;
+}
+
+.vote-table tbody tr:nth-child(odd) {
+    background: #ffffff;
 }
 
 .vote-table tbody tr:hover {
-    background: #ecfdf5 !important;
+    background: #eef7f8 !important;
 }
 
 .text-start {
@@ -505,41 +509,41 @@ h1 {
 }
 
 .group-header {
-    background: linear-gradient(135deg, #0f766e, #14b8a6) !important;
+    background: linear-gradient(135deg, #2b8f8a, #35a79c) !important;
     color: #fff;
     font-weight: 700;
     text-align: center;
     font-size: 14px;
-    letter-spacing: 0.5px;
+    letter-spacing: 0.4px;
 }
 
 .group-header-left {
-    border-right: 2px solid rgba(255, 255, 255, 0.45);
+    border-right: 2px solid rgba(255, 255, 255, 0.28);
 }
 
 .group-header-right {
-    border-left: 2px solid rgba(255, 255, 255, 0.15);
+    border-left: 1px solid rgba(255, 255, 255, 0.12);
 }
 
 .sub {
     display: block;
     font-size: 11px;
-    opacity: 0.9;
+    opacity: 0.92;
     font-weight: 500;
     margin-top: 4px;
     text-transform: none;
     letter-spacing: 0;
-    color: rgba(255, 255, 255, 0.92);
+    color: rgba(255, 255, 255, 0.9);
 }
 
 .formula {
     font-style: italic;
-    color: #fde68a;
+    color: #fff3b0;
     font-weight: 600;
 }
 
 .split-col {
-    border-right: 3px solid #0f766e !important;
+    border-right: 2px solid #3da19b !important;
 }
 
 .amount-cell {
@@ -548,7 +552,7 @@ h1 {
 }
 
 .deposit-cell {
-    color: #0369a1;
+    color: #2563eb;
 }
 
 .order-count-cell {
@@ -556,27 +560,26 @@ h1 {
 }
 
 .food-cost-cell {
-    color: #b45309;
+    color: #c2410c;
 }
 
 .balance-cell {
     font-weight: 700;
-    border-radius: 0;
 }
 
 .balance-positive {
     color: #15803d !important;
-    background: #f0fdf4 !important;
+    background: #f3fbf6 !important;
 }
 
 .balance-negative {
     color: #dc2626 !important;
-    background: #fef2f2 !important;
+    background: #fff4f4 !important;
 }
 
 .balance-zero {
     color: #a16207 !important;
-    background: #fffbeb !important;
+    background: #fffbea !important;
 }
 
 .transaction-table, .payment-request-table {
