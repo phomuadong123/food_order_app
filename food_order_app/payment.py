@@ -164,7 +164,7 @@ def get_payment_requests(zalo_id=None, from_date=None, to_date=None, limit=20, o
             frappe.throw("Người dùng chưa đăng ký.", frappe.PermissionError)
 
         # Xử lý điều kiện lọc SQL
-        conditions = [""]
+        conditions = []
         params = []
 
         if from_date:
@@ -176,7 +176,9 @@ def get_payment_requests(zalo_id=None, from_date=None, to_date=None, limit=20, o
 
         clauses = []
         if not isAdmin:
-            clauses.append(f"user = '{user_data.name}'")
+            clauses.append("user = %s")
+            params.append(user_data.name)
+
         clauses.extend(conditions)
         where_clause = " WHERE " + " AND ".join(clauses) if clauses else ""
 

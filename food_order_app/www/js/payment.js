@@ -118,6 +118,7 @@ function loadPaymentRequests(page = 0) {
             isAdmin: isAdmin
         },
         callback: function(r) {
+            console.log('Payment requests response:', r);
             if (r.message && r.message.success) {
                 renderTable(r.message.data, r.message.user_info);
                 renderPagination(r.message.total_count);
