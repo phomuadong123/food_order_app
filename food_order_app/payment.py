@@ -58,7 +58,7 @@ def create_payment_request(amount,zalo_id):
 
     # Gửi thông báo Zalo đến admin
     message = (
-            f"Yêu cầu nạp tiền mới từ {full_name} - Số tiền: {amount} VNĐ. Vui lòng kiểm tra và duyệt yêu cầu này."
+            f"Yêu cầu nạp tiền mới từ {full_name} - Số tiền: {amount} VNĐ.\n"
             f"Vui lòng kiểm tra và duyệt yêu cầu tại link!\n"
             f"{frappe.utils.get_url()}/api/method/food_order_app.api.payment_request"
         )

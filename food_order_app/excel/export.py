@@ -195,7 +195,8 @@ def _create_report_sheet(wb, start_date, end_date, date_headers, period_query, s
 
         row_data = [stt, u.real_name or u.full_name]
         for idx in range(1, len(date_headers) + 1):
-            row_data.append(1 if idx in u_data['days'] else "")
+            count = u_data['days'].count(idx)
+            row_data.append(count if count > 0 else "")
 
         row_data.extend([
             num_days,
