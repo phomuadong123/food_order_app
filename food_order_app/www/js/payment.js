@@ -272,7 +272,7 @@ function submitApproval(action, notes) {
             if (r.message && r.message.success) {
                 frappe.msgprint(r.message.message);
                 closeMyModal();
-                loadPaymentRequests(0, isAdmin); // Tải lại trang sau khi duyệt
+                loadPaymentRequests(); // Tải lại trang sau khi duyệt
             } else {
                 frappe.msgprint('Có lỗi xảy ra: ' + (r.message ? r.message.message : 'Unknown error'));
             }

@@ -54,10 +54,10 @@ def create_payment_request(amount,zalo_id):
         "bank_info": f"Ngân hàng: {bank_info['bank']}\nSố tài khoản: {bank_info['account_number']}\nTên: {bank_info['account_name']}\nNội dung: {bank_info['content']}",
         "qr_code": f"data:image/png;base64,{qr_base64}"
     })
-    pr.insert()
+    pr.insert(ignore_permissions=True)
 
     # Gửi thông báo Zalo đến admin
-    notify_admins_by_zalo(f'Có yêu cầu nạp tiền mới từ user: {full_name}, số tiền: {amount} VNĐ. Vui lòng kiểm tra và duyệt yêu cầu này.')
+    
     return {
         "success": True,
         "payment_request": pr.name,
@@ -184,6 +184,7 @@ def get_payment_requests(zalo_id=None, from_date=None, to_date=None, limit=20, o
         frappe.log_error(f"and isAdmin: {isAdmin}", "get_payment_requests_debug")
         frappe.log_error(f"{where_clause}", "get_payment_requests_debug")
 
+
         # Truy vấn dữ liệu
         query = f"""
             SELECT name, user,full_name, amount, status, qr_code, bank_info, transaction_id, notes, creation
@@ -192,9 +193,12 @@ def get_payment_requests(zalo_id=None, from_date=None, to_date=None, limit=20, o
             ORDER BY creation DESC
             LIMIT %s OFFSET %s
         """
+        frappe.log_error(f"{query}", "get_payment_requests_debug")
+
         # Thêm limit và offset vào params
         data_params = params + [limit, offset]
         requests = frappe.db.sql(query, tuple(data_params), as_dict=True)
+        frappe.log_error(f"{data_params}", "get_payment_requests_debug")
 
         # Đếm tổng số để phân trang
         count_query = f"SELECT COUNT(*) FROM `tabPayment Request` {where_clause}"
