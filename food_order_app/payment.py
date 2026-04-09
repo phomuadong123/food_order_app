@@ -167,6 +167,10 @@ def get_payment_requests(zalo_id=None, from_date=None, to_date=None, limit=20, o
         conditions = []
         params = []
         isAdmin = str(isAdmin).lower() in ["1", "true"]
+        if not isAdmin:
+            clauses.append("user = %s")
+            params.append(user_data.name)
+
         if from_date:
             conditions.append("creation >= %s")
             params.append(from_date + " 00:00:00")
@@ -175,16 +179,10 @@ def get_payment_requests(zalo_id=None, from_date=None, to_date=None, limit=20, o
             params.append(to_date + " 23:59:59")
 
         clauses = []
-        if not isAdmin:
-            clauses.append("user = %s")
-            params.append(user_data.name)
 
         clauses.extend(conditions)
         where_clause = " WHERE " + " AND ".join(clauses) if clauses else ""
-        frappe.log_error(f"and isAdmin: {isAdmin}", "get_payment_requests_debug")
-        frappe.log_error(f"{where_clause}", "get_payment_requests_debug")
-
-
+        
         # Truy vấn dữ liệu
         query = f"""
             SELECT name, user,full_name, amount, status, qr_code, bank_info, transaction_id, notes, creation
@@ -193,12 +191,10 @@ def get_payment_requests(zalo_id=None, from_date=None, to_date=None, limit=20, o
             ORDER BY creation DESC
             LIMIT %s OFFSET %s
         """
-        frappe.log_error(f"{query}", "get_payment_requests_debug")
 
         # Thêm limit và offset vào params
         data_params = params + [limit, offset]
         requests = frappe.db.sql(query, tuple(data_params), as_dict=True)
-        frappe.log_error(f"{data_params}", "get_payment_requests_debug")
 
         # Đếm tổng số để phân trang
         count_query = f"SELECT COUNT(*) FROM `tabPayment Request` {where_clause}"
