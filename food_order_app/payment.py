@@ -166,7 +166,7 @@ def get_payment_requests(zalo_id=None, from_date=None, to_date=None, limit=20, o
         # Xử lý điều kiện lọc SQL
         conditions = []
         params = []
-
+        isAdmin = str(isAdmin).lower() in ["1", "true"]
         if from_date:
             conditions.append("creation >= %s")
             params.append(from_date + " 00:00:00")
@@ -181,7 +181,7 @@ def get_payment_requests(zalo_id=None, from_date=None, to_date=None, limit=20, o
 
         clauses.extend(conditions)
         where_clause = " WHERE " + " AND ".join(clauses) if clauses else ""
-        frappe.log_error(f"Generated SQL WHERE clause: {where_clause} with params: {params}", "get_payment_requests_debug")
+        frappe.log_error(f"Generated SQL WHERE clause: {where_clause} with params: {params} and isAdmin: {isAdmin}", "get_payment_requests_debug")
 
         # Truy vấn dữ liệu
         query = f"""
