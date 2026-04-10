@@ -57,7 +57,12 @@ def create_payment_request(amount,zalo_id):
     pr.insert(ignore_permissions=True)
 
     # Gửi thông báo Zalo đến admin
-    
+    message = (
+            f"Yêu cầu nạp tiền mới từ {full_name} - Số tiền: {amount} VNĐ.\n"
+            f"Vui lòng kiểm tra và duyệt yêu cầu tại link!\n"
+            f"{frappe.utils.get_url()}/api/method/food_order_app.api.payment_request"
+        )
+    notify_admins_by_zalo(message)
     return {
         "success": True,
         "payment_request": pr.name,
@@ -66,55 +71,52 @@ def create_payment_request(amount,zalo_id):
     }
 
 
-def get_zalo_oa_access_token():
-    """Lấy access token Zalo OA từ bảng Zalo Config."""
-    access_token = frappe.db.get_value("Zalo Config", None, "access_token")
-    return access_token
-
-
-import requests
-import json
-
 def send_zalo_message(user_id, message_text):
-    """
-    Gửi tin nhắn văn bản từ Zalo OA tới một user_id.
-    user_id: ID người dùng (User ID theo OA, không phải số điện thoại).
-    message_text: Nội dung tin nhắn.
-    """
-    access_token = get_zalo_oa_access_token()
-    if not access_token:
-        frappe.log_error("Không tìm thấy Access Token Zalo OA", "Zalo Message Error")
-        return {"success": False, "message": "Missing Access Token"}
-
-    url = "https://openapi.zalo.me/v3.0/oa/message/transaction" # Dùng cho tin nhắn giao dịch/thông báo
-    
-    headers = {
-        "Content-Type": "application/json",
-        "access_token": access_token
-    }
-    
-    payload = {
-        "recipient": {
-            "user_id": user_id
-        },
-        "message": {
-            "text": message_text
-        }
-    }
-
     try:
-        response = requests.post(url, headers=headers, data=json.dumps(payload))
-        res_data = response.json()
-        
-        if res_data.get("error") != 0:
-            frappe.log_error(f"Zalo API Error: {res_data.get('message')}", "Zalo Send Message Failed")
-            return {"success": False, "data": res_data}
-            
-        return {"success": True, "data": res_data}
-        
+        config = frappe.get_all(
+            "Zalo Config",
+            fields=["name", "app_id", "secret_key", "refresh_token", "access_token"],
+            limit=1
+        )
+       
+        if not config:
+            frappe.throw("Missing Zalo Config")
+
+        config = config[0]
+        access_token = (config.get("access_token") or "").strip()
+        url = "https://openapi.zalo.me/v2.0/oa/message"
+
+        headers = {
+            "access_token": access_token,
+            "Content-Type": "application/json"
+        }
+
+        payload = {
+            "recipient": {
+                "user_id": user_id
+            },
+            "message": {
+                "text": message_text
+            }
+        }
+
+        response = requests.post(url, json=payload, headers=headers)
+        result = response.json()
+
+        # Log để debug
+        frappe.log_error(
+            title="Zalo Send Message",
+            message=str(result)
+        )
+
+        return result
+
     except Exception as e:
-        frappe.log_error(frappe.get_traceback(), "Zalo Send Message Exception")
-        return {"success": False, "message": str(e)}
+        frappe.log_error(
+            title="Zalo Send Message Error",
+            message=frappe.get_traceback()
+        )
+        return {"error": str(e)}
 
 
 @frappe.whitelist(allow_guest=True)

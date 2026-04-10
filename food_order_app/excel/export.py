@@ -108,9 +108,9 @@ def _create_report_sheet(wb, start_date, end_date, date_headers, period_query, s
             continue
 
         if o.zalo_user not in user_orders:
-            user_orders[o.zalo_user] = {'days': set(), 'total_amount': 0}
+            user_orders[o.zalo_user] = {'days': [], 'total_amount': 0}
 
-        user_orders[o.zalo_user]['days'].add(period_index)
+        user_orders[o.zalo_user]['days'].append(period_index)
         user_orders[o.zalo_user]['total_amount'] += (o.price or 0)
 
    
@@ -177,7 +177,7 @@ def _create_report_sheet(wb, start_date, end_date, date_headers, period_query, s
     users = frappe.get_all("Zalo User Map", fields=["name", "real_name"])
     stt = 1
     for u in users:
-        u_data = user_orders.get(u.name, {'days': set(), 'total_amount': 0})
+        u_data = user_orders.get(u.name, {'days': [], 'total_amount': 0})
         num_days = len(u_data['days'])
         total_price = u_data['total_amount']
         avg_price = (total_price / num_days) if num_days > 0 else 0
@@ -194,8 +194,11 @@ def _create_report_sheet(wb, start_date, end_date, date_headers, period_query, s
             end_balance = beginning_balance - total_price + deposit_amount
 
         row_data = [stt, u.real_name or u.full_name]
+        from collections import Counter
+        day_counts = Counter(u_data['days'])
+
         for idx in range(1, len(date_headers) + 1):
-            row_data.append(1 if idx in u_data['days'] else "")
+            row_data.append(day_counts.get(idx, ""))
 
         row_data.extend([
             num_days,
