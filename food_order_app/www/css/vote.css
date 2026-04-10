@@ -1204,3 +1204,242 @@ h1 {
         flex-basis: 100%;
     }
 }
+
+
+/* --- Rebalance transaction history modal/table --- */
+.history-modal-card {
+    width: min(1180px, calc(100vw - 32px));
+    max-width: 1180px;
+    max-height: calc(100vh - 56px);
+}
+
+.history-modal-body {
+    padding: 14px 18px 16px;
+    overflow-y: auto;
+    overflow-x: hidden;
+}
+
+.history-table-wrap {
+    width: 100%;
+    max-width: 100%;
+    max-height: 52vh;
+    overflow-x: auto;
+    overflow-y: auto;
+    border: 1px solid #e2e8f0;
+    border-radius: 12px;
+    background: #fff;
+}
+
+.history-table {
+    width: 100%;
+    min-width: 1120px;
+    table-layout: fixed;
+    border-collapse: separate;
+    border-spacing: 0;
+    font-size: 12px;
+}
+
+.history-table thead th {
+    position: sticky;
+    top: 0;
+    z-index: 2;
+    background: #f8fafc;
+}
+
+.history-table th,
+.history-table td {
+    padding: 10px 8px;
+    font-size: 12px;
+    line-height: 1.4;
+    vertical-align: middle;
+}
+
+.history-table .col-stt { width: 56px; }
+.history-table .col-fullname { width: 130px; }
+.history-table .col-zalo { width: 130px; }
+.history-table .col-type { width: 120px; }
+.history-table .col-time { width: 140px; }
+.history-table .col-menu { width: 120px; }
+.history-table .col-description { width: 320px; }
+.history-table .col-amount { width: 140px; }
+
+.history-name-cell {
+    min-width: 0;
+    max-width: none;
+    font-weight: 600;
+    font-size: 12px;
+    color: #1e293b;
+    line-height: 1.35;
+}
+
+.history-menu-cell {
+    min-width: 0;
+}
+
+.history-description-cell {
+    min-width: 0;
+    line-height: 1.45;
+}
+
+.history-amount-cell {
+    white-space: nowrap;
+    font-size: 13px;
+    font-weight: 700;
+}
+
+#my-history-pagination {
+    margin-top: 12px;
+    padding-bottom: 4px;
+}
+
+@media (max-width: 768px) {
+    .history-modal-card {
+        width: calc(100vw - 16px);
+        max-height: calc(100vh - 24px);
+    }
+
+    .history-table-wrap {
+        max-height: 48vh;
+    }
+}
+
+
+
+/* --- Mobile-safe overall layout / prevent page from being pushed wide --- */
+html,
+body {
+    max-width: 100%;
+    overflow-x: hidden;
+}
+
+*,
+*::before,
+*::after {
+    box-sizing: border-box;
+}
+
+.vote-page-header,
+.vote-history,
+#menu,
+.history-modal-card,
+.history-modal-body,
+.table-wrap,
+.vote-table-wrap,
+.history-table-wrap {
+    max-width: 100%;
+}
+
+.vote-history,
+.vote-page-header {
+    overflow: hidden;
+}
+
+.vote-table-wrap,
+.history-table-wrap {
+    -webkit-overflow-scrolling: touch;
+    overscroll-behavior-x: contain;
+}
+
+@media (max-width: 768px) {
+    .vnpt-header-main {
+        padding: 12px;
+    }
+
+    .vnpt-logo-container {
+        gap: 10px;
+        min-width: 0;
+    }
+
+    .site-logo img {
+        height: 52px;
+    }
+
+    .text-line1 {
+        font-size: 15px;
+    }
+
+    .text-line2 {
+        font-size: 20px;
+        letter-spacing: 0.4px;
+    }
+
+    .vote-page-header,
+    .vote-history {
+        margin-left: 8px;
+        margin-right: 8px;
+        width: auto;
+    }
+
+    .vote-history {
+        padding: 10px;
+    }
+
+    .vote-table-wrap {
+        width: 100%;
+        overflow-x: auto;
+        overflow-y: hidden;
+    }
+
+    .vote-table {
+        min-width: 980px;
+    }
+
+    .history-modal {
+        padding: 8px;
+    }
+
+    .history-modal-card {
+        width: calc(100vw - 16px);
+        max-width: calc(100vw - 16px);
+        border-radius: 12px;
+    }
+
+    .history-modal-body {
+        padding: 12px;
+        overflow-x: hidden;
+    }
+
+    .history-filter-row {
+        display: grid !important;
+        grid-template-columns: 1fr;
+        gap: 10px !important;
+        align-items: stretch !important;
+    }
+
+    .history-filter-row label,
+    .history-filter-row input,
+    .history-filter-row button {
+        width: 100%;
+        min-width: 0 !important;
+    }
+
+    #so-du-lich-su {
+        flex-wrap: wrap;
+        align-items: stretch;
+    }
+
+    .wallet-summary-card.compact,
+    .history-deposit-btn {
+        width: 100%;
+        min-width: 100%;
+        flex: 1 1 100%;
+    }
+
+    .history-table-wrap {
+        width: 100%;
+        max-width: 100%;
+        max-height: 46vh;
+        overflow-x: auto;
+        overflow-y: auto;
+    }
+
+    .history-table {
+        min-width: 1040px;
+    }
+
+    #my-history-pagination {
+        overflow-x: auto;
+        white-space: nowrap;
+        flex-wrap: nowrap !important;
+    }
+}
