@@ -128,7 +128,7 @@
         let voteHistoryToDate = ""
 
         let myHistoryPage = 1
-        const myHistoryPageSize = 7
+        const myHistoryPageSize = 10
         let myHistoryFromDate = ""
         let myHistoryToDate = ""
 
@@ -704,12 +704,22 @@
                 }
 
                 let tableHtml = `
-                    <div class="table-wrap">
+                    <div class="table-wrap history-table-wrap">
                         <table class="history-table">
+                            <colgroup>
+                                <col class="col-stt">
+                                <col class="col-fullname">
+                                <col class="col-zalo">
+                                <col class="col-type">
+                                <col class="col-time">
+                                <col class="col-menu">
+                                <col class="col-description">
+                                <col class="col-amount">
+                            </colgroup>
                             <thead>
                                 <tr>
                                     <th class="text-center">STT</th>
-                                    <th class="text-center">Họ và Tên</th>
+                                    <th class="text-center">Họ và tên</th>
                                     <th class="text-center">Tên Zalo</th>
                                     <th class="text-center">Loại giao dịch</th>
                                     <th class="text-center">Thời gian đăng ký</th>
@@ -732,7 +742,7 @@
                             <td class="text-center text-small">${escapeHtml(formatDateTime(row.registration_time))}</td>
                             <td class="text-center history-menu-cell">${escapeHtml(row.menu_item_name || "-")}</td>
                             <td class="history-description-cell">${escapeHtml(row.display_description || "-")}</td>
-                            <td class="text-center amount-cell">${formatCurrency(row.amount)} VND</td>
+                            <td class="text-center amount-cell history-amount-cell">${formatCurrency(row.amount)} VND</td>
                         </tr>
                     `;
                 });
