@@ -40,7 +40,9 @@ function confirmPayment() {
             message: 'Yêu cầu nạp tiền đã được gửi đến quản trị viên. Vui lòng chờ xác nhận (thường trong vòng 1-2 giờ).',
             indicator: 'green'
         });
-        window.closeDepositModal();
+        setTimeout(() => {
+            location.reload();
+        }, 1500);
     });
 };
 
