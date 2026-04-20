@@ -77,10 +77,14 @@ def import_yearly_report(file_url=None):
                 for col_idx, day in date_columns:
                     if str(row[col_idx]).strip() == "1":
                         order_date = datetime(year, month, day)
+                        session_by_date = frappe.db.get_value("Lunch Session", {
+                            "date": order_date, 
+                            "docstatus": ["<", 2]
+                        }, "name")
                         # Kiểm tra đã có order chưa
                         existing = frappe.db.exists("Lunch Order", {
                             "zalo_user": zalo_user,
-                            "session": session_name,
+                            "session": session_by_date,
                             "created_at": ["between", [order_date, order_date + timedelta(days=1) - timedelta(seconds=1)]]
                         })
                         if existing:
@@ -90,7 +94,7 @@ def import_yearly_report(file_url=None):
                         order = frappe.get_doc({
                             "doctype": "Lunch Order",
                             "zalo_user": zalo_user,
-                            "session": session_name,
+                            "session": session_by_date,
                             "menu_item": menu_item,
                             "created_at": order_date,
                             "is_active": 1
