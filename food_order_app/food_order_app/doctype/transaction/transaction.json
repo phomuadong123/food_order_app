@@ -35,6 +35,7 @@
             "fieldname": "real_name",
             "fieldtype": "Data",
             "in_list_view": 1,
+            "in_standard_filter": 1,
             "label": "Họ và tên thật"
         },
         {
@@ -42,12 +43,14 @@
             "fieldname": "department",
             "fieldtype": "Data",
             "in_list_view": 1,
+            "in_standard_filter": 1,
             "label": "Phòng ban"
         },
         {
             "fieldname": "type",
             "fieldtype": "Select",
             "in_list_view": 1,
+            "in_standard_filter": 1,
             "label": "Loại giao dịch (Deposit: Thêm tiền, /Pay: Trừ tiền, /Refund: Hoàn tiền)",
             "options": "Deposit\nPay\nRefund"
         },
@@ -74,6 +77,8 @@
         {
             "fieldname": "date",
             "fieldtype": "Datetime",
+            "in_list_view": 1,
+            "in_standard_filter": 1,
             "label": "Thời gian"
         },
         {
