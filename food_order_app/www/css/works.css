@@ -1,0 +1,91 @@
+.parser-config.compact {
+    background: #fff;
+    border: 1px solid #e9ecef;
+    border-radius: 12px;
+    padding: 16px;
+    margin-bottom: 16px;
+}
+
+.parser-config-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 12px;
+    margin-bottom: 12px;
+    flex-wrap: wrap;
+}
+
+.parser-config-header h3 {
+    margin: 0;
+    font-size: 20px;
+}
+
+.parser-grid-single {
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: 12px;
+}
+
+.parser-field label {
+    display: block;
+    font-weight: 600;
+    margin-bottom: 6px;
+}
+
+.parser-field textarea {
+    width: 100%;
+    min-height: 110px;
+    border: 1px solid #dcdfe4;
+    border-radius: 8px;
+    padding: 10px 12px;
+    resize: vertical;
+    font-size: 14px;
+}
+
+.parser-field small {
+    display: block;
+    color: #6c757d;
+    margin-top: 6px;
+}
+
+.parser-hint {
+    margin-top: 10px;
+    color: #555;
+    font-size: 14px;
+}
+
+.message-card {
+    background: #fff;
+    border-radius: 10px;
+    padding: 10px 12px;
+    margin-bottom: 10px;
+    transition: all 0.2s ease;
+}
+
+.message-header {
+    display: flex;
+    justify-content: space-between;
+    gap: 10px;
+    margin-bottom: 6px;
+    flex-wrap: wrap;
+}
+
+.message-sender {
+    font-weight: 600;
+    color: #222;
+}
+
+.message-time {
+    color: #666;
+    font-size: 13px;
+}
+
+.message-content {
+    color: #222;
+    line-height: 1.5;
+    word-break: break-word;
+}
+
+.message-support-inline {
+    box-shadow: 0 4px 14px rgba(255, 59, 48, 0.12);
+}

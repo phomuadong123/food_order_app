@@ -11,11 +11,10 @@ class ZaloGroupsManager {
         this.isFetching = false;
         this.newMessagesCount = 0;
 
-        this.defaultPrefixes = ['Cần hỗ trợ', 'Hỗ trợ'];
         this.defaultServices = ['vnEdu', 'iOffice', 'vnPortal', 'Kiosk'];
-
-        this.prefixKeywords = [...this.defaultPrefixes];
         this.serviceKeywords = [...this.defaultServices];
+
+        this.acknowledgeText = 'Yêu cầu của bạn đã được tiếp nhận và đang được cán bộ xử lý.';
 
         this.initElements();
         this.loadParserConfig();
@@ -26,12 +25,10 @@ class ZaloGroupsManager {
     }
 
     initElements() {
-        // Groups
         this.loadGroupsBtn = document.getElementById('loadGroupsBtn');
         this.groupsContainer = document.getElementById('groupsContainer');
         this.loadingSpinner = document.getElementById('loadingSpinner');
 
-        // Messages
         this.messagesSection = document.getElementById('messagesSection');
         this.messagesTitle = document.getElementById('messagesTitle');
         this.messagesContainer = document.getElementById('messagesContainer');
@@ -40,13 +37,10 @@ class ZaloGroupsManager {
         this.stopFetchBtn = document.getElementById('stopFetchBtn');
         this.backBtn = document.getElementById('backBtn');
 
-        // Stats
         this.statusValue = document.getElementById('statusValue');
         this.lastUpdateValue = document.getElementById('lastUpdateValue');
         this.newMessageCount = document.getElementById('newMessageCount');
 
-        // Parser config
-        this.prefixKeywordsInput = document.getElementById('prefixKeywordsInput');
         this.serviceKeywordsInput = document.getElementById('serviceKeywordsInput');
         this.saveParserConfigBtn = document.getElementById('saveParserConfigBtn');
         this.resetParserConfigBtn = document.getElementById('resetParserConfigBtn');
@@ -57,14 +51,8 @@ class ZaloGroupsManager {
         if (this.startFetchBtn) this.startFetchBtn.addEventListener('click', () => this.startFetching());
         if (this.stopFetchBtn) this.stopFetchBtn.addEventListener('click', () => this.stopFetching());
         if (this.backBtn) this.backBtn.addEventListener('click', () => this.goBack());
-
-        if (this.saveParserConfigBtn) {
-            this.saveParserConfigBtn.addEventListener('click', () => this.saveParserConfig());
-        }
-
-        if (this.resetParserConfigBtn) {
-            this.resetParserConfigBtn.addEventListener('click', () => this.resetParserConfig());
-        }
+        if (this.saveParserConfigBtn) this.saveParserConfigBtn.addEventListener('click', () => this.saveParserConfig());
+        if (this.resetParserConfigBtn) this.resetParserConfigBtn.addEventListener('click', () => this.resetParserConfig());
     }
 
     // =========================
@@ -72,19 +60,12 @@ class ZaloGroupsManager {
     // =========================
     loadParserConfig() {
         try {
-            const savedPrefixes = localStorage.getItem('works_prefix_keywords');
             const savedServices = localStorage.getItem('works_service_keywords');
-
-            if (savedPrefixes) {
-                this.prefixKeywords = JSON.parse(savedPrefixes);
-            }
-
             if (savedServices) {
                 this.serviceKeywords = JSON.parse(savedServices);
             }
         } catch (error) {
             console.error('Load parser config error:', error);
-            this.prefixKeywords = [...this.defaultPrefixes];
             this.serviceKeywords = [...this.defaultServices];
         }
 
@@ -92,10 +73,6 @@ class ZaloGroupsManager {
     }
 
     renderParserConfigInputs() {
-        if (this.prefixKeywordsInput) {
-            this.prefixKeywordsInput.value = this.prefixKeywords.join('\n');
-        }
-
         if (this.serviceKeywordsInput) {
             this.serviceKeywordsInput.value = this.serviceKeywords.join('\n');
         }
@@ -103,18 +80,12 @@ class ZaloGroupsManager {
 
     saveParserConfig() {
         try {
-            const prefixes = this.parseMultilineInput(this.prefixKeywordsInput?.value || '');
             const services = this.parseMultilineInput(this.serviceKeywordsInput?.value || '');
-
-            this.prefixKeywords = prefixes.length ? prefixes : [...this.defaultPrefixes];
             this.serviceKeywords = services.length ? services : [...this.defaultServices];
-
-            localStorage.setItem('works_prefix_keywords', JSON.stringify(this.prefixKeywords));
             localStorage.setItem('works_service_keywords', JSON.stringify(this.serviceKeywords));
-
             this.renderParserConfigInputs();
             this.refreshHighlightedMessages();
-            this.showNotification('✓ Đã lưu cấu hình nhận diện', 'success');
+            this.showNotification('✓ Đã lưu cấu hình dịch vụ', 'success');
         } catch (error) {
             console.error('Save parser config error:', error);
             this.showNotification('✗ Không lưu được cấu hình', 'error');
@@ -122,15 +93,11 @@ class ZaloGroupsManager {
     }
 
     resetParserConfig() {
-        this.prefixKeywords = [...this.defaultPrefixes];
         this.serviceKeywords = [...this.defaultServices];
-
-        localStorage.setItem('works_prefix_keywords', JSON.stringify(this.prefixKeywords));
         localStorage.setItem('works_service_keywords', JSON.stringify(this.serviceKeywords));
-
         this.renderParserConfigInputs();
         this.refreshHighlightedMessages();
-        this.showNotification('✓ Đã khôi phục cấu hình mặc định', 'info');
+        this.showNotification('✓ Đã khôi phục mặc định', 'info');
     }
 
     parseMultilineInput(text) {
@@ -141,13 +108,11 @@ class ZaloGroupsManager {
     }
 
     // =========================
-    // Load Groups
+    // Groups
     // =========================
     loadGroups() {
-        console.log('loadGroups called');
         try {
             if (!this.loadGroupsBtn) {
-                console.error('loadGroupsBtn not found');
                 this.showNotification('❌ Lỗi: Button không tồn tại', 'error');
                 return;
             }
@@ -165,11 +130,9 @@ class ZaloGroupsManager {
                     } else {
                         const error = response.message?.error || 'Lỗi không xác định';
                         this.showNotification(`✗ Lỗi: ${typeof error === 'string' ? error : JSON.stringify(error)}`, 'error');
-                        console.error('Error:', response.message);
                     }
                 },
-                error: (error) => {
-                    console.error('API Error:', error);
+                error: () => {
                     this.showNotification('✗ Lỗi kết nối API', 'error');
                 }
             });
@@ -273,21 +236,16 @@ class ZaloGroupsManager {
         this.stopFetchBtn.style.display = 'none';
         this.statusValue.textContent = 'Dừng';
         this.statusValue.style.color = '#ff4d4f';
-
-        this.showNotification('⏹ Dừng lấy tin nhắn', 'info');
     }
 
     fetchMessages() {
         try {
-            const offset = 0;
-            const count = 50;
-
             frappe.call({
                 method: 'food_order_app.api.get_zalo_group_messages',
                 args: {
                     group_id: this.selectedGroupId,
-                    offset: offset,
-                    count: count
+                    offset: 0,
+                    count: 50
                 },
                 callback: (response) => {
                     if (response.message && response.message.success) {
@@ -295,8 +253,7 @@ class ZaloGroupsManager {
                         this.processMessages(messages);
                         this.updateLastUpdate();
                     } else {
-                        const error = response.message?.error || 'Lỗi không xác định';
-                        console.error('Error:', error);
+                        console.error('Fetch messages failed:', response.message);
                     }
                 },
                 error: (error) => {
@@ -325,13 +282,20 @@ class ZaloGroupsManager {
         messages.forEach(msg => {
             const msgId = msg.message_id || msg.msg_id || msg.id;
             const isNew = !this.lastMessageId || (String(msgId) > String(this.lastMessageId));
+            const existing = document.querySelector(`[data-msg-id="${msgId}"]`);
 
-            if (!document.querySelector(`[data-msg-id="${msgId}"]`)) {
+            if (!existing) {
                 const messageCard = this.createMessageCard(msg, isNew);
                 this.messagesContainer.prepend(messageCard);
 
                 if (isNew) {
                     this.newMessagesCount++;
+                }
+
+                const parsed = this.parseSupportMessage(msg.message || msg.text || '');
+
+                if (isNew && parsed.isSupport) {
+                    this.autoReplySupportMessage(msg, parsed);
                 }
             }
 
@@ -343,9 +307,7 @@ class ZaloGroupsManager {
         this.newMessageCount.textContent = this.newMessagesCount;
 
         const emptyState = this.messagesContainer.querySelector('.empty-state');
-        if (emptyState) {
-            emptyState.remove();
-        }
+        if (emptyState) emptyState.remove();
 
         const allMessages = this.messagesContainer.querySelectorAll('.message-card');
         if (allMessages.length > 100) {
@@ -362,10 +324,10 @@ class ZaloGroupsManager {
         const contentRaw = msg.message || msg.text || '';
         const content = this.escapeHtml(contentRaw);
 
-        const parsedSupport = this.parseSupportMessage(contentRaw);
+        const parsed = this.parseSupportMessage(contentRaw);
 
         const card = document.createElement('div');
-        card.className = `message-card ${isNew ? 'new' : ''} ${parsedSupport.isSupport ? 'message-support' : ''}`;
+        card.className = `message-card ${isNew ? 'new' : ''} ${parsed.isSupport ? 'message-support-inline' : ''}`;
         card.setAttribute('data-msg-id', msgId);
         card.setAttribute('data-message-raw', contentRaw);
 
@@ -374,30 +336,16 @@ class ZaloGroupsManager {
                 <span class="message-sender">${sender}</span>
                 <span class="message-time">${time}</span>
             </div>
-            ${
-                parsedSupport.isSupport
-                    ? `
-                    <div class="support-badge">🚨 Tin nhắn hỗ trợ</div>
-                    <div class="support-meta">
-                        <div><strong>Tiền tố:</strong> ${this.escapeHtml(parsedSupport.prefix)}</div>
-                        <div><strong>Dịch vụ:</strong> ${this.escapeHtml(parsedSupport.service)}</div>
-                    </div>
-                    `
-                    : ''
-            }
-            <div class="message-content">${this.nl2br(content)}</div>
-            ${
-                parsedSupport.isSupport
-                    ? `<div class="support-detail"><strong>Nội dung cần hỗ trợ:</strong> ${this.escapeHtml(parsedSupport.content)}</div>`
-                    : ''
-            }
+            <div class="message-content">${this.highlightSupportContent(contentRaw, parsed)}</div>
         `;
 
-        if (parsedSupport.isSupport) {
-            card.style.border = '2px solid #ff4d4f';
-            card.style.background = '#fff1f0';
+        if (parsed.isSupport) {
+            card.style.borderLeft = '6px solid #ff3b30';
+            card.style.background = '#fff5f5';
             card.style.fontWeight = '700';
-            card.style.boxShadow = '0 8px 24px rgba(255, 77, 79, 0.18)';
+            card.style.padding = '12px 14px';
+            card.style.borderRadius = '10px';
+            card.style.marginBottom = '10px';
         }
 
         return card;
@@ -405,60 +353,89 @@ class ZaloGroupsManager {
 
     parseSupportMessage(messageText) {
         const text = (messageText || '').trim();
-
         if (!text) {
-            return {
-                isSupport: false,
-                prefix: '',
-                service: '',
-                content: ''
-            };
+            return { isSupport: false, service: '', content: '' };
         }
 
-        for (const prefix of this.prefixKeywords) {
-            const normalizedPrefix = prefix.trim();
-            if (!normalizedPrefix) continue;
+        const normalizedText = text.replace(/\s+/g, ' ').trim();
 
-            const lowerText = text.toLowerCase();
-            const lowerPrefix = normalizedPrefix.toLowerCase();
+        for (const service of this.serviceKeywords) {
+            const serviceValue = (service || '').trim();
+            if (!serviceValue) continue;
 
-            if (!lowerText.startsWith(lowerPrefix)) {
-                continue;
-            }
+            const escapedService = this.escapeRegex(serviceValue);
 
-            const remainingText = text.slice(normalizedPrefix.length).trim();
-            if (!remainingText) {
-                continue;
-            }
+            // Hỗ trợ cả:
+            // Kiosk tạo xã mới
+            // Kiosk - tạo xã mới
+            // Kiosk: tạo xã mới
+            // Kiosk/tạo xã mới
+            const regex = new RegExp(`^${escapedService}(?:\\s*[-:–—/]\\s*|\\s+)(.+)$`, 'i');
+            const match = normalizedText.match(regex);
 
-            for (const service of this.serviceKeywords) {
-                const normalizedService = service.trim();
-                if (!normalizedService) continue;
-
-                const lowerRemaining = remainingText.toLowerCase();
-                const lowerService = normalizedService.toLowerCase();
-
-                if (!lowerRemaining.startsWith(lowerService)) {
-                    continue;
-                }
-
-                const content = remainingText.slice(normalizedService.length).trim();
-
+            if (match && match[1] && match[1].trim()) {
                 return {
                     isSupport: true,
-                    prefix: normalizedPrefix,
-                    service: normalizedService,
-                    content: content
+                    service: serviceValue,
+                    content: match[1].trim()
                 };
             }
         }
 
-        return {
-            isSupport: false,
-            prefix: '',
-            service: '',
-            content: ''
-        };
+        return { isSupport: false, service: '', content: '' };
+    }
+
+    highlightSupportContent(messageText, parsed) {
+        const safeText = this.escapeHtml(messageText || '');
+
+        if (!parsed.isSupport) {
+            return this.nl2br(safeText);
+        }
+
+        const escapedService = this.escapeRegex(parsed.service);
+        const regex = new RegExp(`^(${escapedService})(\\s*[-:–—/]\\s*|\\s+)(.+)$`, 'i');
+        const match = (messageText || '').match(regex);
+
+        if (!match) {
+            return this.nl2br(safeText);
+        }
+
+        const serviceHtml = `<span style="color:#d70015;font-weight:800;">${this.escapeHtml(match[1])}</span>`;
+        const sepHtml = `<span style="color:#d70015;font-weight:800;">${this.escapeHtml(match[2])}</span>`;
+        const contentHtml = `<span style="color:#b00000;font-weight:800;">${this.escapeHtml(match[3])}</span>`;
+
+        return `${serviceHtml}${sepHtml}${this.nl2br(contentHtml)}`;
+    }
+
+    autoReplySupportMessage(msg, parsed) {
+        const msgId = msg.message_id || msg.msg_id || msg.id;
+        const groupId = msg.group_id || this.selectedGroupId;
+
+        if (!msgId || !groupId) return;
+
+        const ackKey = `works_ack_${groupId}_${msgId}`;
+        if (localStorage.getItem(ackKey) === '1') {
+            return;
+        }
+
+        frappe.call({
+            method: 'food_order_app.api.send_zalo_group_message_works',
+            args: {
+                group_id: groupId,
+                text: this.acknowledgeText
+            },
+            callback: (response) => {
+                if (response.message && response.message.success) {
+                    localStorage.setItem(ackKey, '1');
+                    console.log(`Đã phản hồi tự động cho message ${msgId}`, parsed);
+                } else {
+                    console.error('Auto reply failed:', response.message);
+                }
+            },
+            error: (error) => {
+                console.error('Auto reply error:', error);
+            }
+        });
     }
 
     refreshHighlightedMessages() {
@@ -467,57 +444,33 @@ class ZaloGroupsManager {
 
         messageCards.forEach(card => {
             const raw = card.getAttribute('data-message-raw') || '';
-            const msgId = card.getAttribute('data-msg-id');
-            const headerHtml = card.querySelector('.message-header')?.outerHTML || '';
+            const parsed = this.parseSupportMessage(raw);
             const contentNode = card.querySelector('.message-content');
-            const contentHtml = contentNode ? contentNode.innerHTML : this.escapeHtml(raw);
 
-            const parsedSupport = this.parseSupportMessage(raw);
-
-            card.className = card.className.replace(' message-support', '');
-
-            card.innerHTML = `
-                ${headerHtml}
-                ${
-                    parsedSupport.isSupport
-                        ? `
-                        <div class="support-badge">🚨 Tin nhắn hỗ trợ</div>
-                        <div class="support-meta">
-                            <div><strong>Tiền tố:</strong> ${this.escapeHtml(parsedSupport.prefix)}</div>
-                            <div><strong>Dịch vụ:</strong> ${this.escapeHtml(parsedSupport.service)}</div>
-                        </div>
-                        `
-                        : ''
-                }
-                <div class="message-content">${contentHtml}</div>
-                ${
-                    parsedSupport.isSupport
-                        ? `<div class="support-detail"><strong>Nội dung cần hỗ trợ:</strong> ${this.escapeHtml(parsedSupport.content)}</div>`
-                        : ''
-                }
-            `;
-
-            if (parsedSupport.isSupport) {
-                card.classList.add('message-support');
-                card.style.border = '2px solid #ff4d4f';
-                card.style.background = '#fff1f0';
-                card.style.fontWeight = '700';
-                card.style.boxShadow = '0 8px 24px rgba(255, 77, 79, 0.18)';
-            } else {
-                card.style.border = '';
-                card.style.background = '';
-                card.style.fontWeight = '';
-                card.style.boxShadow = '';
+            if (contentNode) {
+                contentNode.innerHTML = this.highlightSupportContent(raw, parsed);
             }
 
-            card.setAttribute('data-msg-id', msgId);
-            card.setAttribute('data-message-raw', raw);
+            if (parsed.isSupport) {
+                card.classList.add('message-support-inline');
+                card.style.borderLeft = '6px solid #ff3b30';
+                card.style.background = '#fff5f5';
+                card.style.fontWeight = '700';
+                card.style.padding = '12px 14px';
+                card.style.borderRadius = '10px';
+                card.style.marginBottom = '10px';
+            } else {
+                card.classList.remove('message-support-inline');
+                card.style.borderLeft = '';
+                card.style.background = '';
+                card.style.fontWeight = '';
+                card.style.padding = '';
+                card.style.borderRadius = '';
+                card.style.marginBottom = '';
+            }
         });
     }
 
-    // =========================
-    // Utilities
-    // =========================
     updateLastUpdate() {
         const now = new Date();
         const hours = String(now.getHours()).padStart(2, '0');
@@ -546,6 +499,10 @@ class ZaloGroupsManager {
         return `${hours}:${minutes}:${seconds}`;
     }
 
+    escapeRegex(text) {
+        return String(text).replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+    }
+
     escapeHtml(text) {
         if (!text) return '';
         const div = document.createElement('div');
@@ -570,9 +527,6 @@ class ZaloGroupsManager {
     }
 }
 
-// Initialize on Frappe ready
 frappe.ready(function() {
-    console.log('Frappe ready - Initializing ZaloGroupsManager');
     window.zaloManager = new ZaloGroupsManager();
-    console.log('ZaloGroupsManager initialized:', window.zaloManager);
 });
