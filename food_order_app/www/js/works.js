@@ -12,7 +12,9 @@ class ZaloGroupsManager {
         this.newMessagesCount = 0;
 
         this.initElements();
-        this.attachEventListeners();
+        if (this.loadGroupsBtn) {
+            this.attachEventListeners();
+        }
     }
 
     initElements() {
@@ -37,39 +39,55 @@ class ZaloGroupsManager {
     }
 
     attachEventListeners() {
-        this.loadGroupsBtn.addEventListener('click', () => this.loadGroups());
-        this.startFetchBtn.addEventListener('click', () => this.startFetching());
-        this.stopFetchBtn.addEventListener('click', () => this.stopFetching());
-        this.backBtn.addEventListener('click', () => this.goBack());
+        if (this.loadGroupsBtn) this.loadGroupsBtn.addEventListener('click', () => this.loadGroups());
+        if (this.startFetchBtn) this.startFetchBtn.addEventListener('click', () => this.startFetching());
+        if (this.stopFetchBtn) this.stopFetchBtn.addEventListener('click', () => this.stopFetching());
+        if (this.backBtn) this.backBtn.addEventListener('click', () => this.goBack());
     }
 
     // =========================
     // Load Groups
     // =========================
-    async loadGroups() {
+    loadGroups() {
+        console.log('loadGroups called');
         try {
-            this.loadGroupsBtn.disabled = true;
-            this.loadingSpinner.style.display = 'inline-block';
-
-            const response = await frappe.call({
-                method: 'food_order_app.food_order_app.api.get_zalo_groups',
-                async: true,
-            });
-
-            if (response.message && response.message.success) {
-                this.displayGroups(response.message.groups);
-                this.showNotification('✓ Tải danh sách nhóm thành công!', 'success');
-            } else {
-                const error = response.message?.error || 'Lỗi không xác định';
-                this.showNotification(`✗ Lỗi: ${error}`, 'error');
-                console.error('Error:', response.message);
+            if (!this.loadGroupsBtn) {
+                console.error('loadGroupsBtn not found');
+                this.showNotification('❌ Lỗi: Button không tồn tại', 'error');
+                return;
             }
+
+            this.loadGroupsBtn.disabled = true;
+            if (this.loadingSpinner) this.loadingSpinner.style.display = 'inline-block';
+
+            console.log('Calling API: food_order_app.api.get_zalo_groups');
+
+            frappe.call({
+                method: 'food_order_app.api.get_zalo_groups',
+                args: {},
+                callback: (response) => {
+                    console.log('API Response:', response);
+                    
+                    if (response.message && response.message.success) {
+                        this.displayGroups(response.message.groups);
+                        this.showNotification('✓ Tải danh sách nhóm thành công!', 'success');
+                    } else {
+                        const error = response.message?.error || 'Lỗi không xác định';
+                        this.showNotification(`✗ Lỗi: ${error}`, 'error');
+                        console.error('Error:', response.message);
+                    }
+                },
+                error: (error) => {
+                    console.error('API Error:', error);
+                    this.showNotification('✗ Lỗi kết nối API', 'error');
+                }
+            });
         } catch (error) {
-            console.error('Error loading groups:', error);
-            this.showNotification('✗ Lỗi kết nối API', 'error');
+            console.error('Exception:', error);
+            this.showNotification('✗ Lỗi hệ thống', 'error');
         } finally {
-            this.loadGroupsBtn.disabled = false;
-            this.loadingSpinner.style.display = 'none';
+            if (this.loadGroupsBtn) this.loadGroupsBtn.disabled = false;
+            if (this.loadingSpinner) this.loadingSpinner.style.display = 'none';
         }
     }
 
@@ -177,26 +195,33 @@ class ZaloGroupsManager {
             const offset = this.lastMessageId ? 0 : 0;
             const count = 50;
 
-            const response = await frappe.call({
-                method: 'food_order_app.food_order_app.api.get_zalo_group_messages',
+            console.log(`Fetching messages from group ${this.selectedGroupId}`);
+
+            frappe.call({
+                method: 'food_order_app.api.get_zalo_group_messages',
                 args: {
                     group_id: this.selectedGroupId,
                     offset: offset,
                     count: count
                 },
-                async: true,
+                callback: (response) => {
+                    console.log('Messages Response:', response);
+                    
+                    if (response.message && response.message.success) {
+                        const messages = response.message.messages || [];
+                        this.processMessages(messages);
+                        this.updateLastUpdate();
+                    } else {
+                        const error = response.message?.error || 'Lỗi không xác định';
+                        console.error('Error:', error);
+                    }
+                },
+                error: (error) => {
+                    console.error('Fetch Messages Error:', error);
+                }
             });
-
-            if (response.message && response.message.success) {
-                const messages = response.message.messages || [];
-                this.processMessages(messages);
-                this.updateLastUpdate();
-            } else {
-                const error = response.message?.error || 'Lỗi không xác định';
-                console.error('Error:', error);
-            }
         } catch (error) {
-            console.error('Error fetching messages:', error);
+            console.error('Exception in fetchMessages:', error);
         }
     }
 
@@ -324,7 +349,9 @@ class ZaloGroupsManager {
     }
 }
 
-// Initialize on document ready
-document.addEventListener('DOMContentLoaded', () => {
+// Initialize on Frappe ready
+frappe.ready(function() {
+    console.log('Frappe ready - Initializing ZaloGroupsManager');
     window.zaloManager = new ZaloGroupsManager();
+    console.log('ZaloGroupsManager initialized:', window.zaloManager);
 });
