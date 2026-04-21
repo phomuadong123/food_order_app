@@ -7,12 +7,11 @@
 
 <div class="container">
     <header class="header">
-        <h1>Works - Quản lý tin nhắn Zalo</h1>
-        <p class="subtitle">Lấy danh sách nhóm và quản lý tin nhắn</p>
+        <h1>📨 Tin nhắn Zalo Works</h1>
+        <p class="subtitle">Theo dõi nhóm và làm nổi bật tin nhắn hỗ trợ</p>
     </header>
 
     <main class="main">
-        <!-- Phần 1: Danh sách nhóm -->
         <section class="section groups-section">
             <div class="section-header">
                 <h2>📋 Danh sách nhóm Zalo</h2>
@@ -29,7 +28,6 @@
             </div>
         </section>
 
-        <!-- Phần 2: Tin nhắn của nhóm được chọn -->
         <section class="section messages-section" id="messagesSection" style="display: none;">
             <div class="section-header">
                 <h2 id="messagesTitle">📨 Tin nhắn nhóm</h2>
@@ -46,48 +44,32 @@
                 </div>
             </div>
 
-            <!-- Cấu hình phân tích cú pháp -->
-            <div class="parser-config" id="parserConfig">
-                <h3>⚙️ Cấu hình nhận diện tin nhắn hỗ trợ</h3>
-
-                <div class="parser-grid">
-                    <div class="parser-field">
-                        <label for="prefixKeywordsInput">Tiền tố hỗ trợ</label>
-                        <textarea
-                            id="prefixKeywordsInput"
-                            rows="3"
-                            placeholder="Mỗi dòng một giá trị, ví dụ:&#10;Cần hỗ trợ&#10;Hỗ trợ"
-                        >Cần hỗ trợ
-Hỗ trợ</textarea>
-                        <small>Ví dụ: Cần hỗ trợ, Hỗ trợ</small>
+            <div class="parser-config compact" id="parserConfig">
+                <div class="parser-config-header">
+                    <h3>⚙️ Cấu hình nhận diện hỗ trợ</h3>
+                    <div class="parser-actions">
+                        <button id="saveParserConfigBtn" class="btn btn-primary">
+                            <span>💾 Lưu</span>
+                        </button>
+                        <button id="resetParserConfigBtn" class="btn btn-secondary">
+                            <span>↺ Mặc định</span>
+                        </button>
                     </div>
+                </div>
 
+                <div class="parser-grid parser-grid-single">
                     <div class="parser-field">
                         <label for="serviceKeywordsInput">Danh sách dịch vụ</label>
                         <textarea
                             id="serviceKeywordsInput"
-                            rows="5"
-                            placeholder="Mỗi dòng một giá trị, ví dụ:&#10;vnEdu&#10;iOffice&#10;vnPortal&#10;Kiosk"
+                            rows="4"
+                            placeholder="Mỗi dòng một dịch vụ"
                         >vnEdu
 iOffice
 vnPortal
 Kiosk</textarea>
-                        <small>Ví dụ: vnEdu, iOffice, vnPortal, Kiosk</small>
+                        <small>Mẫu hợp lệ: <code>Kiosk tạo xã mới ABC</code>, <code>iOffice tạo tài khoản CV1</code></small>
                     </div>
-                </div>
-
-                <div class="parser-actions">
-                    <button id="saveParserConfigBtn" class="btn btn-primary">
-                        <span>💾 Lưu cấu hình</span>
-                    </button>
-                    <button id="resetParserConfigBtn" class="btn btn-secondary">
-                        <span>↺ Khôi phục mặc định</span>
-                    </button>
-                </div>
-
-                <div class="parser-hint">
-                    <strong>Mẫu nhận diện:</strong> <code>[Tiền tố] + [Dịch vụ] + [Nội dung]</code><br>
-                    Ví dụ: <code>Cần hỗ trợ Kiosk tạo xã mới ABC</code>
                 </div>
             </div>
 

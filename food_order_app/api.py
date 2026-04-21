@@ -1306,6 +1306,13 @@ def _get_works_zalo_config():
 
 
 def _call_zalo_api_with_proxy(endpoint, method="GET", data=None):
+    """
+    Call Zalo API qua proxy (CHỈ dùng cho Works)
+    method:
+      - GET
+      - POST       -> gửi form data
+      - POST_JSON  -> gửi json body
+    """
     try:
         config = _get_works_zalo_config()
         if not config:
@@ -1332,11 +1339,21 @@ def _call_zalo_api_with_proxy(endpoint, method="GET", data=None):
                 proxies=proxies,
                 timeout=15
             ).json()
+
+        elif method == "POST_JSON":
+            response = requests.post(
+                endpoint,
+                headers=headers,
+                json=data,
+                proxies=proxies,
+                timeout=15
+            ).json()
+
         else:
             response = requests.post(
                 endpoint,
                 headers=headers,
-                data=data,   # ⚠️ IMPORTANT: dùng data, không dùng json
+                data=data,
                 proxies=proxies,
                 timeout=15
             ).json()
@@ -1348,12 +1365,62 @@ def _call_zalo_api_with_proxy(endpoint, method="GET", data=None):
                 headers["access_token"] = new_at
 
                 if method == "GET":
-                    response = requests.get(endpoint, headers=headers, proxies=proxies, timeout=15).json()
+                    response = requests.get(
+                        endpoint,
+                        headers=headers,
+                        proxies=proxies,
+                        timeout=15
+                    ).json()
+                elif method == "POST_JSON":
+                    response = requests.post(
+                        endpoint,
+                        headers=headers,
+                        json=data,
+                        proxies=proxies,
+                        timeout=15
+                    ).json()
                 else:
-                    response = requests.post(endpoint, headers=headers, data=data, proxies=proxies, timeout=15).json()
+                    response = requests.post(
+                        endpoint,
+                        headers=headers,
+                        data=data,
+                        proxies=proxies,
+                        timeout=15
+                    ).json()
 
         return response
 
     except Exception:
         frappe.log_error(traceback.format_exc(), "_call_zalo_api_with_proxy failed")
         return {"error": -1}
+
+@frappe.whitelist(allow_guest=True)
+def send_zalo_group_message_works(group_id, text):
+    """
+    Gửi tin nhắn vào nhóm Zalo qua proxy (chỉ dùng cho Works)
+    """
+    try:
+        endpoint = "https://openapi.zalo.me/v3.0/oa/group/message"
+
+        data = {
+            "recipient": {
+                "group_id": group_id
+            },
+            "message": {
+                "text": text
+            }
+        }
+
+        response = _call_zalo_api_with_proxy(endpoint, method="POST_JSON", data=data)
+
+        if isinstance(response, dict) and response.get("error") == 0:
+            logger.info(f"[Zalo Works Reply] Gửi phản hồi thành công tới nhóm {group_id}")
+            return {"success": True, "data": response}
+
+        logger.error(f"[Zalo Works Reply] Gửi phản hồi thất bại: {response}")
+        return {"success": False, "error": response}
+
+    except Exception as e:
+        logger.error(f"[Zalo Works Reply] Lỗi hệ thống: {str(e)}")
+        frappe.log_error(frappe.get_traceback(), "send_zalo_group_message_works failed")
+        return {"success": False, "error": str(e)}
