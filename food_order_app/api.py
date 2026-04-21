@@ -1226,3 +1226,64 @@ def remind_close_session():
         logger.error(error)
         frappe.log_error("remind_vote_today failed", error)
 
+
+# =========================
+# ZALO GROUPS MANAGEMENT
+# =========================
+
+@frappe.whitelist(allow_guest=True)
+def get_zalo_groups():
+    """
+    Lấy danh sách nhóm Zalo của tài khoản OA
+    """
+    try:
+        endpoint = "https://openapi.zalo.me/v3.0/oa/group/getgroupsofoa"
+        
+        # Gọi API
+        response = call_zalo_api(endpoint, method="GET")
+        
+        if response.get("error") == 0:
+            groups = response.get("data", {}).get("groups", [])
+            logger.info(f"[Zalo Groups] Lấy thành công {len(groups)} nhóm")
+            return {"success": True, "groups": groups}
+        else:
+            error_msg = response.get("message", "Unknown error")
+            logger.error(f"[Zalo Groups] Lỗi: {error_msg}")
+            return {"success": False, "error": error_msg}
+            
+    except Exception as e:
+        logger.error(f"[Zalo Groups] Lỗi hệ thống: {str(e)}")
+        return {"success": False, "error": str(e)}
+
+
+@frappe.whitelist(allow_guest=True)
+def get_zalo_group_messages(group_id, offset=0, count=50):
+    """
+    Lấy tin nhắn từ một nhóm Zalo
+    """
+    try:
+        endpoint = f"https://openapi.zalo.me/v3.0/oa/group/conversation"
+        
+        # Xây dựng request body
+        data = {
+            "group_id": group_id,
+            "offset": int(offset),
+            "count": int(count)
+        }
+        
+        # Gọi API
+        response = call_zalo_api(endpoint, method="POST", data=data)
+        
+        if response.get("error") == 0:
+            messages = response.get("data", {}).get("conversations", [])
+            logger.info(f"[Zalo Messages] Lấy thành công {len(messages)} tin nhắn từ nhóm {group_id}")
+            return {"success": True, "messages": messages}
+        else:
+            error_msg = response.get("message", "Unknown error")
+            logger.error(f"[Zalo Messages] Lỗi: {error_msg}")
+            return {"success": False, "error": error_msg}
+            
+    except Exception as e:
+        logger.error(f"[Zalo Messages] Lỗi hệ thống: {str(e)}")
+        return {"success": False, "error": str(e)}
+
