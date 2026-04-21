@@ -10,6 +10,7 @@ class ZaloGroupsManager {
         this.lastMessageId = null;
         this.isFetching = false;
         this.newMessagesCount = 0;
+        this.hasLoadedInitialMessages = false;
 
         this.defaultServices = ['vnEdu', 'iOffice', 'vnPortal', 'Kiosk'];
         this.serviceKeywords = [...this.defaultServices];
@@ -179,6 +180,7 @@ class ZaloGroupsManager {
         this.selectedGroupName = groupName;
         this.lastMessageId = null;
         this.newMessagesCount = 0;
+        this.hasLoadedInitialMessages = false;
         this.messagesContainer.innerHTML = '';
 
         this.messagesSection.style.display = 'block';
@@ -188,6 +190,7 @@ class ZaloGroupsManager {
         this.statsContainer.style.display = 'grid';
         this.statusValue.textContent = 'Dừng';
         this.statusValue.style.color = '#ff4d4f';
+        this.newMessageCount.textContent = '0';
 
         setTimeout(() => {
             this.messagesSection.scrollIntoView({ behavior: 'smooth' });
@@ -201,6 +204,8 @@ class ZaloGroupsManager {
         this.selectedGroupName = null;
         this.lastMessageId = null;
         this.newMessagesCount = 0;
+        this.hasLoadedInitialMessages = false;
+        this.messagesContainer.innerHTML = '';
     }
 
     // =========================
@@ -267,42 +272,46 @@ class ZaloGroupsManager {
 
     processMessages(messages) {
         if (!messages || messages.length === 0) {
-            if (!this.lastMessageId) {
+            if (!this.hasLoadedInitialMessages) {
                 this.messagesContainer.innerHTML = `
                     <div class="empty-state">
                         <p>📭 Không có tin nhắn nào</p>
                     </div>
                 `;
+                this.hasLoadedInitialMessages = true;
             }
             return;
         }
 
-        messages.reverse();
+        // giữ thứ tự cũ -> mới để khi prepend vẫn ra mới nhất trên cùng
+        const normalizedMessages = [...messages].reverse();
 
-        messages.forEach(msg => {
+        normalizedMessages.forEach(msg => {
             const msgId = msg.message_id || msg.msg_id || msg.id;
-            const isNew = !this.lastMessageId || (String(msgId) > String(this.lastMessageId));
-            const existing = document.querySelector(`[data-msg-id="${msgId}"]`);
+            if (!msgId) return;
 
-            if (!existing) {
-                const messageCard = this.createMessageCard(msg, isNew);
+            const existing = this.messagesContainer.querySelector(`[data-msg-id="${msgId}"]`);
+            const isBrandNewRecord = !existing;
+
+            if (isBrandNewRecord) {
+                const messageCard = this.createMessageCard(msg, this.hasLoadedInitialMessages);
                 this.messagesContainer.prepend(messageCard);
 
-                if (isNew) {
+                // Chỉ đếm + phản hồi sau khi đã load xong đợt đầu tiên
+                if (this.hasLoadedInitialMessages) {
                     this.newMessagesCount++;
+
+                    const parsed = this.parseSupportMessage(msg.message || msg.text || '');
+                    if (parsed.isSupport) {
+                        this.autoReplySupportMessage(msg, parsed);
+                    }
                 }
-
-                const parsed = this.parseSupportMessage(msg.message || msg.text || '');
-
-                if (isNew && parsed.isSupport) {
-                    this.autoReplySupportMessage(msg, parsed);
-                }
-            }
-
-            if (!this.lastMessageId || String(msgId) > String(this.lastMessageId)) {
-                this.lastMessageId = msgId;
             }
         });
+
+        if (!this.hasLoadedInitialMessages) {
+            this.hasLoadedInitialMessages = true;
+        }
 
         this.newMessageCount.textContent = this.newMessagesCount;
 
@@ -322,7 +331,6 @@ class ZaloGroupsManager {
         const sender = this.escapeHtml(msg.from_display_name || msg.sender_name || 'Người dùng');
         const time = this.escapeHtml(msg.sent_time || this.formatTime(msg.time || msg.timestamp || msg.created_time));
         const contentRaw = msg.message || msg.text || '';
-        const content = this.escapeHtml(contentRaw);
 
         const parsed = this.parseSupportMessage(contentRaw);
 
@@ -346,6 +354,7 @@ class ZaloGroupsManager {
             card.style.padding = '12px 14px';
             card.style.borderRadius = '10px';
             card.style.marginBottom = '10px';
+            card.style.boxShadow = '0 4px 14px rgba(255, 59, 48, 0.12)';
         }
 
         return card;
@@ -365,11 +374,6 @@ class ZaloGroupsManager {
 
             const escapedService = this.escapeRegex(serviceValue);
 
-            // Hỗ trợ cả:
-            // Kiosk tạo xã mới
-            // Kiosk - tạo xã mới
-            // Kiosk: tạo xã mới
-            // Kiosk/tạo xã mới
             const regex = new RegExp(`^${escapedService}(?:\\s*[-:–—/]\\s*|\\s+)(.+)$`, 'i');
             const match = normalizedText.match(regex);
 
@@ -459,6 +463,7 @@ class ZaloGroupsManager {
                 card.style.padding = '12px 14px';
                 card.style.borderRadius = '10px';
                 card.style.marginBottom = '10px';
+                card.style.boxShadow = '0 4px 14px rgba(255, 59, 48, 0.12)';
             } else {
                 card.classList.remove('message-support-inline');
                 card.style.borderLeft = '';
@@ -467,6 +472,7 @@ class ZaloGroupsManager {
                 card.style.padding = '';
                 card.style.borderRadius = '';
                 card.style.marginBottom = '';
+                card.style.boxShadow = '';
             }
         });
     }
