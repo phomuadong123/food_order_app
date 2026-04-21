@@ -1232,33 +1232,23 @@ def remind_close_session():
 # =========================
 @frappe.whitelist(allow_guest=True)
 def get_zalo_groups():
-    """
-    Lấy danh sách nhóm Zalo (qua proxy)
-    """
     try:
         endpoint = "https://openapi.zalo.me/v3.0/oa/group/getgroupsofoa"
 
         response = _call_zalo_api_with_proxy(endpoint, method="GET")
 
-        if response.get("error") == 0:
+        if isinstance(response, dict) and response.get("error") == 0:
             groups = response.get("data", {}).get("groups", [])
-            logger.info(f"[Zalo Groups] Lấy thành công {len(groups)} nhóm")
             return {"success": True, "groups": groups}
-        else:
-            error_msg = response.get("message", "Unknown error")
-            logger.error(f"[Zalo Groups] Lỗi: {error_msg}")
-            return {"success": False, "error": error_msg}
+
+        return {"success": False, "error": response}
 
     except Exception as e:
-        logger.error(f"[Zalo Groups] Lỗi hệ thống: {str(e)}")
         frappe.log_error(frappe.get_traceback(), "get_zalo_groups failed")
         return {"success": False, "error": str(e)}
     
 @frappe.whitelist(allow_guest=True)
 def get_zalo_group_messages(group_id, offset=0, count=50):
-    """
-    Lấy tin nhắn từ nhóm Zalo (qua proxy)
-    """
     try:
         endpoint = "https://openapi.zalo.me/v3.0/oa/group/conversation"
 
@@ -1270,23 +1260,39 @@ def get_zalo_group_messages(group_id, offset=0, count=50):
 
         response = _call_zalo_api_with_proxy(endpoint, method="POST", data=data)
 
-        if response.get("error") == 0:
-            messages = response.get("data", {}).get("conversations", [])
-            logger.info(f"[Zalo Messages] Lấy thành công {len(messages)} tin nhắn từ nhóm {group_id}")
-            return {"success": True, "messages": messages}
-        else:
-            error_msg = response.get("message", "Unknown error")
-            logger.error(f"[Zalo Messages] Lỗi: {error_msg}")
-            return {"success": False, "error": error_msg}
+        # =========================
+        # CASE 1: API trả đúng format bạn gửi (data = list)
+        # =========================
+        if isinstance(response, dict) and response.get("error") == 0:
+            messages = response.get("data", [])   # ⚠️ KHÔNG phải conversations
+
+            return {
+                "success": True,
+                "messages": messages
+            }
+
+        # =========================
+        # CASE 2: API trả trực tiếp list
+        # =========================
+        if isinstance(response, list):
+            return {
+                "success": True,
+                "messages": response
+            }
+
+        # =========================
+        # ERROR
+        # =========================
+        return {
+            "success": False,
+            "error": response
+        }
 
     except Exception as e:
-        logger.error(f"[Zalo Messages] Lỗi hệ thống: {str(e)}")
+        frappe.log_error(frappe.get_traceback(), "get_zalo_group_messages failed")
         return {"success": False, "error": str(e)}
     
 def _get_works_zalo_config():
-    """
-    Lấy config Zalo (bao gồm proxy) cho Works
-    """
     config = frappe.db.sql("""
         SELECT name, app_id, secret_key, refresh_token, access_token, proxy_url
         FROM `tabZalo Config` 
@@ -1300,9 +1306,6 @@ def _get_works_zalo_config():
 
 
 def _call_zalo_api_with_proxy(endpoint, method="GET", data=None):
-    """
-    Call Zalo API qua proxy (CHỈ dùng cho Works)
-    """
     try:
         config = _get_works_zalo_config()
         if not config:
@@ -1311,7 +1314,9 @@ def _call_zalo_api_with_proxy(endpoint, method="GET", data=None):
         access_token = config.get("access_token")
         proxy_url = config.get("proxy_url")
 
-        headers = {'access_token': access_token}
+        headers = {
+            "access_token": access_token
+        }
 
         proxies = None
         if proxy_url:
@@ -1320,22 +1325,32 @@ def _call_zalo_api_with_proxy(endpoint, method="GET", data=None):
                 "https": proxy_url,
             }
 
-        # Call API
         if method == "GET":
-            response = requests.get(endpoint, headers=headers, proxies=proxies, timeout=15).json()
+            response = requests.get(
+                endpoint,
+                headers=headers,
+                proxies=proxies,
+                timeout=15
+            ).json()
         else:
-            response = requests.post(endpoint, headers=headers, json=data, proxies=proxies, timeout=15).json()
+            response = requests.post(
+                endpoint,
+                headers=headers,
+                data=data,   # ⚠️ IMPORTANT: dùng data, không dùng json
+                proxies=proxies,
+                timeout=15
+            ).json()
 
-        # Nếu token hết hạn → refresh
-        if response.get("error") == -216:
+        # refresh token nếu cần
+        if isinstance(response, dict) and response.get("error") == -216:
             new_at = refresh_zalo_tokens()
             if new_at:
-                headers['access_token'] = new_at
+                headers["access_token"] = new_at
 
                 if method == "GET":
                     response = requests.get(endpoint, headers=headers, proxies=proxies, timeout=15).json()
                 else:
-                    response = requests.post(endpoint, headers=headers, json=data, proxies=proxies, timeout=15).json()
+                    response = requests.post(endpoint, headers=headers, data=data, proxies=proxies, timeout=15).json()
 
         return response
 
