@@ -1,0 +1,100 @@
+{% extends "templates/web.html" %}
+
+{% block page_content %}
+
+<link rel="stylesheet" href="/css/works.css?v={{ frappe.utils.generate_hash(8) }}">
+<script src="/js/works.js?v={{ frappe.utils.generate_hash(8) }}"></script>
+
+<div class="container">
+    <header class="header">
+        <h1>📨 Tin nhắn Zalo Works</h1>
+        <p class="subtitle">Theo dõi nhóm và làm nổi bật tin nhắn hỗ trợ</p>
+    </header>
+
+    <main class="main">
+        <section class="section groups-section">
+            <div class="section-header">
+                <h2>📋 Danh sách nhóm Zalo</h2>
+                <button id="loadGroupsBtn" class="btn btn-primary">
+                    <span class="btn-text">Tải danh sách nhóm</span>
+                    <span id="loadingSpinner" class="spinner" style="display: none;"></span>
+                </button>
+            </div>
+
+            <div id="groupsContainer" class="groups-container">
+                <div class="empty-state">
+                    <p>Nhấn "Tải danh sách nhóm" để bắt đầu</p>
+                </div>
+            </div>
+        </section>
+
+        <section class="section messages-section" id="messagesSection" style="display: none;">
+            <div class="section-header">
+                <h2 id="messagesTitle">📨 Tin nhắn nhóm</h2>
+                <div class="controls">
+                    <button id="startFetchBtn" class="btn btn-success" style="display: none;">
+                        <span>▶ Bắt đầu lấy tin nhắn</span>
+                    </button>
+                    <button id="stopFetchBtn" class="btn btn-danger" style="display: none;">
+                        <span>⏹ Dừng lấy tin nhắn</span>
+                    </button>
+                    <button id="backBtn" class="btn btn-secondary">
+                        <span>← Quay lại</span>
+                    </button>
+                </div>
+            </div>
+
+            <div class="parser-config compact" id="parserConfig">
+                <div class="parser-config-header">
+                    <h3>⚙️ Cấu hình nhận diện hỗ trợ</h3>
+                    <div class="parser-actions">
+                        <button id="saveParserConfigBtn" class="btn btn-primary">
+                            <span>💾 Lưu</span>
+                        </button>
+                        <button id="resetParserConfigBtn" class="btn btn-secondary">
+                            <span>↺ Mặc định</span>
+                        </button>
+                    </div>
+                </div>
+
+                <div class="parser-grid parser-grid-single">
+                    <div class="parser-field">
+                        <label for="serviceKeywordsInput">Danh sách dịch vụ</label>
+                        <textarea
+                            id="serviceKeywordsInput"
+                            rows="4"
+                            placeholder="Mỗi dòng một dịch vụ"
+                        >vnEdu
+iOffice
+vnPortal
+Kiosk</textarea>
+                        <small>Mẫu hợp lệ: <code>Kiosk tạo xã mới ABC</code>, <code>iOffice tạo tài khoản CV1</code></small>
+                    </div>
+                </div>
+            </div>
+
+            <div class="stats" id="statsContainer" style="display: none;">
+                <div class="stat-item">
+                    <span class="stat-label">Trạng thái:</span>
+                    <span class="stat-value" id="statusValue">Dừng</span>
+                </div>
+                <div class="stat-item">
+                    <span class="stat-label">Cập nhật cuối:</span>
+                    <span class="stat-value" id="lastUpdateValue">--:--:--</span>
+                </div>
+                <div class="stat-item">
+                    <span class="stat-label">Tin nhắn mới:</span>
+                    <span class="stat-value" id="newMessageCount">0</span>
+                </div>
+            </div>
+
+            <div id="messagesContainer" class="messages-container">
+                <div class="empty-state">
+                    <p>Chọn một nhóm và nhấn "Bắt đầu lấy tin nhắn" để xem tin nhắn</p>
+                </div>
+            </div>
+        </section>
+    </main>
+</div>
+
+{% endblock %}

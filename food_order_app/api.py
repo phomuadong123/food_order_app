@@ -1257,3 +1257,201 @@ def remind_close_session():
         logger.error(error)
         frappe.log_error("remind_vote_today failed", error)
 
+
+# =========================
+# ZALO GROUPS MANAGEMENT
+# =========================
+@frappe.whitelist(allow_guest=True)
+def get_zalo_groups():
+    try:
+        endpoint = "https://openapi.zalo.me/v3.0/oa/group/getgroupsofoa"
+
+        response = _call_zalo_api_with_proxy(endpoint, method="GET")
+
+        if isinstance(response, dict) and response.get("error") == 0:
+            groups = response.get("data", {}).get("groups", [])
+            return {"success": True, "groups": groups}
+
+        return {"success": False, "error": response}
+
+    except Exception as e:
+        frappe.log_error(frappe.get_traceback(), "get_zalo_groups failed")
+        return {"success": False, "error": str(e)}
+    
+@frappe.whitelist(allow_guest=True)
+def get_zalo_group_messages(group_id, offset=0, count=50):
+    try:
+        endpoint = "https://openapi.zalo.me/v3.0/oa/group/conversation"
+
+        data = {
+            "group_id": group_id,
+            "offset": int(offset),
+            "count": int(count)
+        }
+
+        response = _call_zalo_api_with_proxy(endpoint, method="POST", data=data)
+
+        # =========================
+        # CASE 1: API trả đúng format bạn gửi (data = list)
+        # =========================
+        if isinstance(response, dict) and response.get("error") == 0:
+            messages = response.get("data", [])   # ⚠️ KHÔNG phải conversations
+
+            return {
+                "success": True,
+                "messages": messages
+            }
+
+        # =========================
+        # CASE 2: API trả trực tiếp list
+        # =========================
+        if isinstance(response, list):
+            return {
+                "success": True,
+                "messages": response
+            }
+
+        # =========================
+        # ERROR
+        # =========================
+        return {
+            "success": False,
+            "error": response
+        }
+
+    except Exception as e:
+        frappe.log_error(frappe.get_traceback(), "get_zalo_group_messages failed")
+        return {"success": False, "error": str(e)}
+    
+def _get_works_zalo_config():
+    config = frappe.db.sql("""
+        SELECT name, app_id, secret_key, refresh_token, access_token, proxy_url
+        FROM `tabZalo Config` 
+        LIMIT 1
+    """, as_dict=True)
+
+    if not config:
+        return None
+
+    return config[0]
+
+
+def _call_zalo_api_with_proxy(endpoint, method="GET", data=None):
+    """
+    Call Zalo API qua proxy (CHỈ dùng cho Works)
+    method:
+      - GET
+      - POST       -> gửi form data
+      - POST_JSON  -> gửi json body
+    """
+    try:
+        config = _get_works_zalo_config()
+        if not config:
+            return {"error": -1, "message": "No config"}
+
+        access_token = config.get("access_token")
+        proxy_url = config.get("proxy_url")
+
+        headers = {
+            "access_token": access_token
+        }
+
+        proxies = None
+        if proxy_url:
+            proxies = {
+                "http": proxy_url,
+                "https": proxy_url,
+            }
+
+        if method == "GET":
+            response = requests.get(
+                endpoint,
+                headers=headers,
+                proxies=proxies,
+                timeout=15
+            ).json()
+
+        elif method == "POST_JSON":
+            response = requests.post(
+                endpoint,
+                headers=headers,
+                json=data,
+                proxies=proxies,
+                timeout=15
+            ).json()
+
+        else:
+            response = requests.post(
+                endpoint,
+                headers=headers,
+                data=data,
+                proxies=proxies,
+                timeout=15
+            ).json()
+
+        # refresh token nếu cần
+        if isinstance(response, dict) and response.get("error") == -216:
+            new_at = refresh_zalo_tokens()
+            if new_at:
+                headers["access_token"] = new_at
+
+                if method == "GET":
+                    response = requests.get(
+                        endpoint,
+                        headers=headers,
+                        proxies=proxies,
+                        timeout=15
+                    ).json()
+                elif method == "POST_JSON":
+                    response = requests.post(
+                        endpoint,
+                        headers=headers,
+                        json=data,
+                        proxies=proxies,
+                        timeout=15
+                    ).json()
+                else:
+                    response = requests.post(
+                        endpoint,
+                        headers=headers,
+                        data=data,
+                        proxies=proxies,
+                        timeout=15
+                    ).json()
+
+        return response
+
+    except Exception:
+        frappe.log_error(traceback.format_exc(), "_call_zalo_api_with_proxy failed")
+        return {"error": -1}
+
+@frappe.whitelist(allow_guest=True)
+def send_zalo_group_message_works(group_id, text):
+    """
+    Gửi tin nhắn vào nhóm Zalo qua proxy (chỉ dùng cho Works)
+    """
+    try:
+        endpoint = "https://openapi.zalo.me/v3.0/oa/group/message"
+
+        data = {
+            "recipient": {
+                "group_id": group_id
+            },
+            "message": {
+                "text": text
+            }
+        }
+
+        response = _call_zalo_api_with_proxy(endpoint, method="POST_JSON", data=data)
+
+        if isinstance(response, dict) and response.get("error") == 0:
+            logger.info(f"[Zalo Works Reply] Gửi phản hồi thành công tới nhóm {group_id}")
+            return {"success": True, "data": response}
+
+        logger.error(f"[Zalo Works Reply] Gửi phản hồi thất bại: {response}")
+        return {"success": False, "error": response}
+
+    except Exception as e:
+        logger.error(f"[Zalo Works Reply] Lỗi hệ thống: {str(e)}")
+        frappe.log_error(frappe.get_traceback(), "send_zalo_group_message_works failed")
+        return {"success": False, "error": str(e)}
