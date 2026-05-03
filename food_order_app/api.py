@@ -1,5 +1,4 @@
-from random import random
-
+import random
 import frappe
 import os
 import requests
