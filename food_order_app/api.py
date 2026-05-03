@@ -1,3 +1,5 @@
+from random import random
+
 import frappe
 import os
 import requests
@@ -152,27 +154,56 @@ def zalo_callback(code=None, state=None):
         
         config = config[0]
         proxy_url = config.get("proxy_url")
-        proxies = {
-            "http": proxy_url,
-            "https": proxy_url,
-        }
 
-        try:
+        proxy_list = [p.strip() for p in proxy_url.split(",") if p.strip()]
+        random.shuffle(proxy_list)
 
-            profile_res = requests.get(
-                "https://graph.zalo.me/v2.0/me",
-                params={
-                    "fields": "id,name,picture",
-                    "access_token": access_token
-                },
-                proxies=proxies,
-                timeout=15
+        profile = None
+        last_error = None
+
+        for proxy in proxy_list:
+            proxies = {
+                "http": proxy,
+                "https": proxy,
+            }
+
+            try:
+                profile_res = requests.get(
+                    "https://graph.zalo.me/v2.0/me",
+                    params={
+                        "fields": "id,name,picture",
+                        "access_token": access_token
+                    },
+                    proxies=proxies,
+                    timeout=10
+                )
+
+                profile_res.raise_for_status()
+
+                data = profile_res.json()
+
+                # Check lỗi từ Zalo
+                if "error" in data:
+                    raise Exception(data)
+
+                profile = data
+                break
+
+            except Exception:
+                last_error = frappe.get_traceback()
+
+                # Log từng proxy fail (nếu muốn debug sâu thì bật)
+                frappe.log_error(
+                    last_error,
+                    f"[{trace_id}] PROXY FAILED: {proxy}"
+                )
+                continue
+        
+        if profile is None:
+            frappe.log_error(
+                last_error,
+                f"[{trace_id}] PROFILE TRACE"
             )
-            profile = profile_res.json()
-
-        except Exception as e:
-            log(f"STEP 2 FAILED | {str(e)}")
-            frappe.log_error(frappe.get_traceback(), f"[{trace_id}] PROFILE TRACE")
             return {"error": "profile_api_failed"}
 
         zalo_id = profile.get("id")
