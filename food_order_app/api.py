@@ -170,7 +170,9 @@ def zalo_callback(code=None, state=None):
                 profile_res = requests.get(
                     "https://graph.zalo.me/v2.0/me",
                     params={
-                        "fields": "id,name,picture",
+                        "fields": "id,name,picture"
+                    },
+                    headers={
                         "access_token": access_token
                     },
                     proxies=proxies,
@@ -178,11 +180,8 @@ def zalo_callback(code=None, state=None):
                 )
 
                 profile_res.raise_for_status()
-
                 data = profile_res.json()
-
-                # Check lỗi từ Zalo
-                if "error" in data:
+                if data.get("error", 0) != 0:
                     raise Exception(data)
 
                 profile = data
