@@ -525,7 +525,7 @@ def cancel_vote(session, zalo_id):
             logger.error(f"[VOTE] Session not found: {session}")
             return {"success": False, "message": "Không tìm thấy phiên đăng ký bữa ăn"}
 
-        if session_doc.status != "Open":
+        if session_doc.status != "Open" or (session_doc.end_date and now_datetime() > session_doc.end_date):
             return {"success": False, "message": "Phiên bữa ăn đã đóng, không thể đăng ký"}
 
         user = frappe.db.get_value("Zalo User Map", {"zalo_id": zalo_id}, "name")
