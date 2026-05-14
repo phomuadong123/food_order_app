@@ -1,3 +1,4 @@
+import json
 import random
 import frappe
 import os
@@ -926,107 +927,313 @@ def update_wallet_on_transaction(doc, method=None):
 # AUTO SESSION DAILY RENEWAL
 # =========================
 
-def refresh_zalo_tokens():
+def zalo_log(title, data):
+    """
+    Log chuẩn cho ERPNext/Frappe
+    """
     try:
+        if isinstance(data, (dict, list)):
+            data = json.dumps(data, indent=2, ensure_ascii=False)
+
+        frappe.log_error(
+            title=title,
+            message=str(data)
+        )
+
+    except Exception:
+        frappe.log_error(
+            title="Zalo Log Error",
+            message=traceback.format_exc()
+        )
+
+def refresh_zalo_tokens():
+
+    try:
+
+        zalo_log("ZALO REFRESH", "Start refresh token")
+
         config = frappe.db.sql("""
-            SELECT name, app_id, secret_key, refresh_token 
-            FROM `tabZalo Config` 
+            SELECT
+                name,
+                app_id,
+                secret_key,
+                refresh_token
+            FROM `tabZalo Config`
             LIMIT 1
         """, as_dict=True)
 
         if not config:
-            frappe.log_error("Bảng tabZalo Config trống rỗng. Hãy tạo 1 bản ghi trước!", "Zalo SQL Error")
+
+            zalo_log(
+                "ZALO REFRESH ERROR",
+                "Không tìm thấy config"
+            )
+
             return None
-        
+
         config = config[0]
-        doc_name = config["name"] # Tên bản ghi để dùng cho WHERE
 
-        # 2. Gọi API Zalo
+        doc_name = config["name"]
+
         url = "https://oauth.zaloapp.com/v4/oa/access_token"
+
         headers = {
-            'Content-Type': 'application/x-www-form-urlencoded',
-            'secret_key': config["secret_key"]
+            "Content-Type": "application/x-www-form-urlencoded",
+            "secret_key": config["secret_key"]
         }
+
         payload = {
-            'refresh_token': config["refresh_token"],
-            'app_id': config["app_id"],
-            'grant_type': 'refresh_token'
+            "refresh_token": config["refresh_token"],
+            "app_id": config["app_id"],
+            "grant_type": "refresh_token"
         }
 
-        response = requests.post(url, headers=headers, data=payload)
-        res_data = response.json()
+        zalo_log("ZALO REFRESH REQUEST", {
+            "url": url,
+            "payload": payload
+        })
 
+        response = requests.post(
+            url,
+            headers=headers,
+            data=payload,
+            timeout=30
+        )
+
+        zalo_log("ZALO REFRESH HTTP STATUS", response.status_code)
+
+        zalo_log("ZALO REFRESH RAW RESPONSE", response.text)
+
+        try:
+            res_data = response.json()
+
+        except Exception:
+
+            zalo_log(
+                "ZALO REFRESH JSON ERROR",
+                response.text
+            )
+
+            return None
+
+        zalo_log("ZALO REFRESH RESPONSE JSON", res_data)
+
+        # SUCCESS
         if "access_token" in res_data:
-            new_at = res_data["access_token"]
-            new_rt = res_data["refresh_token"]
 
-            # 3. UPDATE theo phong cách SQL bảng thường như bạn muốn
+            new_at = res_data.get("access_token")
+            new_rt = res_data.get("refresh_token")
+
             frappe.db.sql("""
                 UPDATE `tabZalo Config`
-                SET 
+                SET
                     access_token = %s,
                     refresh_token = %s
                 WHERE name = %s
-            """, (new_at, new_rt, doc_name))
-            
+            """, (
+                new_at,
+                new_rt,
+                doc_name
+            ))
+
             frappe.db.commit()
+
+            zalo_log(
+                "ZALO REFRESH SUCCESS",
+                "Token updated successfully"
+            )
+
             return new_at
+
+        # FAIL
         else:
-            frappe.log_error(f"Zalo trả về lỗi: {res_data}", "Zalo API Fail")
+
+            zalo_log(
+                "ZALO REFRESH FAILED",
+                res_data
+            )
+
             return None
 
     except Exception:
-        error_msg = traceback.format_exc()
-        frappe.log_error(title="Zalo SQL refresh Error", message=error_msg)
+
+        zalo_log(
+            "ZALO REFRESH SYSTEM ERROR",
+            traceback.format_exc()
+        )
+
         return None
     
 def call_zalo_api(endpoint, method="GET", data=None):
+
     try:
-        # Lấy access_token từ bảng riêng
+
+        zalo_log("ZALO API START", {
+            "endpoint": endpoint,
+            "method": method,
+            "payload": data
+        })
+
+        # lấy access token
         at_result = frappe.db.sql("""
-            SELECT access_token 
-            FROM `tabZalo Config` 
+            SELECT access_token
+            FROM `tabZalo Config`
             LIMIT 1
         """)
-        
+
         if not at_result:
-            return {"error": -1, "message": "No Config Found"}
-            
-        at = at_result[0][0]
-        headers = {'access_token': at}
 
-        # Gọi API
-        if method == "GET":
-            response = requests.get(endpoint, headers=headers).json()
+            zalo_log(
+                "ZALO API ERROR",
+                "Không tìm thấy access token"
+            )
+
+            return {
+                "error": -1,
+                "message": "No Config Found"
+            }
+
+        access_token = at_result[0][0]
+
+        headers = {
+            "access_token": access_token
+        }
+
+        # CALL API
+        if method.upper() == "GET":
+
+            response = requests.get(
+                endpoint,
+                headers=headers,
+                timeout=30
+            )
+
         else:
-            response = requests.post(endpoint, headers=headers, json=data).json()
 
-        # Nếu hết hạn thì Refresh
-        if response.get("error") == -216:
-            new_at = refresh_zalo_tokens()
-            if new_at:
-                headers['access_token'] = new_at
-                # Thử lại lần 2
-                if method == "GET":
-                    response = requests.get(endpoint, headers=headers).json()
-                else:
-                    response = requests.post(endpoint, headers=headers, json=data).json()
-                    
-        return response
+            response = requests.post(
+                endpoint,
+                headers=headers,
+                json=data,
+                timeout=30
+            )
+
+        zalo_log("ZALO API STATUS", response.status_code)
+
+        zalo_log("ZALO API RAW RESPONSE", response.text)
+
+        try:
+            response_data = response.json()
+
+        except Exception:
+
+            zalo_log(
+                "ZALO API JSON ERROR",
+                response.text
+            )
+
+            return {
+                "error": -1,
+                "message": "Invalid JSON"
+            }
+
+        zalo_log("ZALO API RESPONSE JSON", response_data)
+
+        # TOKEN EXPIRED
+        if response_data.get("error") == -216:
+
+            zalo_log(
+                "ZALO TOKEN EXPIRED",
+                "Start refresh token"
+            )
+
+            new_access_token = refresh_zalo_tokens()
+
+            if not new_access_token:
+
+                zalo_log(
+                    "ZALO REFRESH FAILED",
+                    "Không refresh được token"
+                )
+
+                return {
+                    "error": -216,
+                    "message": "Refresh failed"
+                }
+
+            headers["access_token"] = new_access_token
+
+            zalo_log(
+                "ZALO RETRY API",
+                "Retry with new token"
+            )
+
+            # retry
+            if method.upper() == "GET":
+
+                response = requests.get(
+                    endpoint,
+                    headers=headers,
+                    timeout=30
+                )
+
+            else:
+
+                response = requests.post(
+                    endpoint,
+                    headers=headers,
+                    json=data,
+                    timeout=30
+                )
+
+            zalo_log(
+                "ZALO RETRY STATUS",
+                response.status_code
+            )
+
+            zalo_log(
+                "ZALO RETRY RAW RESPONSE",
+                response.text
+            )
+
+            try:
+                response_data = response.json()
+
+            except Exception:
+
+                zalo_log(
+                    "ZALO RETRY JSON ERROR",
+                    response.text
+                )
+
+                return {
+                    "error": -1
+                }
+
+            zalo_log(
+                "ZALO RETRY RESPONSE JSON",
+                response_data
+            )
+
+        return response_data
 
     except Exception:
-        frappe.log_error(traceback.format_exc(), "call_zalo_api SQL Failed")
-        return {"error": -1}
+
+        zalo_log(
+            "ZALO API SYSTEM ERROR",
+            traceback.format_exc()
+        )
+
+        return {
+            "error": -1
+        }
 
 def send_zalo_vote_link_group(message):
-    """
-    Gửi thực đơn vào nhóm Zalo bằng GMF - Đã tích hợp tự động Refresh Token
-    """
+
     url = "https://openapi.zalo.me/v3.0/oa/group/message"
 
     payload = {
         "recipient": {
-            "group_id": GROUP_ID_ZALO  
+            "group_id": GROUP_ID_ZALO
         },
         "message": {
             "text": message
@@ -1034,15 +1241,43 @@ def send_zalo_vote_link_group(message):
     }
 
     try:
-        response_data = call_zalo_api(url, method="POST", data=payload)
-        
+
+        zalo_log(
+            "ZALO GROUP SEND START",
+            payload
+        )
+
+        response_data = call_zalo_api(
+            endpoint=url,
+            method="POST",
+            data=payload
+        )
+
+        zalo_log(
+            "ZALO GROUP FINAL RESPONSE",
+            response_data
+        )
+
         if response_data.get("error") == 0:
-            logger.info(f"[Zalo Group] Gửi thành công! Response: {response_data}")
+
+            zalo_log(
+                "ZALO GROUP SUCCESS",
+                "Gửi nhóm thành công"
+            )
+
         else:
-            logger.error(f"[Zalo Group] Gửi thất bại: {response_data}")
-            
-    except Exception as e:
-        logger.error(f"[Zalo Group] Lỗi hệ thống: {str(e)}")
+
+            zalo_log(
+                "ZALO GROUP FAILED",
+                response_data
+            )
+
+    except Exception:
+
+        zalo_log(
+            "ZALO GROUP SYSTEM ERROR",
+            traceback.format_exc()
+        )
 
 
 @frappe.whitelist(allow_guest=True)
