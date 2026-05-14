@@ -38,6 +38,26 @@
    "label": "secret_key"
   },
   {
+   "fieldname": "token_created_at",
+   "fieldtype": "Datetime",
+   "label": "Token Created At"
+  },
+  {
+   "fieldname": "refresh_expires_at",
+   "fieldtype": "Datetime",
+   "label": "Refresh Expires At"
+  },
+   {
+   "fieldname": "last_refresh_at",
+   "fieldtype": "Datetime",
+   "label": "Last Refresh At"
+  },
+  {
+    "fieldname": "need_relogin",
+    "fieldtype": "Check",
+    "label": "Need Relogin"
+    },
+  {
    "fieldname": "can_approve_payments",
    "fieldtype": "Check",
    "label": "Can Approve Payments"
