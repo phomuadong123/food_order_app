@@ -436,11 +436,10 @@
                     const { has_order, date, start_date, end_date, full_name, status } = statusRes.message;
                     const badge = (status, startDate, endDate) => {
                         const now = new Date();
-
                         const start = startDate ? new Date(startDate) : null;
                         const end = endDate ? new Date(endDate) : null;
 
-                        // Trong thời gian diễn ra
+                        // 1. TRẠNG THÁI: ĐANG DIỄN RA (Đang mở đăng ký - Hiệu ứng LIVE đỏ rực)
                         if (
                             status === 'Open' &&
                             start &&
@@ -448,32 +447,51 @@
                             now >= start &&
                             now <= end
                         ) {
-                            return `<span class="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-emerald-50 text-emerald-700 ring-1 ring-emerald-200">
-                                        <span class="relative">
-                                            <span class="absolute inline-block h-2.5 w-2.5 rounded-full bg-emerald-400 animate-ping opacity-60"></span>
-                                            <span class="relative inline-block h-2.5 w-2.5 rounded-full bg-emerald-600"></span>
-                                        </span>
-                                        Đang diễn ra
-                                    </span>`;
+                            return `
+                                <span class="relative inline-flex items-center gap-1.5 px-2.5 py-1 text-[11px] sm:text-xs font-bold text-red-600 uppercase tracking-wider rounded-full bg-red-50 border border-red-200 shadow-[0_0_10px_rgba(239,68,68,0.15)] overflow-hidden select-none whitespace-nowrap">
+                                    <!-- Hiệu ứng quét sáng (Shimmer) chạy ngang chữ -->
+                                    <span class="absolute inset-0 w-full h-full bg-gradient-to-r from-transparent via-white/40 to-transparent -translate-x-full animate-[shimmer_2.5s_infinite]"></span>
+                                    
+                                    <!-- Chấm tròn phát sóng nhấp nháy liên tục -->
+                                    <span class="relative flex h-2 w-2 flex-shrink-0">
+                                        <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-red-400 opacity-75"></span>
+                                        <span class="relative inline-flex rounded-full h-2 w-2 bg-red-600"></span>
+                                    </span>
+                                    <span class="relative z-10">Đang diễn ra</span>
+                                </span>
+                            `;
                         }
 
-                        // Đã hết thời gian
+                        // 2. TRẠNG THÁI: ĐÃ HẾT THỜI GIAN (Đã kết thúc / Đã đóng)
                         if (end && now > end) {
-                            return `<span class="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-amber-50 text-amber-700 ring-1 ring-amber-200">
-                                        ● Đã đóng đăng ký
-                                    </span>`;
+                            return `
+                                <span class="inline-flex items-center gap-1.5 px-2.5 py-1 text-[11px] sm:text-xs font-medium text-gray-500 rounded-full bg-gray-100 border border-gray-200 whitespace-nowrap select-none">
+                                    <span class="h-1.5 w-1.5 rounded-full bg-gray-400 flex-shrink-0"></span>
+                                    <span>Đã đóng đăng ký</span>
+                                </span>
+                            `;
                         }
 
-                        // Chưa tới thời gian mở
+                        // 3. TRẠNG THÁI: CHƯA TỚI THỜI GIAN MỞ (Sắp diễn ra - Chấm xanh dương đập nhẹ)
                         if (start && now < start) {
-                            return `<span class="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-sky-50 text-sky-700 ring-1 ring-sky-200">
-                                        ● Chưa đến thời gian mở
-                                    </span>`;
+                            return `
+                                <span class="inline-flex items-center gap-1.5 px-2.5 py-1 text-[11px] sm:text-xs font-medium text-sky-700 rounded-full bg-sky-50 border border-sky-200 whitespace-nowrap select-none">
+                                    <span class="relative flex h-1.5 w-1.5 flex-shrink-0">
+                                        <span class="animate-pulse absolute inline-flex h-full w-full rounded-full bg-sky-400 opacity-75"></span>
+                                        <span class="relative inline-flex rounded-full h-1.5 w-1.5 bg-sky-500"></span>
+                                    </span>
+                                    <span>Chưa mở</span>
+                                </span>
+                            `;
                         }
 
-                        return `<span class="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-slate-50 text-slate-700 ring-1 ring-slate-200">
-                                    ● Chưa được tạo
-                                </span>`;
+                        // 4. TRẠNG THÁI: CHƯA ĐƯỢC TẠO
+                        return `
+                            <span class="inline-flex items-center gap-1.5 px-2.5 py-1 text-[11px] sm:text-xs font-medium text-slate-500 rounded-full bg-slate-50 border border-slate-200 whitespace-nowrap select-none">
+                                <span class="h-1.5 w-1.5 rounded-full bg-slate-400 flex-shrink-0"></span>
+                                <span>Chưa được tạo</span>
+                            </span>
+                        `;
                     };
 
                     const sessionStatusSpan = document.getElementById("session-status");
