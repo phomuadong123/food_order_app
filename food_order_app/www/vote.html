@@ -433,6 +433,7 @@
                     const statusDiv = document.getElementById("order-status");
                     const deadlineDiv = document.getElementById("deadline");
                     const inactiveLockTitle = document.getElementById("inactive-lock-title");
+                    const { has_order, date, start_date, end_date, full_name, status } = statusRes.message;
                     const badge = (status, startDate, endDate) => {
                         const now = new Date();
 
