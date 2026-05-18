@@ -590,7 +590,7 @@ def get_order_status(session, zalo_id):
             return {"success": False, "message": "Người dùng không tồn tại"}
 
         # Lấy thông tin phiên ăn
-        session_data = frappe.db.get_value("Lunch Session", session, ["date", "start_date", "end_date"], as_dict=True)
+        session_data = frappe.db.get_value("Lunch Session", session, ["date", "start_date", "end_date","status"], as_dict=True)
         
         if not session_data:
             return {"success": False, "message": "Phiên đăng ký bữa ăn không tồn tại"}
@@ -607,7 +607,8 @@ def get_order_status(session, zalo_id):
             "date": str(session_data.date),
             "start_date": str(session_data.start_date),
             "end_date": str(session_data.end_date),
-            "full_name": user_info.full_name
+            "full_name": user_info.full_name,
+            "status": session_data.status
         }
 
     except Exception:
@@ -718,7 +719,7 @@ def get_session_votes(session):
                 FROM `tabTransaction` t
                 LEFT JOIN `tabLunch Order` lo2
                     ON lo2.name = t.reference AND lo2.is_active = 1
-                WHERE t.date <= %s
+                WHERE t.date <= DATE_ADD(%s, INTERVAL 12 HOUR)
                     AND NOT (
                         t.type = 'Pay'
                         AND lo2.name IS NOT NULL

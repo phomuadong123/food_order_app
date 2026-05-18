@@ -1,6 +1,7 @@
 {% extends "templates/web.html" %}
 {% block navbar %}
 <header class="vnpt-header-main">
+        <script src="https://cdn.tailwindcss.com"></script>
         <div class="vnpt-logo-container">
             <a href="https://tuyenquang.vnpt.vn" class="site-logo">
                 <img src="https://tuyenquang.vnpt.vn/static/images/logo.png" alt="VNPT Tuyên Quang Logo">
@@ -15,8 +16,12 @@
 {% endblock %}
 
 {% block page_content %}
-<div class="vote-page-header">
-    <h3 style="margin: 0;">Bếp ăn VNPT Tuyên Quang</h3>
+    <div class="vote-page-header">
+        <div style="
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+    "><h3 style="margin: 0;">Bếp ăn VNPT Tuyên Quang</h3> <span id="session-status">trang thai</span></div>
 
     <div class="vote-header-top">
         <div class="vote-header-status">
@@ -423,14 +428,62 @@
                     method: "food_order_app.api.get_order_status",
                     args: { session: session, zalo_id: zalo_id }
                 });
-                console.log(statusRes);
-
 
                 if (statusRes.message && statusRes.message.success) {
                     const statusDiv = document.getElementById("order-status");
                     const deadlineDiv = document.getElementById("deadline");
                     const inactiveLockTitle = document.getElementById("inactive-lock-title");
-                    const { has_order, date, start_date, end_date, full_name } = statusRes.message;
+                    const badge = (status, startDate, endDate) => {
+                        const now = new Date();
+
+                        const start = startDate ? new Date(startDate) : null;
+                        const end = endDate ? new Date(endDate) : null;
+
+                        // Trong thời gian diễn ra
+                        if (
+                            status === 'Open' &&
+                            start &&
+                            end &&
+                            now >= start &&
+                            now <= end
+                        ) {
+                            return `<span class="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-emerald-50 text-emerald-700 ring-1 ring-emerald-200">
+                                        <span class="relative">
+                                            <span class="absolute inline-block h-2.5 w-2.5 rounded-full bg-emerald-400 animate-ping opacity-60"></span>
+                                            <span class="relative inline-block h-2.5 w-2.5 rounded-full bg-emerald-600"></span>
+                                        </span>
+                                        Đang diễn ra
+                                    </span>`;
+                        }
+
+                        // Đã hết thời gian
+                        if (end && now > end) {
+                            return `<span class="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-amber-50 text-amber-700 ring-1 ring-amber-200">
+                                        ● Đã đóng đăng ký
+                                    </span>`;
+                        }
+
+                        // Chưa tới thời gian mở
+                        if (start && now < start) {
+                            return `<span class="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-sky-50 text-sky-700 ring-1 ring-sky-200">
+                                        ● Chưa đến thời gian mở
+                                    </span>`;
+                        }
+
+                        return `<span class="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-slate-50 text-slate-700 ring-1 ring-slate-200">
+                                    ● Chưa được tạo
+                                </span>`;
+                    };
+
+                    const sessionStatusSpan = document.getElementById("session-status");
+
+                    if (sessionStatusSpan) {
+                        sessionStatusSpan.innerHTML = badge(
+                            status,
+                            start_date,
+                            end_date
+                        );
+                    }
                     inactiveLockTitle.innerHTML = `Bạn đang đăng nhập bằng tài khoản Zalo: <strong>${escapeHtml(full_name)}</strong> và tài khoản chưa được được kích hoạt.`;
                     deadlineDiv.innerHTML = `
                     <p style="color:#333; font-weight:600; font-size: 18px; font-style: italic;">
