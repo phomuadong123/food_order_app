@@ -968,6 +968,9 @@ h1 {
 }
 
 @media (max-width: 440px) {
+    #header-bep-an {
+        font-size: 22px;
+    }
     .text-line2 {
         font-size: 24px;
     }
