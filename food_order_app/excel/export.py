@@ -174,7 +174,16 @@ def _create_report_sheet(wb, start_date, end_date, date_headers, period_query, s
         else:
             ws.column_dimensions[get_column_letter(col_idx)].width = 15
 
-    users = frappe.get_all("Zalo User Map", fields=["name", "real_name"])
+    users = frappe.db.sql("""
+        SELECT DISTINCT
+            z.name,
+            z.real_name
+        FROM `tabZalo User Map` z
+        INNER JOIN `tabLunch Order` tlo
+            ON z.name = tlo.zalo_user
+        ORDER BY z.real_name ASC
+    """, as_dict=True)
+
     stt = 1
     for u in users:
         u_data = user_orders.get(u.name, {'days': [], 'total_amount': 0})
@@ -223,6 +232,20 @@ def _create_report_sheet(wb, start_date, end_date, date_headers, period_query, s
             ws.cell(row=curr_row, column=col_idx).number_format = '#,##0'
 
         stt += 1
+
+    total_row = ws.max_row + 1
+
+    ws.cell(row=total_row, column=1, value="")
+    ws.cell(row=total_row, column=2, value="TỔNG")
+
+    # Tổng các cột ngày ăn
+    for col_idx in range(3, 3 + len(date_headers)):
+        col_letter = get_column_letter(col_idx)
+        ws.cell(
+            row=total_row,
+            column=col_idx,
+            value=f"=SUM({col_letter}3:{col_letter}{total_row-1})"
+        )
 
     ws.freeze_panes = "C3"
 
