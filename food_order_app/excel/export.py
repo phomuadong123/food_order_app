@@ -184,6 +184,11 @@ def _create_report_sheet(wb, start_date, end_date, date_headers, period_query, s
         ORDER BY z.real_name ASC
     """, as_dict=True)
 
+    total_num_days = 0
+    total_total_price = 0
+    total_beginning_balance = 0
+    total_deposit_amount = 0
+    total_end_balance = 0
     stt = 1
     for u in users:
         u_data = user_orders.get(u.name, {'days': [], 'total_amount': 0})
@@ -218,6 +223,12 @@ def _create_report_sheet(wb, start_date, end_date, date_headers, period_query, s
             end_balance,
         ])
 
+        total_num_days += num_days
+        total_total_price += total_price
+        total_beginning_balance += beginning_balance
+        total_deposit_amount += deposit_amount
+        total_end_balance += end_balance
+
         ws.append(row_data)
 
         curr_row = ws.max_row
@@ -235,10 +246,9 @@ def _create_report_sheet(wb, start_date, end_date, date_headers, period_query, s
 
     total_row = ws.max_row + 1
 
-    ws.cell(row=total_row, column=1, value="")
     ws.cell(row=total_row, column=2, value="TỔNG")
 
-    # Tổng các cột ngày ăn
+    # Tổng các cột ngày
     for col_idx in range(3, 3 + len(date_headers)):
         col_letter = get_column_letter(col_idx)
         ws.cell(
@@ -246,6 +256,36 @@ def _create_report_sheet(wb, start_date, end_date, date_headers, period_query, s
             column=col_idx,
             value=f"=SUM({col_letter}3:{col_letter}{total_row-1})"
         )
+
+    summary_start = 3 + len(date_headers)
+
+    # Số ngày ăn
+    ws.cell(row=total_row, column=summary_start, value=total_num_days)
+
+    # Đơn giá suất ăn (không nên cộng)
+    avg_all = total_total_price / total_num_days if total_num_days else 0
+    ws.cell(row=total_row, column=summary_start + 1, value=avg_all)
+
+    # Thành tiền
+    ws.cell(row=total_row, column=summary_start + 2, value=total_total_price)
+
+    # Số tiền đầu kỳ
+    ws.cell(row=total_row, column=summary_start + 3, value=total_beginning_balance)
+
+    # Số tiền nạp vào
+    ws.cell(row=total_row, column=summary_start + 4, value=total_deposit_amount)
+
+    # Số tiền còn lại
+    ws.cell(row=total_row, column=summary_start + 5, value=total_end_balance)
+
+    for col_idx in range(1, num_columns + 1):
+        cell = ws.cell(row=total_row, column=col_idx)
+        cell.font = Font(bold=True)
+        cell.alignment = center_align
+
+    # format tiền
+    for col_idx in range(summary_start + 1, summary_start + 5 + 1):
+        ws.cell(row=total_row, column=col_idx).number_format = '#,##0'
 
     ws.freeze_panes = "C3"
 
