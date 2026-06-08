@@ -967,7 +967,14 @@ h1 {
     }
 }
 
+#header-bep-an {
+    font-size: 28px;margin: 0;font-weight: 700;
+}
+
 @media (max-width: 440px) {
+    #header-bep-an {
+        font-size: 22px;
+    }
     .text-line2 {
         font-size: 24px;
     }

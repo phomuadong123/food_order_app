@@ -1,6 +1,7 @@
 {% extends "templates/web.html" %}
 {% block navbar %}
 <header class="vnpt-header-main">
+        <script src="https://cdn.tailwindcss.com"></script>
         <div class="vnpt-logo-container">
             <a href="https://tuyenquang.vnpt.vn" class="site-logo">
                 <img src="https://tuyenquang.vnpt.vn/static/images/logo.png" alt="VNPT Tuyên Quang Logo">
@@ -15,8 +16,12 @@
 {% endblock %}
 
 {% block page_content %}
-<div class="vote-page-header">
-    <h3 style="margin: 0;">Bếp ăn VNPT Tuyên Quang</h3>
+    <div class="vote-page-header">
+        <div style="
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+    "><h3 id="header-bep-an">Bếp ăn VNPT Tuyên Quang</h3> <span id="session-status">trang thai</span></div>
 
     <div class="vote-header-top">
         <div class="vote-header-status">
@@ -423,14 +428,81 @@
                     method: "food_order_app.api.get_order_status",
                     args: { session: session, zalo_id: zalo_id }
                 });
-                console.log(statusRes);
-
 
                 if (statusRes.message && statusRes.message.success) {
                     const statusDiv = document.getElementById("order-status");
                     const deadlineDiv = document.getElementById("deadline");
                     const inactiveLockTitle = document.getElementById("inactive-lock-title");
-                    const { has_order, date, start_date, end_date, full_name } = statusRes.message;
+                    const { has_order, date, start_date, end_date, full_name, status } = statusRes.message;
+                    const badge = (status, startDate, endDate) => {
+                        const now = new Date();
+                        const start = startDate ? new Date(startDate) : null;
+                        const end = endDate ? new Date(endDate) : null;
+
+                        // 1. TRẠNG THÁI: ĐANG DIỄN RA (Đang mở đăng ký - Hiệu ứng LIVE đỏ rực)
+                        if (
+                            status === 'Open' &&
+                            start &&
+                            end &&
+                            now >= start &&
+                            now <= end
+                        ) {
+                            return `
+                                <span class="relative inline-flex items-center gap-1.5 px-2.5 py-1 text-[11px] sm:text-xs font-bold text-red-600 uppercase tracking-wider rounded-full bg-red-50 border border-red-200 shadow-[0_0_10px_rgba(239,68,68,0.15)] overflow-hidden select-none whitespace-nowrap">
+                                    <!-- Hiệu ứng quét sáng (Shimmer) chạy ngang chữ -->
+                                    <span class="absolute inset-0 w-full h-full bg-gradient-to-r from-transparent via-white/40 to-transparent -translate-x-full animate-[shimmer_2.5s_infinite]"></span>
+                                    
+                                    <!-- Chấm tròn phát sóng nhấp nháy liên tục -->
+                                    <span class="relative flex h-2 w-2 flex-shrink-0">
+                                        <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-red-400 opacity-75"></span>
+                                        <span class="relative inline-flex rounded-full h-2 w-2 bg-red-600"></span>
+                                    </span>
+                                    <span class="relative z-10">Đang diễn ra</span>
+                                </span>
+                            `;
+                        }
+
+                        // 2. TRẠNG THÁI: ĐÃ HẾT THỜI GIAN (Đã kết thúc / Đã đóng)
+                        if (end && now > end) {
+                            return `
+                                <span class="inline-flex items-center gap-1.5 px-2.5 py-1 text-[11px] sm:text-xs font-medium text-gray-500 rounded-full bg-gray-100 border border-gray-200 whitespace-nowrap select-none">
+                                    <span class="h-1.5 w-1.5 rounded-full bg-gray-400 flex-shrink-0"></span>
+                                    <span>Đã đóng đăng ký</span>
+                                </span>
+                            `;
+                        }
+
+                        // 3. TRẠNG THÁI: CHƯA TỚI THỜI GIAN MỞ (Sắp diễn ra - Chấm xanh dương đập nhẹ)
+                        if (start && now < start) {
+                            return `
+                                <span class="inline-flex items-center gap-1.5 px-2.5 py-1 text-[11px] sm:text-xs font-medium text-sky-700 rounded-full bg-sky-50 border border-sky-200 whitespace-nowrap select-none">
+                                    <span class="relative flex h-1.5 w-1.5 flex-shrink-0">
+                                        <span class="animate-pulse absolute inline-flex h-full w-full rounded-full bg-sky-400 opacity-75"></span>
+                                        <span class="relative inline-flex rounded-full h-1.5 w-1.5 bg-sky-500"></span>
+                                    </span>
+                                    <span>Chưa mở</span>
+                                </span>
+                            `;
+                        }
+
+                        // 4. TRẠNG THÁI: CHƯA ĐƯỢC TẠO
+                        return `
+                            <span class="inline-flex items-center gap-1.5 px-2.5 py-1 text-[11px] sm:text-xs font-medium text-slate-500 rounded-full bg-slate-50 border border-slate-200 whitespace-nowrap select-none">
+                                <span class="h-1.5 w-1.5 rounded-full bg-slate-400 flex-shrink-0"></span>
+                                <span>Chưa được tạo</span>
+                            </span>
+                        `;
+                    };
+
+                    const sessionStatusSpan = document.getElementById("session-status");
+
+                    if (sessionStatusSpan) {
+                        sessionStatusSpan.innerHTML = badge(
+                            status,
+                            start_date,
+                            end_date
+                        );
+                    }
                     inactiveLockTitle.innerHTML = `Bạn đang đăng nhập bằng tài khoản Zalo: <strong>${escapeHtml(full_name)}</strong> và tài khoản chưa được được kích hoạt.`;
                     deadlineDiv.innerHTML = `
                     <p style="color:#333; font-weight:600; font-size: 18px; font-style: italic;">
