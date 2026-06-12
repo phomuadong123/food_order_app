@@ -668,10 +668,7 @@ def get_session_votes(session):
         if not session:
             return {"success": False, "message": "Missing session"}
 
-        # Lấy ngày của phiên ăn để xác định tháng báo cáo.
-        # Lưu ý nghiệp vụ: bữa ăn ngày hôm nay có thể đăng ký từ 13:30 hôm trước
-        # đến 09:00 hôm nay, nên khi thống kê tiền ăn trong tháng KHÔNG được suy luận
-        # ngày ăn theo lo.created_at. Ngày ăn chuẩn phải lấy theo Lunch Session.date.
+        # Get session date to determine the month
         session_doc = frappe.get_doc("Lunch Session", session)
         session_date = getdate(session_doc.date)
 
@@ -700,7 +697,11 @@ def get_session_votes(session):
                     ELSE ''
                 END AS note,
                 COALESCE(wallet.balance, 0) AS wallet_balance,
-                COALESCE(prev_balance.beginning_balance, 0) AS beginning_balance,
+                (
+                    COALESCE(wallet.balance, 0)
+                    - COALESCE(deposit_summary.monthly_deposit_amount, 0)
+                    + COALESCE(order_summary.monthly_food_cost, 0)
+                ) AS beginning_balance,
                 COALESCE(order_summary.monthly_order_count, 0) AS monthly_order_count,
                 COALESCE(order_summary.monthly_food_cost, 0) AS monthly_food_cost,
                 COALESCE(deposit_summary.monthly_deposit_amount, 0) AS monthly_deposit_amount
@@ -713,37 +714,31 @@ def get_session_votes(session):
                 ON wallet.zalo_user = lo.zalo_user
             LEFT JOIN (
                 SELECT
-                    t.zalo_user,
-                    SUM(t.amount) AS beginning_balance
-                FROM `tabTransaction` t
-                LEFT JOIN `tabLunch Order` lo2
-                    ON lo2.name = t.reference AND lo2.is_active = 1
-                LEFT JOIN `tabLunch Session` ls_pay
-                    ON ls_pay.name = lo2.session
-                WHERE t.date < %s
-                    AND NOT (
-                        t.type = 'Pay'
-                        AND lo2.name IS NOT NULL
-                        AND ls_pay.name IS NOT NULL
-                        AND DATE(ls_pay.date) >= DATE(%s)
-                        AND DATE(ls_pay.date) <= DATE(%s)
-                    )
-                GROUP BY t.zalo_user
-            ) prev_balance ON prev_balance.zalo_user = lo.zalo_user
-            LEFT JOIN (
-                SELECT
                     lo2.zalo_user,
                     COUNT(*) AS monthly_order_count,
                     SUM(IFNULL(lmi2.price, 0)) AS monthly_food_cost
                 FROM `tabLunch Order` lo2
                 LEFT JOIN `tabLunch Menu Item` lmi2
                     ON lo2.menu_item = lmi2.name
-                LEFT JOIN `tabLunch Session` ls2
-                    ON ls2.name = lo2.session
                 WHERE lo2.is_active = 1
-                    AND ls2.name IS NOT NULL
-                    AND DATE(ls2.date) >= DATE(%s)
-                    AND DATE(ls2.date) <= DATE(%s)
+                    AND DATE(
+                        DATE_ADD(
+                            lo2.created_at,
+                            INTERVAL CASE
+                                WHEN TIME(lo2.created_at) > '12:00:00' THEN 1
+                                ELSE 0
+                            END DAY
+                        )
+                    ) >= %s
+                    AND DATE(
+                        DATE_ADD(
+                            lo2.created_at,
+                            INTERVAL CASE
+                                WHEN TIME(lo2.created_at) > '12:00:00' THEN 1
+                                ELSE 0
+                            END DAY
+                        )
+                    ) <= %s
                 GROUP BY lo2.zalo_user
             ) order_summary ON order_summary.zalo_user = lo.zalo_user
             LEFT JOIN (
@@ -760,11 +755,8 @@ def get_session_votes(session):
                 AND lo.is_active = 1
             ORDER BY lo.created_at DESC, lo.creation DESC
         """, (
-            start_of_month,         # prev_balance: chỉ lấy giao dịch trước đầu tháng
-            start_of_month,         # prev_balance: loại Pay của các phiên ăn thuộc tháng hiện tại
-            end_of_month,           # prev_balance: loại Pay của các phiên ăn thuộc tháng hiện tại
-            start_of_month,         # order_summary: tính tiền ăn theo Lunch Session.date
-            end_of_month,           # order_summary: tính tiền ăn theo Lunch Session.date
+            start_of_month,         # order_summary
+            end_of_month,           # order_summary
             start_of_month,         # deposit_summary
             end_of_month,           # deposit_summary
             session,                # lo.session
