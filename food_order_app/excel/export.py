@@ -70,7 +70,7 @@ def _get_transaction_maps(start_date, end_date):
     return deposit_map, sum_in_period_map, sum_after_end_map
 
 
-def _create_report_sheet(wb, start_date, end_date, date_headers, period_query, sheet_title):
+def _create_report_sheet(wb, start_date, end_date, date_headers, period_query, sheet_title, is_active_user=False):
     import openpyxl
     from openpyxl.styles import Alignment, Font, PatternFill
     from openpyxl.utils import get_column_letter
@@ -174,15 +174,21 @@ def _create_report_sheet(wb, start_date, end_date, date_headers, period_query, s
         else:
             ws.column_dimensions[get_column_letter(col_idx)].width = 15
 
-    users = frappe.db.sql("""
+    query = """
         SELECT DISTINCT
             z.name,
             z.real_name
         FROM `tabZalo User Map` z
         INNER JOIN `tabLunch Order` tlo
             ON z.name = tlo.zalo_user
-        ORDER BY z.real_name ASC
-    """, as_dict=True)
+    """
+
+    if is_active_user:
+        query += " WHERE z.is_active = 1"
+
+    query += " ORDER BY z.real_name ASC"
+
+    users = frappe.db.sql(query, as_dict=True)
 
     total_num_days = 0
     total_total_price = 0
@@ -290,12 +296,12 @@ def _create_report_sheet(wb, start_date, end_date, date_headers, period_query, s
     ws.freeze_panes = "C3"
 
 
-def _build_excel_report(start_date, end_date, date_headers, period_query, title, filename_suffix):
+def _build_excel_report(start_date, end_date, date_headers, period_query, title, filename_suffix, is_active_user=False):
     import openpyxl
     from io import BytesIO
 
     wb = openpyxl.Workbook()
-    _create_report_sheet(wb, start_date, end_date, date_headers, period_query, title)
+    _create_report_sheet(wb, start_date, end_date, date_headers, period_query, title, is_active_user=False)
 
     output = BytesIO()
     wb.save(output)
@@ -307,7 +313,7 @@ def _build_excel_report(start_date, end_date, date_headers, period_query, title,
 
 
 @frappe.whitelist(allow_guest=False)
-def export_monthly_report(month=None, year=None):
+def export_monthly_report(month=None, year=None, is_active_user = False):
     if not month or not year:
         current = datetime.now()
         month = current.month
@@ -322,11 +328,11 @@ def export_monthly_report(month=None, year=None):
     date_headers = [str(day) for day in range(1, days_in_month + 1)]
     title = f"Tháng {month}-{year}"
     filename_suffix = f"Thang_{month}_{year}"
-    return _build_excel_report(start_date, end_date, date_headers, "DAY(lo.created_at)", title, filename_suffix)
+    return _build_excel_report(start_date, end_date, date_headers, "DAY(lo.created_at)", title, filename_suffix, is_active_user)
 
 
 @frappe.whitelist(allow_guest=False)
-def export_daily_report(date=None):
+def export_daily_report(date=None, is_active_user = False):
     if not date:
         date = datetime.now().date()
     else:
@@ -337,11 +343,11 @@ def export_daily_report(date=None):
     date_headers = [date.strftime('%d/%m/%Y')]
     title = f"Ngày {date.strftime('%d-%m-%Y')}"
     filename_suffix = f"Ngay_{date.strftime('%Y%m%d')}"
-    return _build_excel_report(start_date, end_date, date_headers, '1', title, filename_suffix)
+    return _build_excel_report(start_date, end_date, date_headers, '1', title, filename_suffix, is_active_user)
 
 
 @frappe.whitelist(allow_guest=False)
-def export_yearly_report(year=None):
+def export_yearly_report(year=None, is_active_user = False):
     import openpyxl
     from io import BytesIO
 
@@ -357,7 +363,7 @@ def export_yearly_report(year=None):
         end_date = datetime(year, month, days_in_month, 23, 59, 59)
         date_headers = [str(day) for day in range(1, days_in_month + 1)]
         sheet_title = f"Thang_{month}"
-        _create_report_sheet(wb, start_date, end_date, date_headers, "DAY(ls.date)", sheet_title)
+        _create_report_sheet(wb, start_date, end_date, date_headers, "DAY(ls.date)", sheet_title, is_active_user)
 
     output = BytesIO()
     wb.save(output)

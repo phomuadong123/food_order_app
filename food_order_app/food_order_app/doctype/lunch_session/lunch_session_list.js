@@ -52,10 +52,16 @@ frappe.listview_settings['Lunch Session'] = {
                                     fieldtype: 'Date',
                                     reqd: 1,
                                     default: frappe.datetime.get_today()
+                                },
+                                {
+                                    fieldname: 'is_active_user',
+                                    label: __('Chỉ lọc User đang hoạt động'),
+                                    fieldtype: 'Check',
+                                    default: 1
                                 }
                             ],
                             function(values2) {
-                                var download_url = "/api/method/food_order_app.excel.export.export_daily_report?date=" + values2.date;
+                                var download_url = "/api/method/food_order_app.excel.export.export_daily_report?date=" + values2.date + "&is_active_user=" + values2.is_active_user;
                                 window.open(download_url, '_blank');
                             },
                             __('Chọn ngày xuất báo cáo'),
@@ -78,10 +84,16 @@ frappe.listview_settings['Lunch Session'] = {
                                     fieldtype: 'Int',
                                     reqd: 1,
                                     default: today.getFullYear()
+                                },
+                                {
+                                    fieldname: 'is_active_user',
+                                    label: __('Chỉ lọc User đang hoạt động'),
+                                    fieldtype: 'Check',
+                                    default: 1
                                 }
                             ],
                             function(values2) {
-                                var download_url = "/api/method/food_order_app.excel.export.export_monthly_report?month=" + values2.month + "&year=" + values2.year;
+                                var download_url = "/api/method/food_order_app.excel.export.export_monthly_report?month=" + values2.month + "&year=" + values2.year + "&is_active_user=" + values2.is_active_user;
                                 window.open(download_url, '_blank');
                             },
                             __('Chọn tháng và năm xuất báo cáo'),
@@ -96,10 +108,16 @@ frappe.listview_settings['Lunch Session'] = {
                                     fieldtype: 'Int',
                                     reqd: 1,
                                     default: today.getFullYear()
+                                },
+                                                                {
+                                    fieldname: 'is_active_user',
+                                    label: __('Chỉ lọc User đang hoạt động'),
+                                    fieldtype: 'Check',
+                                    default: 1
                                 }
                             ],
                             function(values2) {
-                                var download_url = "/api/method/food_order_app.excel.export.export_yearly_report?year=" + values2.year;
+                                var download_url = "/api/method/food_order_app.excel.export.export_yearly_report?year=" + values2.year + "&is_active_user=" + values2.is_active_user;
                                 window.open(download_url, '_blank');
                             },
                             __('Chọn năm xuất báo cáo'),
