@@ -70,7 +70,7 @@ def _get_transaction_maps(start_date, end_date):
     return deposit_map, sum_in_period_map, sum_after_end_map
 
 
-def _create_report_sheet(wb, start_date, end_date, date_headers, period_query, sheet_title, is_active_user=False):
+def _create_report_sheet(wb, start_date, end_date, date_headers, period_query, sheet_title, is_active_user):
     import openpyxl
     from openpyxl.styles import Alignment, Font, PatternFill
     from openpyxl.utils import get_column_letter
@@ -296,12 +296,12 @@ def _create_report_sheet(wb, start_date, end_date, date_headers, period_query, s
     ws.freeze_panes = "C3"
 
 
-def _build_excel_report(start_date, end_date, date_headers, period_query, title, filename_suffix, is_active_user=False):
+def _build_excel_report(start_date, end_date, date_headers, period_query, title, filename_suffix, is_active_user):
     import openpyxl
     from io import BytesIO
 
     wb = openpyxl.Workbook()
-    _create_report_sheet(wb, start_date, end_date, date_headers, period_query, title, is_active_user=False)
+    _create_report_sheet(wb, start_date, end_date, date_headers, period_query, title, is_active_user)
 
     output = BytesIO()
     wb.save(output)
