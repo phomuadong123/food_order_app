@@ -313,7 +313,7 @@ def _build_excel_report(start_date, end_date, date_headers, period_query, title,
 
 
 @frappe.whitelist(allow_guest=False)
-def export_monthly_report(month=None, year=None, is_active_user = False):
+def export_monthly_report(month=None, year=None, is_active_user=0):
     if not month or not year:
         current = datetime.now()
         month = current.month
@@ -332,7 +332,7 @@ def export_monthly_report(month=None, year=None, is_active_user = False):
 
 
 @frappe.whitelist(allow_guest=False)
-def export_daily_report(date=None, is_active_user = False):
+def export_daily_report(date=None, is_active_user=0):
     if not date:
         date = datetime.now().date()
     else:
@@ -347,7 +347,7 @@ def export_daily_report(date=None, is_active_user = False):
 
 
 @frappe.whitelist(allow_guest=False)
-def export_yearly_report(year=None, is_active_user = False):
+def export_yearly_report(year=None, is_active_user=0):
     import openpyxl
     from io import BytesIO
 
