@@ -2,7 +2,7 @@ import frappe
 import os
 import requests
 import traceback
-from frappe.utils import now, nowdate, add_days, getdate
+from frappe.utils import now, nowdate, add_days, getdate, cint
 from datetime import date, datetime, timedelta
 import calendar
 
@@ -182,7 +182,7 @@ def _create_report_sheet(wb, start_date, end_date, date_headers, period_query, s
         INNER JOIN `tabLunch Order` tlo
             ON z.name = tlo.zalo_user
     """
-
+    is_active_user = cint(is_active_user)
     if is_active_user:
         query += " WHERE z.is_active = 1"
 
