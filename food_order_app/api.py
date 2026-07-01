@@ -680,10 +680,6 @@ def get_session_votes(session):
             (session_date.replace(day=1) + timedelta(days=32)).replace(day=1) - timedelta(days=1),
             datetime.max.time()
         )
-        end_of_previous_month = datetime.combine(
-            start_of_month - timedelta(days=1),
-            datetime.max.time()
-        )
 
         rows = frappe.db.sql("""
             SELECT
@@ -701,7 +697,11 @@ def get_session_votes(session):
                     ELSE ''
                 END AS note,
                 COALESCE(wallet.balance, 0) AS wallet_balance,
-                COALESCE(prev_balance.beginning_balance, 0) AS beginning_balance,
+                (
+                    COALESCE(wallet.balance, 0)
+                    - COALESCE(deposit_summary.monthly_deposit_amount, 0)
+                    + COALESCE(order_summary.monthly_food_cost, 0)
+                ) AS beginning_balance,
                 COALESCE(order_summary.monthly_order_count, 0) AS monthly_order_count,
                 COALESCE(order_summary.monthly_food_cost, 0) AS monthly_food_cost,
                 COALESCE(deposit_summary.monthly_deposit_amount, 0) AS monthly_deposit_amount
@@ -712,38 +712,6 @@ def get_session_votes(session):
                 ON lo.menu_item = lmi.name
             LEFT JOIN `tabLunch Wallet` wallet
                 ON wallet.zalo_user = lo.zalo_user
-            LEFT JOIN (
-                SELECT
-                    t.zalo_user,
-                    SUM(t.amount) AS beginning_balance
-                FROM `tabTransaction` t
-                LEFT JOIN `tabLunch Order` lo2
-                    ON lo2.name = t.reference AND lo2.is_active = 1
-                WHERE t.date <= DATE_ADD(%s, INTERVAL 12 HOUR)
-                    AND NOT (
-                        t.type = 'Pay'
-                        AND lo2.name IS NOT NULL
-                        AND DATE(
-                            DATE_ADD(
-                                lo2.created_at,
-                                INTERVAL CASE
-                                    WHEN TIME(lo2.created_at) > '12:00:00' THEN 1
-                                    ELSE 0
-                                END DAY
-                            )
-                        ) >= %s
-                        AND DATE(
-                            DATE_ADD(
-                                lo2.created_at,
-                                INTERVAL CASE
-                                    WHEN TIME(lo2.created_at) > '12:00:00' THEN 1
-                                    ELSE 0
-                                END DAY
-                            )
-                        ) <= %s
-                    )
-                GROUP BY t.zalo_user
-            ) prev_balance ON prev_balance.zalo_user = lo.zalo_user
             LEFT JOIN (
                 SELECT
                     lo2.zalo_user,
@@ -787,9 +755,6 @@ def get_session_votes(session):
                 AND lo.is_active = 1
             ORDER BY lo.created_at DESC, lo.creation DESC
         """, (
-            end_of_previous_month,  # prev_balance
-            start_of_month,         # prev_balance
-            end_of_month,           # prev_balance
             start_of_month,         # order_summary
             end_of_month,           # order_summary
             start_of_month,         # deposit_summary
