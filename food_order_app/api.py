@@ -19,6 +19,7 @@ REDIRECT_URI = os.getenv("ZALO_REDIRECT_URI")
 ZALO_OA_ACCESS_TOKEN = os.getenv("ZALO_OA_ACCESS_TOKEN")
 GROUP_ID_ZALO = os.getenv("GROUP_ID_ZALO")
 BASE_URL = os.getenv("BASE_URL")
+SERVER_URL = "http://bepan.vnpt-tuyenquang.vn:5544"
 
 
 # =========================
@@ -42,7 +43,7 @@ def start_vote(session = None):
             return {"error": "start_vote_failed", "detail": "No active session available"}
 
     try:
-        base = BASE_URL or frappe.utils.get_url()
+        base = SERVER_URL # BASE_URL or frappe.utils.get_url()
         redirect_uri = f"{base}{REDIRECT_URI}"
 
         from urllib.parse import quote_plus
@@ -69,7 +70,7 @@ def start_vote(session = None):
 @frappe.whitelist(allow_guest=True)
 def payment_request(session = None):
     try:
-        base = BASE_URL or frappe.utils.get_url()
+        base = SERVER_URL # BASE_URL or frappe.utils.get_url()
         redirect_uri = f"{base}{REDIRECT_URI}"
 
         from urllib.parse import quote_plus
@@ -267,7 +268,7 @@ def zalo_callback(code=None, state=None):
 
         # STEP 6: REDIRECT
 
-        PRODUCTION_DOMAIN = BASE_URL
+        PRODUCTION_DOMAIN = SERVER_URL
         if state == "payment_request":
             final_url = f"{PRODUCTION_DOMAIN}/payment?zalo_id={zalo_id}"
         else:
