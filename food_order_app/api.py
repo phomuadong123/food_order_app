@@ -19,7 +19,7 @@ REDIRECT_URI = os.getenv("ZALO_REDIRECT_URI")
 ZALO_OA_ACCESS_TOKEN = os.getenv("ZALO_OA_ACCESS_TOKEN")
 GROUP_ID_ZALO = os.getenv("GROUP_ID_ZALO")
 BASE_URL = os.getenv("BASE_URL")
-NGROK_URL = "https://cortically-summational-brain.ngrok-free.dev"
+NGROK_URL = "https://mia-hotels-packard-circular.trycloudflare.com"
 SERVER_URL = "http://bep-an.vnpt-tuyenquang.vn:5544"
 
 
