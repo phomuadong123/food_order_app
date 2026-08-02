@@ -20,7 +20,7 @@ ZALO_OA_ACCESS_TOKEN = os.getenv("ZALO_OA_ACCESS_TOKEN")
 GROUP_ID_ZALO = os.getenv("GROUP_ID_ZALO")
 BASE_URL = os.getenv("BASE_URL")
 NGROK_URL = "https://cortically-summational-brain.ngrok-free.dev"
-SERVER_URL = "http://bepan.vnpt-tuyenquang.vn:5544"
+SERVER_URL = "http://bep-an.vnpt-tuyenquang.vn:5544"
 
 
 # =========================
@@ -1303,7 +1303,7 @@ def check_and_renew_sessions():
 
         # tạo session mới
         new_name = frappe.generate_hash(10)
-        link = f"{BASE_URL}/api/method/food_order_app.api.start_vote?session={new_name}"
+        link = f"{SERVER_URL}/api/method/food_order_app.api.start_vote?session={new_name}"
         start_time = datetime.combine(getdate(), last_session["start_date"].time())
         end_time = datetime.combine(today_date, last_session["end_date"].time())
 
