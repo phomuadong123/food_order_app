@@ -6,6 +6,8 @@ from frappe.utils import now, now_datetime
 import requests
 from food_order_app.api import call_zalo_api
 
+SERVER_URL = "http://bep-an.vnpt-tuyenquang.vn:5544"
+
 
 @frappe.whitelist(allow_guest=True)
 def create_payment_request(amount,zalo_id):
@@ -60,7 +62,7 @@ def create_payment_request(amount,zalo_id):
     message = (
             f"Yêu cầu nạp tiền mới từ {full_name} - Số tiền: {amount} VNĐ.\n"
             f"Vui lòng kiểm tra và duyệt yêu cầu tại link!\n"
-            f"{frappe.utils.get_url()}/api/method/food_order_app.api.payment_request"
+            f"{SERVER_URL}/api/method/food_order_app.api.payment_request"
         )
     notify_admins_by_zalo(message)
     return {
