@@ -55,6 +55,7 @@
         let menuByLabel = new Map();
         let selectedUser = null;
         let userSearchTimer = null;
+        let userSearchRequest = 0;
 
         const clearUserSelection = () => {
             selectedUser = null;
@@ -71,29 +72,31 @@
             }
 
             wrapper.html(`
-                <div class="border rounded p-2" style="max-height: 240px; overflow-y: auto;">
-                    ${users.map((user, index) => `
-                        <button type="button" class="btn btn-default btn-sm text-left w-100 mb-2" data-user-index="${index}">
-                            <strong>${escapeHtml(user.full_name || user.real_name || user.zalo_id)}</strong>
-                            <div class="text-muted small">
-                                ${escapeHtml(user.real_name || "-")} · ${escapeHtml(user.department || "-")} · Zalo ID: ${escapeHtml(user.zalo_id || "-")}
-                            </div>
-                            <div class="small">${__("Số dư ví")}: ${escapeHtml(formatAmount(user.wallet_balance))} · ${user.is_active ? __("Đang hoạt động") : __("Chưa kích hoạt")}</div>
-                        </button>
-                    `).join("")}
+                <div class="border rounded p-2" style="max-height: 300px; overflow-y: auto;">
+                    ${users.map((user, index) => {
+                        const activeLabel = Number(user.is_active) ? __("Đang hoạt động") : __("Chưa kích hoạt");
+                        return `
+                            <button type="button" class="btn btn-default btn-sm text-left w-100 mb-2" data-user-index="${index}">
+                                <strong>${escapeHtml(user.full_name || user.real_name || user.zalo_id)}</strong>
+                                <div class="text-muted small">${__("Tên thật")}: ${escapeHtml(user.real_name || "-")} · ${__("Phòng ban")}: ${escapeHtml(user.department || "-")}</div>
+                                <div class="text-muted small">Zalo ID: ${escapeHtml(user.zalo_id || "-")}</div>
+                                <div class="small">${__("Số dư ví")}: ${escapeHtml(formatAmount(user.wallet_balance))} · ${activeLabel}</div>
+                            </button>
+                        `;
+                    }).join("")}
                 </div>
             `);
 
             wrapper.find("[data-user-index]").on("click", function () {
                 selectedUser = users[Number($(this).data("user-index"))];
-                dialog.set_value("user_search", selectedUser.full_name || selectedUser.zalo_id);
                 dialog.get_field("selected_user_summary").$wrapper.html(`
                     <div class="alert alert-info mb-0">
                         <strong>${escapeHtml(selectedUser.full_name || "-")}</strong><br>
                         ${__("Tên thật")}: ${escapeHtml(selectedUser.real_name || "-")}<br>
                         ${__("Phòng ban")}: ${escapeHtml(selectedUser.department || "-")}<br>
                         Zalo ID: ${escapeHtml(selectedUser.zalo_id || "-")}<br>
-                        ${__("Số dư ví hiện tại")}: ${escapeHtml(formatAmount(selectedUser.wallet_balance))}
+                        ${__("Số dư ví hiện tại")}: ${escapeHtml(formatAmount(selectedUser.wallet_balance))}<br>
+                        ${__("Trạng thái")}: ${Number(selectedUser.is_active) ? __("Đang hoạt động") : __("Chưa kích hoạt")}
                     </div>
                 `);
                 wrapper.empty();
@@ -150,16 +153,15 @@
 
         const searchUsers = async () => {
             const searchText = (dialog.get_value("user_search") || "").trim();
-            clearUserSelection();
-            if (searchText.length < 2) {
-                renderUserResults([], __("Nhập ít nhất 2 ký tự để tìm theo tên hoặc Zalo ID."));
-                return;
-            }
+            const requestId = ++userSearchRequest;
+            dialog.get_field("user_results").$wrapper.html(`<div class="text-muted">${__("Đang tải người dùng...")}</div>`);
 
             try {
                 const payload = await call("admin_search_lunch_users", { search_text: searchText });
+                if (requestId !== userSearchRequest) return;
                 renderUserResults(payload.data);
             } catch (error) {
+                if (requestId !== userSearchRequest) return;
                 renderUserResults([], errorMessage(error, __("Không thể tìm người dùng.")));
             }
         };
@@ -195,7 +197,7 @@
                     fieldname: "user_search",
                     label: __("Tìm người dùng"),
                     fieldtype: "Data",
-                    description: __("Tìm theo tên Zalo, tên thật hoặc Zalo ID."),
+                    description: __("Tìm theo tên Zalo, tên thật, Zalo ID hoặc phòng ban."),
                 },
                 { fieldname: "user_results", fieldtype: "HTML" },
                 { fieldname: "selected_user_summary", fieldtype: "HTML" },
@@ -238,11 +240,13 @@
 
         dialog.show();
         clearUserSelection();
-        renderUserResults([], __("Nhập ít nhất 2 ký tự để tìm người dùng."));
         dialog.get_field("user_search").$input.on("input", () => {
+            clearUserSelection();
+            userSearchRequest += 1;
             window.clearTimeout(userSearchTimer);
             userSearchTimer = window.setTimeout(searchUsers, 300);
         });
+        searchUsers();
         loadSessions();
     };
 

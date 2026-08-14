@@ -139,15 +139,26 @@ def admin_get_session_menu_items(session):
 
 @frappe.whitelist()
 def admin_search_lunch_users(search_text=None):
-    """Search Zalo users by name or Zalo ID for the administrative dialog."""
+    """Return a bounded default or filtered Zalo user list for the admin dialog."""
     _require_lunch_order_management_permission()
     search_text = (search_text or "").strip()
-    if not search_text:
-        return {"success": True, "data": []}
 
-    like_value = f"%{search_text}%"
-    users = frappe.db.sql(
+    where_clause = ""
+    params = ()
+    if search_text:
+        like_value = f"%{search_text}%"
+        where_clause = """
+            WHERE (
+                zum.full_name LIKE %s
+                OR zum.real_name LIKE %s
+                OR zum.zalo_id LIKE %s
+                OR zum.department LIKE %s
+            )
         """
+        params = (like_value, like_value, like_value, like_value)
+
+    users = frappe.db.sql(
+        f"""
         SELECT
             zum.name,
             zum.full_name,
@@ -158,13 +169,11 @@ def admin_search_lunch_users(search_text=None):
             wallet.balance AS wallet_balance
         FROM `tabZalo User Map` zum
         LEFT JOIN `tabLunch Wallet` wallet ON wallet.zalo_user = zum.name
-        WHERE zum.full_name LIKE %s
-           OR zum.real_name LIKE %s
-           OR zum.zalo_id LIKE %s
-        ORDER BY zum.full_name asc, zum.name asc
-        LIMIT 20
+        {where_clause}
+        ORDER BY zum.full_name ASC, zum.real_name ASC, zum.name ASC
+        LIMIT 30
         """,
-        (like_value, like_value, like_value),
+        params,
         as_dict=True,
     )
     return {"success": True, "data": users}
