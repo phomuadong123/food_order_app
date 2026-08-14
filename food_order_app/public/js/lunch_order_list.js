@@ -203,7 +203,7 @@
                 {
                     fieldname: "active_summary",
                     fieldtype: "HTML",
-                    options: `<div class="text-muted">${__("Thời gian tạo được lấy theo thời điểm xác nhận. Đơn mới sẽ ở trạng thái Hoạt động.")}</div>`,
+                    options: `<div class="text-muted">${__("Thời gian đăng ký sẽ được ghi nhận lúc 00:00:01 của ngày ăn đã chọn. Đơn mới sẽ ở trạng thái Hoạt động.")}</div>`,
                 },
             ],
             primary_action_label: __("Xác nhận thêm đặt mới"),

@@ -1,3 +1,5 @@
+from datetime import datetime, time
+
 import frappe
 from frappe.utils import flt, getdate, now
 
@@ -59,7 +61,7 @@ def _get_admin_session_menu_price(session, menu_item):
     return price
 
 
-def _create_admin_lunch_order_and_pay(session, menu_item, zalo_user, price):
+def _create_admin_lunch_order_and_pay(session, menu_item, zalo_user, price, order_datetime):
     """Create one correction order and one linked Pay transaction.
 
     The existing Transaction.after_insert hook updates the wallet in the same
@@ -72,7 +74,7 @@ def _create_admin_lunch_order_and_pay(session, menu_item, zalo_user, price):
             "zalo_user": zalo_user,
             "is_active": 1,
             "menu_item": menu_item,
-            "created_at": now(),
+            "created_at": order_datetime,
         }
     )
     order_doc.insert(ignore_permissions=True)
@@ -86,7 +88,7 @@ def _create_admin_lunch_order_and_pay(session, menu_item, zalo_user, price):
             "reference": order_doc.name,
             "session": session,
             "description": "Trừ tiền cho suất đăng ký ăn",
-            "date": now(),
+            "date": order_datetime,
         }
     )
     transaction.insert(ignore_permissions=True)
@@ -185,6 +187,10 @@ def admin_create_lunch_order(session, menu_item, zalo_user):
         session_doc = frappe.get_doc("Lunch Session", session)
         if session_doc.status not in ("Open", "Closed"):
             frappe.throw("Buổi ăn phải ở trạng thái Mở hoặc Đã đóng để có thể điều chỉnh.")
+        if not session_doc.date:
+            frappe.throw("Buổi ăn không có ngày ăn để ghi nhận thời gian đăng ký.")
+
+        admin_order_datetime = datetime.combine(getdate(session_doc.date), time(0, 0, 1))
 
         user = frappe.db.get_value(
             "Zalo User Map",
@@ -204,6 +210,7 @@ def admin_create_lunch_order(session, menu_item, zalo_user):
             menu_item=menu_item,
             zalo_user=zalo_user,
             price=price,
+            order_datetime=admin_order_datetime,
         )
         wallet_balance = frappe.db.get_value("Lunch Wallet", {"zalo_user": zalo_user}, "balance")
 
