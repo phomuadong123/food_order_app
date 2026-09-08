@@ -163,42 +163,33 @@ def zalo_callback(code=None, state=None):
         profile = None
         last_error = None
 
-        for proxy in proxy_list:
-            proxies = {
-                "http": proxy,
-                "https": proxy,
-            }
+        try:
+            profile_res = requests.get(
+                "https://graph.zalo.me/v2.0/me",
+                params={
+                    "fields": "id,name,picture"
+                },
+                headers={
+                    "access_token": access_token
+                },
+                timeout=10
+            )
 
-            try:
-                profile_res = requests.get(
-                    "https://graph.zalo.me/v2.0/me",
-                    params={
-                        "fields": "id,name,picture"
-                    },
-                    headers={
-                        "access_token": access_token
-                    },
-                    proxies=proxies,
-                    timeout=10
-                )
+            profile_res.raise_for_status()
+            data = profile_res.json()
 
-                profile_res.raise_for_status()
-                data = profile_res.json()
-                if data.get("error", 0) != 0:
-                    raise Exception(data)
+            if data.get("error", 0) != 0:
+                raise Exception(data)
 
-                profile = data
-                break
+            profile = data
 
-            except Exception:
-                last_error = frappe.get_traceback()
+        except Exception:
+            last_error = frappe.get_traceback()
 
-                # Log từng proxy fail (nếu muốn debug sâu thì bật)
-                frappe.log_error(
-                    last_error,
-                    f"[{trace_id}] PROXY FAILED: {proxy}"
-                )
-                continue
+            frappe.log_error(
+                last_error,
+                f"[{trace_id}] ZALO PROFILE FAILED"
+            )
         
         if profile is None:
             frappe.log_error(
